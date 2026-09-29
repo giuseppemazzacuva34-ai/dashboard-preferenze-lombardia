@@ -1,0 +1,3991 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard Lombardia · Preferenze Elettorali</title>
+
+<style>
+:root{
+    --bg:#0d1728;
+    --bg2:#13223a;
+    --panel:#172942;
+    --panel2:#1d3150;
+    --border:rgba(255,255,255,.09);
+    --text:#f5f7fb;
+    --muted:#9eacc0;
+    --accent:#4f8cff;
+    --accent2:#6ea4ff;
+    --green:#39c98b;
+    --orange:#f3a847;
+    --red:#ef6a75;
+    --shadow:0 18px 50px rgba(0,0,0,.24);
+    --radius:18px;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    min-height:100%;
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+button,
+select,
+input{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+.app{
+    min-height:100vh;
+    display:flex;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+    width:260px;
+    min-height:100vh;
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    background:#0b1423;
+    border-right:1px solid var(--border);
+    padding:22px 14px;
+    z-index:20;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:8px 10px 24px;
+}
+
+.brand-mark{
+    width:44px;
+    height:44px;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    background:linear-gradient(135deg,#4f8cff,#315fb7);
+    font-weight:900;
+    font-size:17px;
+    box-shadow:0 10px 25px rgba(79,140,255,.25);
+}
+
+.brand-title{
+    font-weight:800;
+    font-size:17px;
+}
+
+.brand-sub{
+    font-size:11px;
+    color:var(--muted);
+    margin-top:3px;
+}
+
+.nav-title{
+    color:#687991;
+    text-transform:uppercase;
+    font-size:10px;
+    letter-spacing:1.3px;
+    padding:15px 12px 7px;
+}
+
+.nav button{
+    width:100%;
+    border:0;
+    background:transparent;
+    color:#b8c4d5;
+    padding:11px 12px;
+    border-radius:11px;
+    text-align:left;
+    margin:2px 0;
+    transition:.18s;
+}
+
+.nav button:hover{
+    background:rgba(255,255,255,.05);
+    color:#fff;
+}
+
+.nav button.active{
+    background:rgba(79,140,255,.16);
+    color:#fff;
+}
+
+.nav-icon{
+    display:inline-block;
+    width:25px;
+    opacity:.8;
+}
+
+.sidebar-bottom{
+    position:absolute;
+    bottom:18px;
+    left:14px;
+    right:14px;
+}
+
+.status{
+    padding:12px;
+    background:rgba(57,201,139,.08);
+    border:1px solid rgba(57,201,139,.18);
+    border-radius:13px;
+    font-size:11px;
+    color:#b6e9d2;
+}
+
+.status-dot{
+    display:inline-block;
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--green);
+    margin-right:7px;
+}
+
+/* MAIN */
+
+.main{
+    margin-left:260px;
+    width:calc(100% - 260px);
+    min-height:100vh;
+}
+
+/* TOPBAR */
+
+.topbar{
+    height:76px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 28px;
+    background:rgba(13,23,40,.88);
+    backdrop-filter:blur(15px);
+    position:sticky;
+    top:0;
+    z-index:15;
+}
+
+.page-title{
+    font-size:20px;
+    font-weight:800;
+}
+
+.page-subtitle{
+    color:var(--muted);
+    font-size:12px;
+    margin-top:4px;
+}
+
+.top-actions{
+    display:flex;
+    gap:9px;
+    align-items:center;
+}
+
+.top-btn{
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:#dce5f2;
+    border-radius:10px;
+    padding:9px 13px;
+}
+
+/* CONTENT */
+
+.content{
+    padding:28px;
+    max-width:1700px;
+    margin:auto;
+}
+
+.view{
+    display:none;
+}
+
+.view.active{
+    display:block;
+}
+
+/* FILTER BAR */
+
+.filters{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(160px,1fr));
+    gap:12px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:20px;
+    box-shadow:var(--shadow);
+}
+
+.filter label{
+    display:block;
+    color:var(--muted);
+    font-size:11px;
+    margin-bottom:6px;
+}
+
+.filter select,
+.filter input{
+    width:100%;
+    border:1px solid var(--border);
+    background:#0e1b2d;
+    color:#fff;
+    padding:10px 11px;
+    border-radius:10px;
+    outline:none;
+}
+
+.filter select:focus,
+.filter input:focus{
+    border-color:var(--accent);
+}
+
+/* HERO */
+
+.hero{
+    padding:28px;
+    border-radius:24px;
+    background:
+        radial-gradient(circle at 80% 20%,rgba(79,140,255,.23),transparent 35%),
+        linear-gradient(135deg,#182d4b,#12213a);
+    border:1px solid var(--border);
+    box-shadow:var(--shadow);
+    margin-bottom:20px;
+}
+
+.hero-kicker{
+    color:#79a9ff;
+    text-transform:uppercase;
+    font-size:11px;
+    letter-spacing:1.5px;
+    font-weight:700;
+}
+
+.hero h1{
+    margin:9px 0 7px;
+    font-size:32px;
+}
+
+.hero p{
+    margin:0;
+    color:var(--muted);
+}
+
+/* KPI */
+
+.kpis{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:14px;
+    margin-bottom:20px;
+}
+
+.kpi{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:17px;
+    padding:18px;
+    box-shadow:var(--shadow);
+}
+
+.kpi-label{
+    color:var(--muted);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.8px;
+}
+
+.kpi-value{
+    font-size:27px;
+    font-weight:850;
+    margin-top:10px;
+}
+
+.kpi-detail{
+    color:#708198;
+    font-size:11px;
+    margin-top:6px;
+}
+
+/* GRID */
+
+.grid-2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+}
+
+.grid-3{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:18px;
+}
+
+.card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+    box-shadow:var(--shadow);
+}
+
+.card-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+}
+
+.card-title{
+    font-size:15px;
+    font-weight:800;
+}
+
+.card-subtitle{
+    font-size:11px;
+    color:var(--muted);
+    margin-top:4px;
+}
+
+/* TABS */
+
+.election-tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:18px;
+}
+
+.election-tab{
+    padding:11px 17px;
+    border-radius:11px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:#aebbd0;
+}
+
+.election-tab.active{
+    background:rgba(79,140,255,.17);
+    color:#fff;
+    border-color:rgba(79,140,255,.4);
+}
+
+/* TABLE */
+
+.table-wrap{
+    overflow:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th{
+    text-align:left;
+    color:#718199;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.8px;
+    padding:10px 9px;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+}
+
+td{
+    padding:12px 9px;
+    border-bottom:1px solid rgba(255,255,255,.05);
+    font-size:12px;
+    white-space:nowrap;
+}
+
+tbody tr{
+    transition:.15s;
+}
+
+tbody tr:hover{
+    background:rgba(255,255,255,.035);
+}
+
+.rank{
+    width:32px;
+    color:#718199;
+}
+
+.candidate-name{
+    font-weight:700;
+}
+
+.badge{
+    display:inline-flex;
+    align-items:center;
+    padding:4px 8px;
+    border-radius:7px;
+    background:rgba(79,140,255,.12);
+    color:#91b7ff;
+    font-size:10px;
+}
+
+.badge.gray{
+    background:rgba(255,255,255,.06);
+    color:#aebbd0;
+}
+
+.badge.green{
+    background:rgba(57,201,139,.1);
+    color:#71ddb0;
+}
+
+/* BARS */
+
+.bar-row{
+    margin-bottom:14px;
+}
+
+.bar-top{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:6px;
+    font-size:12px;
+}
+
+.bar-bg{
+    height:7px;
+    background:#0d1a2b;
+    border-radius:20px;
+    overflow:hidden;
+}
+
+.bar{
+    height:100%;
+    background:linear-gradient(90deg,#4f8cff,#79a9ff);
+    border-radius:20px;
+}
+
+/* MUNICIPALITIES */
+
+.municipality-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+}
+
+.municipality{
+    border:1px solid var(--border);
+    background:#13243c;
+    padding:16px;
+    border-radius:14px;
+    cursor:pointer;
+    transition:.18s;
+}
+
+.municipality:hover{
+    transform:translateY(-2px);
+    border-color:rgba(79,140,255,.35);
+}
+
+.municipality-name{
+    font-weight:800;
+}
+
+.municipality-meta{
+    color:var(--muted);
+    font-size:11px;
+    margin-top:7px;
+}
+
+/* COLLEGE */
+
+.college-card{
+    background:#13243c;
+    border:1px solid var(--border);
+    padding:18px;
+    border-radius:15px;
+}
+
+.college-number{
+    font-size:11px;
+    color:#79a9ff;
+    text-transform:uppercase;
+}
+
+.college-name{
+    font-weight:800;
+    margin-top:7px;
+    font-size:16px;
+}
+
+/* DETAIL */
+
+.detail-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:18px;
+}
+
+.back-btn{
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:#dbe5f3;
+    border-radius:10px;
+    padding:9px 13px;
+}
+
+.detail-title{
+    font-size:27px;
+    font-weight:850;
+}
+
+.detail-meta{
+    color:var(--muted);
+    font-size:12px;
+    margin-top:6px;
+}
+
+.detail-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-bottom:18px;
+}
+
+.detail-box{
+    padding:16px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+}
+
+.detail-box-label{
+    color:var(--muted);
+    font-size:10px;
+    text-transform:uppercase;
+}
+
+.detail-box-value{
+    margin-top:7px;
+    font-size:15px;
+    font-weight:800;
+}
+
+/* CABINA */
+
+.admin-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+}
+
+.admin-form{
+    display:grid;
+    gap:10px;
+}
+
+.admin-form label{
+    color:var(--muted);
+    font-size:11px;
+}
+
+.admin-form input,
+.admin-form select{
+    background:#0e1b2d;
+    border:1px solid var(--border);
+    color:#fff;
+    padding:11px;
+    border-radius:10px;
+}
+
+.primary{
+    border:0;
+    background:linear-gradient(135deg,#4f8cff,#376dcc);
+    color:#fff;
+    border-radius:10px;
+    padding:11px 15px;
+    font-weight:700;
+}
+
+.secondary{
+    border:1px solid var(--border);
+    background:var(--panel2);
+    color:#fff;
+    border-radius:10px;
+    padding:10px 14px;
+}
+
+.actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+/* EMPTY */
+
+.empty{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--muted);
+}
+
+.empty strong{
+    display:block;
+    color:#fff;
+    margin-bottom:7px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1200px){
+    .kpis{
+        grid-template-columns:repeat(3,1fr);
+    }
+
+    .grid-3{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .municipality-grid{
+        grid-template-columns:1fr 1fr;
+    }
+}
+
+@media(max-width:900px){
+    .sidebar{
+        width:75px;
+    }
+
+    .brand-title,
+    .brand-sub,
+    .nav-title,
+    .nav-text,
+    .sidebar-bottom{
+        display:none;
+    }
+
+    .brand{
+        justify-content:center;
+    }
+
+    .main{
+        margin-left:75px;
+        width:calc(100% - 75px);
+    }
+
+    .nav button{
+        text-align:center;
+    }
+
+    .nav-icon{
+        width:auto;
+    }
+
+    .filters,
+    .grid-2,
+    .admin-grid{
+        grid-template-columns:1fr 1fr;
+    }
+}
+
+@media(max-width:650px){
+    .content{
+        padding:16px;
+    }
+
+    .topbar{
+        padding:0 16px;
+    }
+
+    .filters,
+    .kpis,
+    .grid-2,
+    .grid-3,
+    .admin-grid,
+    .municipality-grid,
+    .detail-grid{
+        grid-template-columns:1fr;
+    }
+
+    .hero h1{
+        font-size:25px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+    <div class="brand">
+        <div class="brand-mark">LO</div>
+
+        <div>
+            <div class="brand-title">Dashboard Lombardia</div>
+            <div class="brand-sub">Preferenze · Territorio · Elezioni</div>
+        </div>
+    </div>
+
+    <nav class="nav">
+
+        <div class="nav-title">Dashboard</div>
+
+        <button class="active" data-view="home">
+            <span class="nav-icon">⌂</span>
+            <span class="nav-text">Home</span>
+        </button>
+
+        <button data-view="analisi">
+            <span class="nav-icon">▦</span>
+            <span class="nav-text">Analisi storica</span>
+        </button>
+
+        <button data-view="comuni">
+            <span class="nav-icon">⌖</span>
+            <span class="nav-text">Comuni</span>
+        </button>
+
+        <button data-view="collegi">
+            <span class="nav-icon">▤</span>
+            <span class="nav-text">Collegi</span>
+        </button>
+
+        <div class="nav-title">Elezioni</div>
+
+        <button data-view="elezioni">
+            <span class="nav-icon">◉</span>
+            <span class="nav-text">Elezioni 2027</span>
+        </button>
+
+        <button data-view="candidati">
+            <span class="nav-icon">♙</span>
+            <span class="nav-text">Candidati</span>
+        </button>
+
+        <button data-view="correnti">
+            <span class="nav-icon">◈</span>
+            <span class="nav-text">Correnti</span>
+        </button>
+
+        <div class="nav-title">Gestione</div>
+
+        <button data-view="cabina">
+            <span class="nav-icon">⚙</span>
+            <span class="nav-text">Cabina di regia</span>
+        </button>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+        <div class="status">
+            <span class="status-dot"></span>
+            Sistema pronto
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+<header class="topbar">
+
+    <div>
+        <div class="page-title" id="pageTitle">
+            Dashboard Lombardia
+        </div>
+
+        <div class="page-subtitle" id="pageSubtitle">
+            Analisi delle preferenze elettorali
+        </div>
+    </div>
+
+    <div class="top-actions">
+
+        <button class="top-btn" id="searchFocus">
+            🔎 Cerca
+        </button>
+
+        <button class="top-btn" id="resetFilters">
+            ↻ Reset
+        </button>
+
+    </div>
+
+</header>
+
+
+<div class="content">
+
+
+<!-- ================= HOME ================= -->
+
+<section class="view active" id="view-home">
+
+    <div class="hero">
+
+        <div class="hero-kicker">
+            Lombardia · Analisi elettorale
+        </div>
+
+        <h1>
+            Dashboard Preferenze Lombardia
+        </h1>
+
+        <p>
+            Analisi territoriale di candidati, preferenze, correnti,
+            comuni e collegi elettorali.
+        </p>
+
+    </div>
+
+
+    <div class="filters">
+
+        <div class="filter">
+
+            <label>Provincia</label>
+
+            <select id="provinceFilter">
+                <option value="">Tutta la Lombardia</option>
+            </select>
+
+        </div>
+
+
+        <div class="filter">
+
+            <label>Elezione</label>
+
+            <select id="electionFilter">
+
+                <option value="">Tutte</option>
+                <option value="Europee 2024">Europee 2024</option>
+                <option value="Regionali 2023">Regionali 2023</option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter">
+
+            <label>Comune</label>
+
+            <select id="municipalityFilter">
+
+                <option value="">Tutti i comuni</option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter">
+
+            <label>Ricerca</label>
+
+            <input
+                id="globalSearch"
+                type="search"
+                placeholder="Candidato, comune..."
+            >
+
+        </div>
+
+    </div>
+
+
+    <div class="kpis">
+
+        <div class="kpi">
+
+            <div class="kpi-label">
+                Candidati
+            </div>
+
+            <div class="kpi-value" id="kpiCandidates">
+                0
+            </div>
+
+            <div class="kpi-detail">
+                candidati presenti
+            </div>
+
+        </div>
+
+
+        <div class="kpi">
+
+            <div class="kpi-label">
+                Totale preferenze
+            </div>
+
+            <div class="kpi-value" id="kpiPreferences">
+                0
+            </div>
+
+            <div class="kpi-detail">
+                nel filtro selezionato
+            </div>
+
+        </div>
+
+
+        <div class="kpi">
+
+            <div class="kpi-label">
+                Comuni
+            </div>
+
+            <div class="kpi-value" id="kpiMunicipalities">
+                0
+            </div>
+
+            <div class="kpi-detail">
+                comuni interessati
+            </div>
+
+        </div>
+
+
+        <div class="kpi">
+
+            <div class="kpi-label">
+                Correnti
+            </div>
+
+            <div class="kpi-value" id="kpiCurrents">
+                0
+            </div>
+
+            <div class="kpi-detail">
+                classificazioni presenti
+            </div>
+
+        </div>
+
+
+        <div class="kpi">
+
+            <div class="kpi-label">
+                Classificati
+            </div>
+
+            <div class="kpi-value" id="kpiClassified">
+                0
+            </div>
+
+            <div class="kpi-detail">
+                candidati con corrente
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="grid-2">
+
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div>
+                    <div class="card-title">
+                        Classifica candidati
+                    </div>
+
+                    <div class="card-subtitle">
+                        Preferenze nel territorio selezionato
+                    </div>
+                </div>
+
+                <button
+                    class="secondary"
+                    onclick="showView('candidati')"
+                >
+                    Vedi tutti
+                </button>
+
+            </div>
+
+            <div id="topCandidates"></div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div>
+                    <div class="card-title">
+                        Classifica correnti
+                    </div>
+
+                    <div class="card-subtitle">
+                        Aggregazione delle preferenze
+                    </div>
+                </div>
+
+                <button
+                    class="secondary"
+                    onclick="showView('correnti')"
+                >
+                    Analizza
+                </button>
+
+            </div>
+
+            <div id="topCurrents"></div>
+
+        </div>
+
+    </div>
+
+
+    <div style="height:18px"></div>
+
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <div>
+                <div class="card-title">
+                    Comuni
+                </div>
+
+                <div class="card-subtitle">
+                    Seleziona un comune per aprire la scheda territoriale
+                </div>
+            </div>
+
+            <button
+                class="secondary"
+                onclick="showView('comuni')"
+            >
+                Tutti i comuni
+            </button>
+
+        </div>
+
+        <div
+            class="municipality-grid"
+            id="homeMunicipalities"
+        ></div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= ANALISI ================= -->
+
+<section class="view" id="view-analisi">
+
+    <div class="hero">
+
+        <div class="hero-kicker">
+            Analisi storica
+        </div>
+
+        <h1>
+            Europee 2024 ↔ Regionali 2023
+        </h1>
+
+        <p>
+            Confronto territoriale delle preferenze e delle classificazioni.
+        </p>
+
+    </div>
+
+
+    <div class="election-tabs">
+
+        <button
+            class="election-tab active"
+            data-election="Europee 2024"
+        >
+            Europee 2024
+        </button>
+
+        <button
+            class="election-tab"
+            data-election="Regionali 2023"
+        >
+            Regionali 2023
+        </button>
+
+        <button
+            class="election-tab"
+            data-election=""
+        >
+            Confronto
+        </button>
+
+    </div>
+
+
+    <div class="grid-2">
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div>
+                    <div class="card-title">
+                        Candidati
+                    </div>
+
+                    <div class="card-subtitle">
+                        Ordinamento per preferenze
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="analysisCandidates"></div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div>
+                    <div class="card-title">
+                        Correnti
+                    </div>
+
+                    <div class="card-subtitle">
+                        Aggregazione per corrente
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="analysisCurrents"></div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= COMUNI ================= -->
+
+<section class="view" id="view-comuni">
+
+    <div class="detail-header">
+
+        <div>
+            <div class="detail-title">
+                Comuni della Lombardia
+            </div>
+
+            <div class="detail-meta">
+                Seleziona un comune per aprire la relativa scheda.
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="filters">
+
+        <div class="filter">
+
+            <label>Provincia</label>
+
+            <select id="comuniProvinceFilter"></select>
+
+        </div>
+
+        <div class="filter">
+
+            <label>Ricerca comune</label>
+
+            <input
+                id="comuniSearch"
+                placeholder="Nome comune..."
+            >
+
+        </div>
+
+    </div>
+
+
+    <div
+        class="municipality-grid"
+        id="allMunicipalities"
+    ></div>
+
+</section>
+
+
+<!-- ================= SCHEDA COMUNE ================= -->
+
+<section class="view" id="view-comune-detail">
+
+    <div class="detail-header">
+
+        <div>
+
+            <div class="detail-title" id="municipalityDetailName">
+                Comune
+            </div>
+
+            <div
+                class="detail-meta"
+                id="municipalityDetailMeta"
+            ></div>
+
+        </div>
+
+        <button
+            class="back-btn"
+            onclick="showView('comuni')"
+        >
+            ← Torna ai comuni
+        </button>
+
+    </div>
+
+
+    <div class="detail-grid">
+
+        <div class="detail-box">
+
+            <div class="detail-box-label">
+                Provincia
+            </div>
+
+            <div
+                class="detail-box-value"
+                id="detailProvince"
+            ></div>
+
+        </div>
+
+
+        <div class="detail-box">
+
+            <div class="detail-box-label">
+                ISTAT
+            </div>
+
+            <div
+                class="detail-box-value"
+                id="detailIstat"
+            ></div>
+
+        </div>
+
+
+        <div class="detail-box">
+
+            <div class="detail-box-label">
+                Camera
+            </div>
+
+            <div
+                class="detail-box-value"
+                id="detailCamera"
+            ></div>
+
+        </div>
+
+
+        <div class="detail-box">
+
+            <div class="detail-box-label">
+                Senato
+            </div>
+
+            <div
+                class="detail-box-value"
+                id="detailSenato"
+            ></div>
+
+        </div>
+
+    </div>
+
+
+    <div class="grid-2">
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <div class="card-title">
+                        Europee 2024
+                    </div>
+
+                    <div class="card-subtitle">
+                        Preferenze dei candidati nel comune
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div id="detailEuropee"></div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <div class="card-title">
+                        Regionali 2023
+                    </div>
+
+                    <div class="card-subtitle">
+                        Preferenze dei candidati nel comune
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div id="detailRegionali"></div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= CANDIDATI ================= -->
+
+<section class="view" id="view-candidati">
+
+    <div class="hero">
+
+        <div class="hero-kicker">
+            Candidati
+        </div>
+
+        <h1>
+            Classifica candidati
+        </h1>
+
+        <p>
+            Elenco dei candidati e relative preferenze.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>#</th>
+                        <th>Candidato</th>
+                        <th>Lista</th>
+                        <th>Corrente</th>
+                        <th>Preferenze</th>
+                        <th>Comuni</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="candidatesTable"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= CORRENTI ================= -->
+
+<section class="view" id="view-correnti">
+
+    <div class="hero">
+
+        <div class="hero-kicker">
+            Classificazione
+        </div>
+
+        <h1>
+            Analisi delle correnti
+        </h1>
+
+        <p>
+            Le correnti sono classificazioni assegnate ai candidati
+            e possono essere modificate dalla Cabina di Regia.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>#</th>
+                        <th>Corrente</th>
+                        <th>Candidati</th>
+                        <th>Preferenze</th>
+                        <th>Comuni</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="currentsTable"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= COLLEGI ================= -->
+
+<section class="view" id="view-collegi">
+
+    <div class="hero">
+
+        <div class="hero-kicker">
+            Territorio elettorale
+        </div>
+
+        <h1>
+            Collegi Camera e Senato
+        </h1>
+
+        <p>
+            Struttura territoriale predisposta per le elezioni 2027.
+        </p>
+
+    </div>
+
+
+    <div class="election-tabs">
+
+        <button
+            class="election-tab active"
+            data-college-type="Camera"
+        >
+            Camera
+        </button>
+
+        <button
+            class="election-tab"
+            data-college-type="Senato"
+        >
+            Senato
+        </button>
+
+    </div>
+
+
+    <div
+        class="grid-3"
+        id="collegesGrid"
+    ></div>
+
+</section>
+
+
+<!-- ================= ELEZIONI 2027 ================= -->
+
+<section class="view" id="view-elezioni">
+
+    <div class="hero">
+
+        <div class="hero-kicker">
+            Elezioni 2027
+        </div>
+
+        <h1>
+            Organizzazione territoriale
+        </h1>
+
+        <p>
+            Camera e Senato · selezione dei collegi · comuni appartenenti.
+        </p>
+
+    </div>
+
+
+    <div class="grid-2">
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div>
+                    <div class="card-title">
+                        Camera
+                    </div>
+
+                    <div class="card-subtitle">
+                        Collegi plurinominali e uninominali
+                    </div>
+                </div>
+
+                <button
+                    class="primary"
+                    onclick="openCollege('Camera')"
+                >
+                    Seleziona
+                </button>
+
+            </div>
+
+            <div class="empty">
+                <strong>Selezione collegi Camera</strong>
+                La struttura territoriale verrà collegata ai dati ufficiali.
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div>
+                    <div class="card-title">
+                        Senato
+                    </div>
+
+                    <div class="card-subtitle">
+                        Collegi plurinominali e uninominali
+                    </div>
+                </div>
+
+                <button
+                    class="primary"
+                    onclick="openCollege('Senato')"
+                >
+                    Seleziona
+                </button>
+
+            </div>
+
+            <div class="empty">
+                <strong>Selezione collegi Senato</strong>
+                La struttura territoriale verrà collegata ai dati ufficiali.
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= CABINA ================= -->
+
+<section class="view" id="view-cabina">
+
+    <div class="hero">
+
+        <div class="hero-kicker">
+            Gestione
+        </div>
+
+        <h1>
+            Cabina di Regia
+        </h1>
+
+        <p>
+            Gestione candidati, correnti, importazione dati e classificazioni.
+        </p>
+
+    </div>
+
+
+    <div class="admin-grid">
+
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div>
+                    <div class="card-title">
+                        Classificazione candidato
+                    </div>
+
+                    <div class="card-subtitle">
+                        Assegna o modifica una corrente.
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="admin-form">
+
+                <label>Candidato</label>
+
+                <select id="adminCandidate"></select>
+
+
+                <label>Corrente</label>
+
+                <input
+                    id="adminCurrent"
+                    placeholder="Es. Corrente A"
+                >
+
+
+                <label>Sottocorrente</label>
+
+                <input
+                    id="adminSubCurrent"
+                    placeholder="Facoltativo"
+                >
+
+
+                <div class="actions">
+
+                    <button
+                        class="primary"
+                        id="saveClassification"
+                    >
+                        Salva classificazione
+                    </button>
+
+                    <button
+                        class="secondary"
+                        id="clearClassification"
+                    >
+                        Cancella
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div>
+                    <div class="card-title">
+                        Importazione dati
+                    </div>
+
+                    <div class="card-subtitle">
+                        Carica CSV per aggiornare l'analisi.
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="admin-form">
+
+                <label>
+                    CSV preferenze
+                </label>
+
+                <input
+                    type="file"
+                    id="csvInput"
+                    accept=".csv"
+                >
+
+                <div class="actions">
+
+                    <button
+                        class="secondary"
+                        id="exportData"
+                    >
+                        Esporta classificazioni
+                    </button>
+
+                    <button
+                        class="secondary"
+                        id="clearData"
+                    >
+                        Ripristina demo
+                    </button>
+
+                </div>
+
+                <div
+                    class="empty"
+                    style="padding:20px 5px"
+                >
+                    I dati originali dovranno essere collegati
+                    successivamente ai file ufficiali.
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <div style="height:18px"></div>
+
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <div>
+                <div class="card-title">
+                    Stato classificazioni
+                </div>
+
+                <div class="card-subtitle">
+                    Situazione corrente dei candidati.
+                </div>
+            </div>
+
+        </div>
+
+        <div
+            class="table-wrap"
+            id="classificationStatus"
+        ></div>
+
+    </div>
+
+</section>
+
+
+</div>
+
+</main>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   DATI DEMO
+   ========================================================= */
+
+const DEMO_DATA = [
+
+    {
+        istat:"015001",
+        comune:"Milano",
+        provincia:"Milano",
+        elezione:"Regionali 2023",
+        lista:"Fratelli d'Italia",
+        candidato:"Candidato Demo 1",
+        preferenze:1250,
+        cameraP:"Camera P01",
+        cameraU:"Camera U01",
+        senatoP:"Senato P01",
+        senatoU:"Senato U01"
+    },
+
+    {
+        istat:"015001",
+        comune:"Milano",
+        provincia:"Milano",
+        elezione:"Regionali 2023",
+        lista:"Fratelli d'Italia",
+        candidato:"Candidato Demo 2",
+        preferenze:970,
+        cameraP:"Camera P01",
+        cameraU:"Camera U01",
+        senatoP:"Senato P01",
+        senatoU:"Senato U01"
+    },
+
+    {
+        istat:"015002",
+        comune:"Monza",
+        provincia:"Monza e Brianza",
+        elezione:"Regionali 2023",
+        lista:"Fratelli d'Italia",
+        candidato:"Candidato Demo 1",
+        preferenze:820,
+        cameraP:"Camera P02",
+        cameraU:"Camera U02",
+        senatoP:"Senato P02",
+        senatoU:"Senato U02"
+    },
+
+    {
+        istat:"015002",
+        comune:"Monza",
+        provincia:"Monza e Brianza",
+        elezione:"Europee 2024",
+        lista:"Fratelli d'Italia",
+        candidato:"Candidato Demo 3",
+        preferenze:720,
+        cameraP:"Camera P02",
+        cameraU:"Camera U02",
+        senatoP:"Senato P02",
+        senatoU:"Senato U02"
+    },
+
+    {
+        istat:"016001",
+        comune:"Bergamo",
+        provincia:"Bergamo",
+        elezione:"Regionali 2023",
+        lista:"Fratelli d'Italia",
+        candidato:"Candidato Demo 4",
+        preferenze:690,
+        cameraP:"Camera P03",
+        cameraU:"Camera U03",
+        senatoP:"Senato P03",
+        senatoU:"Senato U03"
+    },
+
+    {
+        istat:"017001",
+        comune:"Brescia",
+        provincia:"Brescia",
+        elezione:"Regionali 2023",
+        lista:"Fratelli d'Italia",
+        candidato:"Candidato Demo 5",
+        preferenze:640,
+        cameraP:"Camera P04",
+        cameraU:"Camera U04",
+        senatoP:"Senato P04",
+        senatoU:"Senato U04"
+    }
+
+];
+
+
+/* =========================================================
+   STATO
+   ========================================================= */
+
+let data = [...DEMO_DATA];
+
+let classifications =
+    JSON.parse(
+        localStorage.getItem("lombardia_classifications") || "{}"
+    );
+
+let currentElection = "";
+
+let currentCollegeType = "Camera";
+
+let selectedMunicipality = null;
+
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+
+function formatNumber(value){
+
+    return Number(value || 0)
+        .toLocaleString("it-IT");
+
+}
+
+
+function unique(values){
+
+    return [...new Set(values)]
+        .filter(Boolean)
+        .sort((a,b)=>a.localeCompare(b,"it"));
+
+}
+
+
+function getClassification(candidate){
+
+    return classifications[candidate] || {
+        corrente:"",
+        sottocorrente:""
+    };
+
+}
+
+
+function getCandidates(){
+
+    return unique(
+        data.map(x=>x.candidato)
+    );
+
+}
+
+
+function getFilteredData(){
+
+    const province =
+        document.getElementById("provinceFilter")?.value || "";
+
+    const election =
+        document.getElementById("electionFilter")?.value || "";
+
+    const comune =
+        document.getElementById("municipalityFilter")?.value || "";
+
+    const search =
+        (
+            document.getElementById("globalSearch")?.value || ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+    return data.filter(row=>{
+
+        if(province && row.provincia !== province)
+            return false;
+
+        if(election && row.elezione !== election)
+            return false;
+
+        if(comune && row.comune !== comune)
+            return false;
+
+        if(search){
+
+            const text = [
+                row.candidato,
+                row.comune,
+                row.provincia
+            ]
+            .join(" ")
+            .toLowerCase();
+
+            if(!text.includes(search))
+                return false;
+        }
+
+        return true;
+
+    });
+
+}
+
+
+/* =========================================================
+   NAVIGAZIONE
+   ========================================================= */
+
+function showView(view){
+
+    document
+        .querySelectorAll(".view")
+        .forEach(el=>el.classList.remove("active"));
+
+    const target =
+        document.getElementById("view-"+view);
+
+    if(target)
+        target.classList.add("active");
+
+
+    document
+        .querySelectorAll(".nav button")
+        .forEach(btn=>{
+
+            btn.classList.toggle(
+                "active",
+                btn.dataset.view === view
+            );
+
+        });
+
+
+    const titles = {
+
+        home:[
+            "Dashboard Lombardia",
+            "Analisi delle preferenze elettorali"
+        ],
+
+        analisi:[
+            "Analisi storica",
+            "Europee 2024 · Regionali 2023"
+        ],
+
+        comuni:[
+            "Comuni",
+            "Territorio lombardo"
+        ],
+
+        candidati:[
+            "Candidati",
+            "Classifica delle preferenze"
+        ],
+
+        correnti:[
+            "Correnti",
+            "Aggregazione delle preferenze"
+        ],
+
+        collegi:[
+            "Collegi",
+            "Camera · Senato"
+        ],
+
+        elezioni:[
+            "Elezioni 2027",
+            "Organizzazione territoriale"
+        ],
+
+        cabina:[
+            "Cabina di Regia",
+            "Gestione dati e classificazioni"
+        ],
+
+        "comune-detail":[
+            "Scheda Comune",
+            "Dettaglio territoriale"
+        ]
+
+    };
+
+
+    const info =
+        titles[view] || titles.home;
+
+    document.getElementById("pageTitle").textContent =
+        info[0];
+
+    document.getElementById("pageSubtitle").textContent =
+        info[1];
+
+
+    renderAll();
+
+}
+
+
+document
+    .querySelectorAll(".nav button")
+    .forEach(btn=>{
+
+        btn.addEventListener(
+            "click",
+            ()=>showView(btn.dataset.view)
+        );
+
+    });
+
+
+/* =========================================================
+   FILTRI
+   ========================================================= */
+
+function populateFilters(){
+
+    const provinces =
+        unique(data.map(x=>x.provincia));
+
+    const provinceFilter =
+        document.getElementById("provinceFilter");
+
+    provinceFilter.innerHTML =
+        `<option value="">Tutta la Lombardia</option>` +
+        provinces
+            .map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`)
+            .join("");
+
+
+    const comuni =
+        unique(data.map(x=>x.comune));
+
+    const municipalityFilter =
+        document.getElementById("municipalityFilter");
+
+    municipalityFilter.innerHTML =
+        `<option value="">Tutti i comuni</option>` +
+        comuni
+            .map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`)
+            .join("");
+
+
+    const comuniProvince =
+        document.getElementById("comuniProvinceFilter");
+
+    comuniProvince.innerHTML =
+        `<option value="">Tutte le province</option>` +
+        provinces
+            .map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`)
+            .join("");
+
+
+    const adminCandidate =
+        document.getElementById("adminCandidate");
+
+    adminCandidate.innerHTML =
+        getCandidates()
+            .map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`)
+            .join("");
+
+}
+
+
+function resetFilters(){
+
+    document.getElementById("provinceFilter").value="";
+    document.getElementById("electionFilter").value="";
+    document.getElementById("municipalityFilter").value="";
+    document.getElementById("globalSearch").value="";
+
+    renderAll();
+
+}
+
+
+document
+    .getElementById("resetFilters")
+    .addEventListener(
+        "click",
+        resetFilters
+    );
+
+
+[
+    "provinceFilter",
+    "electionFilter",
+    "municipalityFilter",
+    "globalSearch"
+]
+.forEach(id=>{
+
+    document
+        .getElementById(id)
+        .addEventListener(
+            "input",
+            renderAll
+        );
+
+});
+
+
+document
+    .getElementById("searchFocus")
+    .addEventListener(
+        "click",
+        ()=>{
+            document
+                .getElementById("globalSearch")
+                .focus();
+        }
+    );
+
+
+/* =========================================================
+   KPI
+   ========================================================= */
+
+function renderKpis(){
+
+    const rows =
+        getFilteredData();
+
+    const candidates =
+        unique(rows.map(x=>x.candidato));
+
+    const municipalities =
+        unique(rows.map(x=>x.comune));
+
+    const currents =
+        unique(
+            candidates
+                .map(c=>getClassification(c).corrente)
+                .filter(Boolean)
+        );
+
+    const classified =
+        candidates.filter(
+            c=>getClassification(c).corrente
+        );
+
+
+    const preferences =
+        rows.reduce(
+            (sum,x)=>sum + Number(x.preferenze || 0),
+            0
+        );
+
+
+    document.getElementById("kpiCandidates")
+        .textContent =
+        formatNumber(candidates.length);
+
+    document.getElementById("kpiPreferences")
+        .textContent =
+        formatNumber(preferences);
+
+    document.getElementById("kpiMunicipalities")
+        .textContent =
+        formatNumber(municipalities.length);
+
+    document.getElementById("kpiCurrents")
+        .textContent =
+        formatNumber(currents.length);
+
+    document.getElementById("kpiClassified")
+        .textContent =
+        formatNumber(classified.length);
+
+}
+
+
+/* =========================================================
+   CLASSIFICA CANDIDATI
+   ========================================================= */
+
+function aggregateCandidates(rows){
+
+    const map = {};
+
+    rows.forEach(row=>{
+
+        if(!map[row.candidato]){
+
+            map[row.candidato] = {
+                candidato:row.candidato,
+                lista:row.lista,
+                preferenze:0,
+                comuni:new Set()
+            };
+
+        }
+
+        map[row.candidato].preferenze +=
+            Number(row.preferenze || 0);
+
+        map[row.candidato].comuni.add(
+            row.comune
+        );
+
+    });
+
+
+    return Object.values(map)
+        .sort(
+            (a,b)=>
+                b.preferenze-a.preferenze
+        );
+
+}
+
+
+function renderCandidateRanking(){
+
+    const rows =
+        getFilteredData();
+
+    const ranking =
+        aggregateCandidates(rows);
+
+    const container =
+        document.getElementById("topCandidates");
+
+    if(!ranking.length){
+
+        container.innerHTML =
+            `<div class="empty">Nessun dato disponibile.</div>`;
+
+        return;
+    }
+
+
+    const max =
+        ranking[0].preferenze;
+
+
+    container.innerHTML =
+        ranking
+            .slice(0,8)
+            .map((item,index)=>{
+
+                const c =
+                    getClassification(
+                        item.candidato
+                    );
+
+                const width =
+                    max
+                    ? Math.round(
+                        item.preferenze / max * 100
+                    )
+                    : 0;
+
+                return `
+
+                <div class="bar-row">
+
+                    <div class="bar-top">
+
+                        <span>
+                            <strong>${index+1}.</strong>
+                            ${escapeHtml(item.candidato)}
+
+                            ${
+                                c.corrente
+                                ? `<span class="badge">${escapeHtml(c.corrente)}</span>`
+                                : ""
+                            }
+
+                        </span>
+
+                        <strong>
+                            ${formatNumber(item.preferenze)}
+                        </strong>
+
+                    </div>
+
+                    <div class="bar-bg">
+
+                        <div
+                            class="bar"
+                            style="width:${width}%"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+                `;
+
+            })
+            .join("");
+
+}
+
+
+/* =========================================================
+   CORRENTI
+   ========================================================= */
+
+function aggregateCurrents(rows){
+
+    const map = {};
+
+    rows.forEach(row=>{
+
+        const c =
+            getClassification(row.candidato);
+
+        const current =
+            c.corrente || "Non classificata";
+
+
+        if(!map[current]){
+
+            map[current] = {
+                corrente:current,
+                candidati:new Set(),
+                comuni:new Set(),
+                preferenze:0
+            };
+
+        }
+
+
+        map[current].candidati.add(
+            row.candidato
+        );
+
+        map[current].comuni.add(
+            row.comune
+        );
+
+        map[current].preferenze +=
+            Number(row.preferenze || 0);
+
+    });
+
+
+    return Object.values(map)
+        .sort(
+            (a,b)=>
+                b.preferenze-a.preferenze
+        );
+
+}
+
+
+function renderCurrentRanking(){
+
+    const rows =
+        getFilteredData();
+
+    const ranking =
+        aggregateCurrents(rows);
+
+    const container =
+        document.getElementById("topCurrents");
+
+
+    if(!ranking.length){
+
+        container.innerHTML =
+            `<div class="empty">Nessun dato disponibile.</div>`;
+
+        return;
+
+    }
+
+
+    const max =
+        ranking[0].preferenze;
+
+
+    container.innerHTML =
+        ranking
+            .slice(0,8)
+            .map(item=>{
+
+                const width =
+                    max
+                    ? Math.round(
+                        item.preferenze / max * 100
+                    )
+                    : 0;
+
+
+                return `
+
+                <div class="bar-row">
+
+                    <div class="bar-top">
+
+                        <span>
+                            ${escapeHtml(item.corrente)}
+                        </span>
+
+                        <strong>
+                            ${formatNumber(item.preferenze)}
+                        </strong>
+
+                    </div>
+
+                    <div class="bar-bg">
+
+                        <div
+                            class="bar"
+                            style="width:${width}%"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+                `;
+
+            })
+            .join("");
+
+}
+
+
+/* =========================================================
+   COMUNI
+   ========================================================= */
+
+function getMunicipalities(){
+
+    const map = {};
+
+    data.forEach(row=>{
+
+        if(!map[row.comune]){
+
+            map[row.comune] = {
+                comune:row.comune,
+                provincia:row.provincia,
+                istat:row.istat,
+                preferences:0,
+                candidates:new Set(),
+                cameraP:row.cameraP,
+                cameraU:row.cameraU,
+                senatoP:row.senatoP,
+                senatoU:row.senatoU
+            };
+
+        }
+
+
+        map[row.comune].preferences +=
+            Number(row.preferenze || 0);
+
+        map[row.comune].candidates.add(
+            row.candidato
+        );
+
+    });
+
+
+    return Object.values(map);
+
+}
+
+
+function municipalityCard(item){
+
+    return `
+
+        <div
+            class="municipality"
+            onclick="openMunicipality('${escapeJs(item.comune)}')"
+        >
+
+            <div class="municipality-name">
+                ${escapeHtml(item.comune)}
+            </div>
+
+            <div class="municipality-meta">
+                ${escapeHtml(item.provincia)}
+            </div>
+
+            <div class="municipality-meta">
+
+                ${formatNumber(item.preferences)}
+                preferenze ·
+                ${item.candidates.size} candidati
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+function renderMunicipalities(){
+
+    const municipalities =
+        getMunicipalities();
+
+
+    const province =
+        document.getElementById(
+            "comuniProvinceFilter"
+        )?.value || "";
+
+
+    const search =
+        (
+            document.getElementById(
+                "comuniSearch"
+            )?.value || ""
+        )
+        .toLowerCase()
+        .trim();
+
+
+    const filtered =
+        municipalities.filter(item=>{
+
+            if(
+                province &&
+                item.provincia !== province
+            )
+                return false;
+
+
+            if(
+                search &&
+                !item.comune
+                    .toLowerCase()
+                    .includes(search)
+            )
+                return false;
+
+
+            return true;
+
+        });
+
+
+    const home =
+        document.getElementById(
+            "homeMunicipalities"
+        );
+
+
+    if(home){
+
+        home.innerHTML =
+            municipalities
+                .slice(0,9)
+                .map(municipalityCard)
+                .join("");
+
+    }
+
+
+    const all =
+        document.getElementById(
+            "allMunicipalities"
+        );
+
+
+    if(all){
+
+        all.innerHTML =
+            filtered
+                .map(municipalityCard)
+                .join("");
+
+    }
+
+}
+
+
+/* =========================================================
+   SCHEDA COMUNE
+   ========================================================= */
+
+function openMunicipality(name){
+
+    selectedMunicipality =
+        name;
+
+    showView("comune-detail");
+
+}
+
+
+function renderMunicipalityDetail(){
+
+    if(!selectedMunicipality)
+        return;
+
+
+    const municipality =
+        getMunicipalities()
+            .find(
+                x=>x.comune === selectedMunicipality
+            );
+
+
+    if(!municipality)
+        return;
+
+
+    document.getElementById(
+        "municipalityDetailName"
+    ).textContent =
+        municipality.comune;
+
+
+    document.getElementById(
+        "municipalityDetailMeta"
+    ).textContent =
+        municipality.provincia;
+
+
+    document.getElementById(
+        "detailProvince"
+    ).textContent =
+        municipality.provincia;
+
+
+    document.getElementById(
+        "detailIstat"
+    ).textContent =
+        municipality.istat;
+
+
+    document.getElementById(
+        "detailCamera"
+    ).textContent =
+        municipality.cameraP || "—";
+
+
+    document.getElementById(
+        "detailSenato"
+    ).textContent =
+        municipality.senatoP || "—";
+
+
+    renderMunicipalityElection(
+        "Europee 2024",
+        "detailEuropee"
+    );
+
+    renderMunicipalityElection(
+        "Regionali 2023",
+        "detailRegionali"
+    );
+
+}
+
+
+function renderMunicipalityElection(
+    election,
+    elementId
+){
+
+    const rows =
+        data
+            .filter(
+                x=>
+                    x.comune === selectedMunicipality &&
+                    x.elezione === election
+            )
+            .sort(
+                (a,b)=>
+                    Number(b.preferenze || 0) -
+                    Number(a.preferenze || 0)
+            );
+
+
+    const element =
+        document.getElementById(elementId);
+
+
+    if(!rows.length){
+
+        element.innerHTML =
+            `<div class="empty">
+                Nessun dato disponibile.
+            </div>`;
+
+        return;
+
+    }
+
+
+    element.innerHTML = `
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>#</th>
+                        <th>Candidato</th>
+                        <th>Corrente</th>
+                        <th>Preferenze</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    ${
+                        rows.map((row,index)=>{
+
+                            const c =
+                                getClassification(
+                                    row.candidato
+                                );
+
+                            return `
+
+                                <tr>
+
+                                    <td>${index+1}</td>
+
+                                    <td class="candidate-name">
+                                        ${escapeHtml(row.candidato)}
+                                    </td>
+
+                                    <td>
+                                        ${
+                                            c.corrente
+                                            ? `<span class="badge">${escapeHtml(c.corrente)}</span>`
+                                            : `<span class="badge gray">Non classificata</span>`
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            ${formatNumber(row.preferenze)}
+                                        </strong>
+                                    </td>
+
+                                </tr>
+
+                            `;
+
+                        }).join("")
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   TABELLA CANDIDATI
+   ========================================================= */
+
+function renderCandidatesTable(){
+
+    const ranking =
+        aggregateCandidates(
+            getFilteredData()
+        );
+
+
+    const tbody =
+        document.getElementById(
+            "candidatesTable"
+        );
+
+
+    tbody.innerHTML =
+        ranking
+            .map((item,index)=>{
+
+                const c =
+                    getClassification(
+                        item.candidato
+                    );
+
+                return `
+
+                    <tr>
+
+                        <td class="rank">
+                            ${index+1}
+                        </td>
+
+                        <td class="candidate-name">
+                            ${escapeHtml(item.candidato)}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(item.lista || "—")}
+                        </td>
+
+                        <td>
+
+                            ${
+                                c.corrente
+                                ? `<span class="badge">${escapeHtml(c.corrente)}</span>`
+                                : `<span class="badge gray">Non classificata</span>`
+                            }
+
+                        </td>
+
+                        <td>
+                            <strong>
+                                ${formatNumber(item.preferenze)}
+                            </strong>
+                        </td>
+
+                        <td>
+                            ${item.comuni.size}
+                        </td>
+
+                    </tr>
+
+                `;
+
+            })
+            .join("");
+
+}
+
+
+/* =========================================================
+   TABELLA CORRENTI
+   ========================================================= */
+
+function renderCurrentsTable(){
+
+    const ranking =
+        aggregateCurrents(
+            getFilteredData()
+        );
+
+
+    const tbody =
+        document.getElementById(
+            "currentsTable"
+        );
+
+
+    tbody.innerHTML =
+        ranking
+            .map((item,index)=>`
+
+                <tr>
+
+                    <td class="rank">
+                        ${index+1}
+                    </td>
+
+                    <td class="candidate-name">
+                        ${escapeHtml(item.corrente)}
+                    </td>
+
+                    <td>
+                        ${item.candidati.size}
+                    </td>
+
+                    <td>
+                        <strong>
+                            ${formatNumber(item.preferenze)}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${item.comuni.size}
+                    </td>
+
+                </tr>
+
+            `)
+            .join("");
+
+}
+
+
+/* =========================================================
+   ANALISI
+   ========================================================= */
+
+function renderAnalysis(){
+
+    const rows =
+        currentElection
+        ? data.filter(
+            x=>x.elezione === currentElection
+        )
+        : getFilteredData();
+
+
+    const candidates =
+        aggregateCandidates(rows)
+            .slice(0,15);
+
+
+    document.getElementById(
+        "analysisCandidates"
+    ).innerHTML = `
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>#</th>
+                        <th>Candidato</th>
+                        <th>Corrente</th>
+                        <th>Preferenze</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    ${
+                        candidates.map((item,index)=>{
+
+                            const c =
+                                getClassification(
+                                    item.candidato
+                                );
+
+                            return `
+
+                                <tr>
+
+                                    <td>${index+1}</td>
+
+                                    <td class="candidate-name">
+                                        ${escapeHtml(item.candidato)}
+                                    </td>
+
+                                    <td>
+                                        ${
+                                            c.corrente
+                                            ? `<span class="badge">${escapeHtml(c.corrente)}</span>`
+                                            : `<span class="badge gray">Non classificata</span>`
+                                        }
+                                    </td>
+
+                                    <td>
+                                        ${formatNumber(item.preferenze)}
+                                    </td>
+
+                                </tr>
+
+                            `;
+
+                        }).join("")
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    `;
+
+
+    const currents =
+        aggregateCurrents(rows);
+
+
+    document.getElementById(
+        "analysisCurrents"
+    ).innerHTML =
+        currents
+            .map(item=>`
+
+                <div class="bar-row">
+
+                    <div class="bar-top">
+
+                        <span>
+                            ${escapeHtml(item.corrente)}
+                        </span>
+
+                        <strong>
+                            ${formatNumber(item.preferenze)}
+                        </strong>
+
+                    </div>
+
+                    <div class="bar-bg">
+
+                        <div
+                            class="bar"
+                            style="width:${
+                                currents[0]?.preferenze
+                                ? item.preferenze /
+                                  currents[0].preferenze *
+                                  100
+                                : 0
+                            }%"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+            `)
+            .join("");
+
+}
+
+
+/* =========================================================
+   COLLEGI
+   ========================================================= */
+
+function getColleges(){
+
+    const field =
+        currentCollegeType === "Camera"
+        ? "cameraP"
+        : "senatoP";
+
+
+    const map = {};
+
+
+    data.forEach(row=>{
+
+        const college =
+            row[field];
+
+        if(!college)
+            return;
+
+
+        if(!map[college]){
+
+            map[college] = {
+                name:college,
+                comuni:new Set(),
+                preferences:0
+            };
+
+        }
+
+
+        map[college].comuni.add(
+            row.comune
+        );
+
+        map[college].preferences +=
+            Number(row.preferenze || 0);
+
+    });
+
+
+    return Object.values(map);
+
+}
+
+
+function renderColleges(){
+
+    const colleges =
+        getColleges();
+
+
+    const grid =
+        document.getElementById(
+            "collegesGrid"
+        );
+
+
+    grid.innerHTML =
+        colleges.map((college,index)=>`
+
+            <div class="college-card">
+
+                <div class="college-number">
+                    ${currentCollegeType} · Collegio ${index+1}
+                </div>
+
+                <div class="college-name">
+                    ${escapeHtml(college.name)}
+                </div>
+
+                <div class="municipality-meta">
+                    ${college.comuni.size} comuni
+                </div>
+
+                <div class="municipality-meta">
+                    ${formatNumber(college.preferences)}
+                    preferenze
+                </div>
+
+            </div>
+
+        `).join("");
+
+}
+
+
+/* =========================================================
+   CABINA DI REGIA
+   ========================================================= */
+
+function renderAdmin(){
+
+    const candidate =
+        document.getElementById(
+            "adminCandidate"
+        )?.value;
+
+
+    if(candidate){
+
+        const c =
+            getClassification(candidate);
+
+
+        document.getElementById(
+            "adminCurrent"
+        ).value =
+            c.corrente || "";
+
+
+        document.getElementById(
+            "adminSubCurrent"
+        ).value =
+            c.sottocorrente || "";
+
+    }
+
+
+    const rows =
+        getCandidates()
+            .map(candidate=>{
+
+                const c =
+                    getClassification(candidate);
+
+
+                return `
+
+                    <tr>
+
+                        <td class="candidate-name">
+                            ${escapeHtml(candidate)}
+                        </td>
+
+                        <td>
+
+                            ${
+                                c.corrente
+                                ? `<span class="badge green">${escapeHtml(c.corrente)}</span>`
+                                : `<span class="badge gray">Non classificata</span>`
+                            }
+
+                        </td>
+
+                        <td>
+                            ${c.sottocorrente
+                                ? escapeHtml(c.sottocorrente)
+                                : "—"
+                            }
+                        </td>
+
+                    </tr>
+
+                `;
+
+            })
+            .join("");
+
+
+    document.getElementById(
+        "classificationStatus"
+    ).innerHTML = `
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Candidato</th>
+                    <th>Corrente</th>
+                    <th>Sottocorrente</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+                ${rows}
+            </tbody>
+
+        </table>
+
+    `;
+
+}
+
+
+document
+    .getElementById("adminCandidate")
+    .addEventListener(
+        "change",
+        renderAdmin
+    );
+
+
+document
+    .getElementById("saveClassification")
+    .addEventListener(
+        "click",
+        ()=>{
+
+            const candidate =
+                document.getElementById(
+                    "adminCandidate"
+                ).value;
+
+            const corrente =
+                document.getElementById(
+                    "adminCurrent"
+                ).value.trim();
+
+            const sottocorrente =
+                document.getElementById(
+                    "adminSubCurrent"
+                ).value.trim();
+
+
+            if(!candidate)
+                return;
+
+
+            classifications[candidate] = {
+                corrente,
+                sottocorrente
+            };
+
+
+            localStorage.setItem(
+                "lombardia_classifications",
+                JSON.stringify(
+                    classifications
+                )
+            );
+
+
+            renderAll();
+
+            alert(
+                "Classificazione salvata."
+            );
+
+        }
+    );
+
+
+document
+    .getElementById("clearClassification")
+    .addEventListener(
+        "click",
+        ()=>{
+
+            const candidate =
+                document.getElementById(
+                    "adminCandidate"
+                ).value;
+
+            delete classifications[candidate];
+
+            localStorage.setItem(
+                "lombardia_classifications",
+                JSON.stringify(
+                    classifications
+                )
+            );
+
+            renderAll();
+
+        }
+    );
+
+
+/* =========================================================
+   CSV
+   ========================================================= */
+
+document
+    .getElementById("csvInput")
+    .addEventListener(
+        "change",
+        handleCSV
+    );
+
+
+function handleCSV(event){
+
+    const file =
+        event.target.files[0];
+
+    if(!file)
+        return;
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload = function(){
+
+        const text =
+            reader.result;
+
+
+        const lines =
+            text
+                .split(/\r?\n/)
+                .filter(Boolean);
+
+
+        if(lines.length < 2)
+            return;
+
+
+        const delimiter =
+            lines[0].includes(";")
+            ? ";"
+            : ",";
+
+
+        const headers =
+            parseCSVLine(
+                lines[0],
+                delimiter
+            )
+            .map(normalizeHeader);
+
+
+        const rows = [];
+
+
+        for(let i=1;i<lines.length;i++){
+
+            const values =
+                parseCSVLine(
+                    lines[i],
+                    delimiter
+                );
+
+
+            const row = {};
+
+
+            headers.forEach(
+                (header,index)=>{
+                    row[header] =
+                        values[index] || "";
+                }
+            );
+
+
+            rows.push(
+                normalizeImportedRow(row)
+            );
+
+        }
+
+
+        if(rows.length){
+
+            data = rows;
+
+            populateFilters();
+
+            renderAll();
+
+            alert(
+                `Importate ${rows.length.toLocaleString("it-IT")} righe.`
+            );
+
+        }
+
+    };
+
+
+    reader.readAsText(
+        file,
+        "UTF-8"
+    );
+
+}
+
+
+function parseCSVLine(
+    line,
+    delimiter
+){
+
+    const result = [];
+
+    let current = "";
+
+    let insideQuotes = false;
+
+
+    for(let i=0;i<line.length;i++){
+
+        const char =
+            line[i];
+
+
+        if(char === '"'){
+
+            if(
+                insideQuotes &&
+                line[i+1] === '"'
+            ){
+
+                current += '"';
+                i++;
+
+            }else{
+
+                insideQuotes =
+                    !insideQuotes;
+
+            }
+
+            continue;
+
+        }
+
+
+        if(
+            char === delimiter &&
+            !insideQuotes
+        ){
+
+            result.push(
+                current.trim()
+            );
+
+            current = "";
+
+        }else{
+
+            current += char;
+
+        }
+
+    }
+
+
+    result.push(
+        current.trim()
+    );
+
+
+    return result;
+
+}
+
+
+function normalizeHeader(value){
+
+    return value
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(
+            /[\u0300-\u036f]/g,
+            ""
+        )
+        .replace(
+            /[^a-z0-9]+/g,
+            "_"
+        )
+        .replace(
+            /^_|_$/g,
+            ""
+        );
+
+}
+
+
+function normalizeImportedRow(row){
+
+    const find = (...keys)=>{
+
+        for(const key of keys){
+
+            if(
+                row[key] !== undefined
+            )
+                return row[key];
+
+        }
+
+        return "";
+
+    };
+
+
+    return {
+
+        istat:
+            find(
+                "istat",
+                "codice_istat",
+                "codiceistat"
+            ),
+
+        comune:
+            find(
+                "comune",
+                "municipio"
+            ),
+
+        provincia:
+            find(
+                "provincia"
+            ),
+
+        elezione:
+            find(
+                "elezione"
+            ),
+
+        lista:
+            find(
+                "lista"
+            ),
+
+        candidato:
+            find(
+                "candidato"
+            ),
+
+        preferenze:
+            Number(
+                String(
+                    find(
+                        "preferenze",
+                        "voti"
+                    )
+                )
+                .replace(/\./g,"")
+                .replace(",",".")
+            ) || 0,
+
+        cameraP:
+            find(
+                "camera_p",
+                "camera_plurinominale"
+            ),
+
+        cameraU:
+            find(
+                "camera_u",
+                "camera_uninominale"
+            ),
+
+        senatoP:
+            find(
+                "senato_p",
+                "senato_plurinominale"
+            ),
+
+        senatoU:
+            find(
+                "senato_u",
+                "senato_uninominale"
+            )
+
+    };
+
+}
+
+
+/* =========================================================
+   EXPORT CLASSIFICAZIONI
+   ========================================================= */
+
+document
+    .getElementById("exportData")
+    .addEventListener(
+        "click",
+        ()=>{
+
+            const rows = [
+                [
+                    "candidato",
+                    "corrente",
+                    "sottocorrente"
+                ]
+            ];
+
+
+            Object.entries(
+                classifications
+            )
+            .forEach(
+                ([candidate,value])=>{
+
+                    rows.push([
+                        candidate,
+                        value.corrente || "",
+                        value.sottocorrente || ""
+                    ]);
+
+                }
+            );
+
+
+            const csv =
+                rows
+                    .map(
+                        row=>
+                            row
+                            .map(
+                                value=>
+                                    `"${String(value)
+                                        .replace(/"/g,'""')}"`
+                            )
+                            .join(";")
+                    )
+                    .join("\n");
+
+
+            const blob =
+                new Blob(
+                    [csv],
+                    {
+                        type:"text/csv;charset=utf-8;"
+                    }
+                );
+
+
+            const url =
+                URL.createObjectURL(
+                    blob
+                );
+
+
+            const a =
+                document.createElement("a");
+
+            a.href = url;
+
+            a.download =
+                "classificazioni_correnti.csv";
+
+            a.click();
+
+            URL.revokeObjectURL(url);
+
+        }
+    );
+
+
+/* =========================================================
+   ELEZIONE TABS
+   ========================================================= */
+
+document
+    .querySelectorAll(
+        ".election-tab[data-election]"
+    )
+    .forEach(btn=>{
+
+        btn.addEventListener(
+            "click",
+            ()=>{
+
+                document
+                    .querySelectorAll(
+                        ".election-tab[data-election]"
+                    )
+                    .forEach(
+                        x=>x.classList.remove("active")
+                    );
+
+
+                btn.classList.add("active");
+
+
+                currentElection =
+                    btn.dataset.election;
+
+
+                renderAnalysis();
+
+            }
+        );
+
+    });
+
+
+/* =========================================================
+   COLLEGIO TABS
+   ========================================================= */
+
+document
+    .querySelectorAll(
+        ".election-tab[data-college-type]"
+    )
+    .forEach(btn=>{
+
+        btn.addEventListener(
+            "click",
+            ()=>{
+
+                document
+                    .querySelectorAll(
+                        ".election-tab[data-college-type]"
+                    )
+                    .forEach(
+                        x=>x.classList.remove("active")
+                    );
+
+
+                btn.classList.add("active");
+
+
+                currentCollegeType =
+                    btn.dataset.collegeType;
+
+
+                renderColleges();
+
+            }
+        );
+
+    });
+
+
+function openCollege(type){
+
+    currentCollegeType =
+        type;
+
+    showView("collegi");
+
+}
+
+
+/* =========================================================
+   COMUNI SEARCH
+   ========================================================= */
+
+document
+    .getElementById(
+        "comuniProvinceFilter"
+    )
+    .addEventListener(
+        "input",
+        renderMunicipalities
+    );
+
+
+document
+    .getElementById(
+        "comuniSearch"
+    )
+    .addEventListener(
+        "input",
+        renderMunicipalities
+    );
+
+
+/* =========================================================
+   SICUREZZA HTML
+   ========================================================= */
+
+function escapeHtml(value){
+
+    return String(value ?? "")
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+function escapeJs(value){
+
+    return String(value ?? "")
+        .replace(
+            /\\/g,
+            "\\\\"
+        )
+        .replace(
+            /'/g,
+            "\\'"
+        );
+
+}
+
+
+/* =========================================================
+   RENDER COMPLESSIVO
+   ========================================================= */
+
+function renderAll(){
+
+    renderKpis();
+
+    renderCandidateRanking();
+
+    renderCurrentRanking();
+
+    renderMunicipalities();
+
+    renderCandidatesTable();
+
+    renderCurrentsTable();
+
+    renderAnalysis();
+
+    renderColleges();
+
+    renderAdmin();
+
+    renderMunicipalityDetail();
+
+}
+
+
+/* =========================================================
+   INIT
+   ========================================================= */
+
+populateFilters();
+
+renderAll();
+
+</script>
+
+</body>
+</html>
