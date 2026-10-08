@@ -2120,13 +2120,16 @@ function installSondaggiModule(){
         '<td>'+(cid?esc2(coalitionFor(cid)?.name||""):"—")+'</td></tr>';
     }).join("");
 
+    const nationalCamera=Object.fromEntries(partyKeys.map(k=>[k,num(S.parties[k].camera)]));
+    const nationalSenate=Object.fromEntries(partyKeys.map(k=>[k,num(S.parties[k].senate)]));
     const coalRows=S.coalitions.map(co=>{
-      const vals=S.chamber==="camera"?cVals:rVals;
-      const total=coalitionFigure(co.members,vals,S.chamber,S.chamber==="senato"?S.region:null).total;
+      const camTotal=coalitionFigure(co.members,nationalCamera,"camera").total;
+      const senTotal=coalitionFigure(co.members,nationalSenate,"senato").total;
+      const totalLabel="Camera "+fmt(camTotal)+"% · Senato "+fmt(senTotal)+"%";
       const members=partyKeys.map(k=>
         '<label><input type="checkbox" data-member="'+esc2(co.id)+'" data-party="'+esc2(k)+'" '+((co.members||[]).includes(k)?"checked":"")+'>'+esc2(S.parties[k].name)+'</label>'
       ).join("");
-      return '<div class="sg-coal"><div class="sg-coal-head"><b>'+esc2(co.name)+'</b><strong>'+fmt(total)+'%</strong><button type="button" data-coal-del="'+esc2(co.id)+'">Elimina</button></div><div class="sg-members">'+members+'</div></div>';
+      return '<div class="sg-coal"><div class="sg-coal-head"><b>'+esc2(co.name)+'</b><strong>'+esc2(totalLabel)+'</strong><button type="button" data-coal-del="'+esc2(co.id)+'">Elimina</button></div><div class="sg-members">'+members+'</div></div>';
     }).join("")||'<div class="sg-empty">Nessuna coalizione definita. Crea una coalizione e assegna le liste.</div>';
 
     function resultRows(res,type){
