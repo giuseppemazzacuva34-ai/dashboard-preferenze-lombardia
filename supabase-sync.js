@@ -1578,6 +1578,21 @@ function installSondaggiModule(){
       });
       const best=members.slice().sort((a,b)=>(chamber==="camera"?camVals[b]:senVals[b])-(chamber==="camera"?camVals[a]:senVals[a]))[0];
       if(best)res.seats[best]=(res.seats[best]||0)+(add-used);
+
+      const targetSeats=chamber==="camera"?400:200;
+      const currentTotal=Object.values(res.seats).reduce((s,v)=>s+v,0);
+      let missing=targetSeats-currentTotal;
+      if(missing>0){
+        const others=Object.keys(res.seats).filter(k=>!members.includes(k));
+        const pool=others.reduce((s,k)=>s+(chamber==="camera"?camVals[k]:senVals[k]),0);
+        if(pool>0){
+          const extra=others.map(k=>({k,raw:missing*(chamber==="camera"?camVals[k]:senVals[k])/pool}));
+          extra.forEach(x=>{const q=Math.floor(x.raw);res.seats[x.k]=(res.seats[x.k]||0)+q;});
+          let usedExtra=extra.reduce((s,x)=>s+Math.floor(x.raw),0);
+          extra.sort((a,b)=>(b.raw-Math.floor(b.raw))-(a.raw-Math.floor(a.raw)));
+          for(let i=usedExtra;i<missing&&extra.length;i++)res.seats[extra[i-usedExtra]?.k||extra[0].k]++;
+        }
+      }
       res.bonusSeats=add;
     }
 
