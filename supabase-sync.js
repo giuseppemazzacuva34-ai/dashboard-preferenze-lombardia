@@ -1848,7 +1848,14 @@ function installSondaggiModule(){
         const candidates=[];
         SENATE_PROP_REGIONS.forEach(region=>{
           const rr=regionResults[region],count=rr.unitSeats[winnerId]||0;
-          if(count)candidates.push({region,priority:rr.remainderWinners.has(winnerId)?0:1,rest:rr.remainders[winnerId]||0});
+          for(let n=0;n<count;n++){
+            candidates.push({
+              region,
+              priority:(n===0&&rr.remainderWinners.has(winnerId))?0:1,
+              rest:rr.remainders[winnerId]||0,
+              ordinal:n
+            });
+          }
         });
         candidates.sort((a,b)=>a.priority-b.priority||a.rest-b.rest||a.region.localeCompare(b.region,"it"));
         for(const cand of candidates){
