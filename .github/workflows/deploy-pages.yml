@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -26,112 +26,6 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
-
-
-      - name: Prepare survey panel source
-        if: contains(github.event.head_commit.message, 'Split survey source')
-        shell: python
-        run: |
-          import base64, gzip
-          from pathlib import Path
-          import re
-          s=Path("index.html").read_text(encoding="utf-8")
-          m=re.search(r'const b64="([^"]+)"',s)
-          if not m:
-              raise SystemExit("b64 non trovato")
-          raw=gzip.decompress(base64.b64decode(m.group(1))).decode("utf-8")
-          out=Path("survey-source-parts")
-          out.mkdir(exist_ok=True)
-          for old in out.glob("part-*.txt"):
-              old.unlink()
-          for i in range(0,len(raw),100000):
-              (out/f"part-{i//100000+1:03d}.txt").write_text(raw[i:i+100000],encoding="utf-8")
-          Path("index.decoded.js").unlink(missing_ok=True)
-          print("decoded bytes",len(raw),"parts",(len(raw)+99999)//100000)
-      - name: Commit survey panel source
-        if: contains(github.event.head_commit.message, 'Split survey source')
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add survey-source-parts
-          git add -u index.decoded.js || true
-          git commit -m "Split survey source" || exit 0
-          git push
-
-
-      - name: Find survey module
-        if: contains(github.event.head_commit.message, 'Find survey module')
-        shell: python
-        run: |
-          from pathlib import Path
-          terms=["SONDAGGI — Nuovo sistema elettorale","Nuovo sistema elettorale","PREMIO DI GOVERNABILITA","Nuova coalizione","AGGIORNA DA YOUTREND"]
-          hits=[]
-          for p in sorted(Path("survey-source-parts").glob("part-*.txt")):
-              c=p.read_text(encoding="utf-8")
-              for term in terms:
-                  i=c.lower().find(term.lower())
-                  if i>=0:
-                      hits.append(f"PART={p.name} TERM={term} IDX={i}\\n" + c[max(0,i-5000):i+25000] + "\\n")
-          Path("survey-sondaggi-snippet.txt").write_text("\n====\n".join(hits) if hits else "NESSUN MATCH",encoding="utf-8")
-          print("matches",len(hits))
-      - name: Commit survey module snippet
-        if: contains(github.event.head_commit.message, 'Find survey module')
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add survey-sondaggi-snippet.txt
-          git commit -m "Find survey module" || exit 0
-          git push
-
-
-      - name: Locate survey keywords
-        if: contains(github.event.head_commit.message, 'Locate survey keywords')
-        shell: python
-        run: |
-          from pathlib import Path
-          import re
-          terms=[
-            "sondaggi","coalizioni","nuova coalizione","ripristina base",
-            "Camera dei deputati","PREMIO DI GOVERNABILITA","governabilità",
-            "youtrend","supermedia","scenario nazionale","calcolo seggi"
-          ]
-          hits=[]
-          for p in sorted(Path("survey-source-parts").glob("part-*.txt")):
-              c=p.read_text(encoding="utf-8")
-              low=c.lower()
-              for term in terms:
-                  i=low.find(term.lower())
-                  if i>=0:
-                      hits.append(
-                        "PART="+p.name+" TERM="+term+" IDX="+str(i)+"\\n"+
-                        c[max(0,i-3500):i+9000]+"\\n"
-                      )
-          Path("survey-keywords.txt").write_text("\n====\n".join(hits) if hits else "NESSUN MATCH",encoding="utf-8")
-          print("matches",len(hits))
-      - name: Commit survey keywords
-        if: contains(github.event.head_commit.message, 'Locate survey keywords')
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add survey-keywords.txt
-          git commit -m "Locate survey keywords" || exit 0
-          git push
-
-      - name: Cleanup survey tooling
-        if: contains(github.event.head_commit.message, 'Cleanup survey tooling')
-        shell: bash
-        run: |
-          rm -rf survey-source-parts
-          rm -f survey-sondaggi-snippet.txt survey-keywords.txt index.decoded.js
-          rm -f .github/workflows/extract-dashboard-source.yml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Cleanup survey tooling" || exit 0
-          git push
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
