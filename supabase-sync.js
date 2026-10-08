@@ -186,7 +186,7 @@ function installMobileLayout(){
   if(typeof document==="undefined" || document.getElementById("dashboard-mobile-fixes")) return;
   const style=document.createElement("style");
   style.id="dashboard-mobile-fixes";
-  style.textContent=String.raw\`
+  style.textContent=String.raw`
 @media (max-width: 820px){
   html,body{width:100%;max-width:100%;overflow-x:hidden}
   body{padding-bottom:72px!important}
