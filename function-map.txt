@@ -1,0 +1,614 @@
+[]; try{ticketGroups=JSON.parse(window.localStorage.getItem('lombardia_ticket_2026')||'[]');}catch(e){ticketGroups=[];}
+function saveCorrente(c,v){correnti[c]=String(v||'').trim();localStorage.setItem('lombardia_correnti_2026',JSON.stringify(correnti));applyCorrenti();render();}
+function saveTickets(){localStorage.setItem('lombardia_ticket_2026',JSON.stringify(ticketGroups));re
+
+---
+
+tring(v||'').trim();localStorage.setItem('lombardia_correnti_2026',JSON.stringify(correnti));applyCorrenti();render();}
+function saveTickets(){localStorage.setItem('lombardia_ticket_2026',JSON.stringify(ticketGroups));render();}
+function ticketForCandidate(c,prov){return ticketGroups.find(t=>t.prov===prov && t.candidates.includes(c));}
+function effectiveCurrentTotals(rows){
+ co
+
+---
+
+render();}
+function saveTickets(){localStorage.setItem('lombardia_ticket_2026',JSON.stringify(ticketGroups));render();}
+function ticketForCandidate(c,prov){return ticketGroups.find(t=>t.prov===prov && t.candidates.includes(c));}
+function effectiveCurrentTotals(rows){
+ const groups={},used=new Set(),out={};
+ rows.forEach(r=>{const tg=ticketForCandidate(r.candidato,r.prov); if(tg
+
+---
+
+render();}
+function ticketForCandidate(c,prov){return ticketGroups.find(t=>t.prov===prov && t.candidates.includes(c));}
+function effectiveCurrentTotals(rows){
+ const groups={},used=new Set(),out={};
+ rows.forEach(r=>{const tg=ticketForCandidate(r.candidato,r.prov); if(tg){if(!groups[tg.id])groups[tg.id]=[]; groups[tg.id].push(r);}});
+ rows.forEach(r=>{const tg=ticketForCandidat
+
+---
+
+ssificare'; out[cur]=(out[cur]||0)+(Number(r.preferenze)||0);}});
+ return Object.entries(out).sort((a,b)=>b[1]-a[1]);
+}
+function effectiveCurrentBy(rows,groupKey){
+ const out={}; const groups={}; const used=new Set();
+ rows.forEach(r=>{const g=groupKey(r)||'Da classificare'; const tg=ticketForCandidate(r.candidato,r.prov); if(tg){const k=g+'\u001f'+tg.id; if(!groups[k])groups[k
+
+---
+
+o]||'Da classificare'; if(!out[g])out[g]={}; out[g][cur]=(out[g][cur]||0)+(Number(r.preferenze)||0);}});
+ return out;
+}
+function ticketValue(t,rows=data){const vals=t.candidates.map(c=>rows.filter(r=>r.prov===t.prov&&r.candidato===c).reduce((a,r)=>a+(Number(r.preferenze)||0),0));return vals.length?Math.max(...vals):0;}
+const norm=s=>String(s||'').normalize('NFD').replace(/[\u03
+
+---
+
+>({...r,geo:geoMap.get(norm(r.prov)+'|'+norm(r.comune))||null}));
+const total=()=>data.reduce((s,r)=>s+r.preferenze,0);
+function applyCorrenti(){data.forEach(r=>r.corrente=correnti[r.candidato]||'');}
+function tab(id,btn){current=id;document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');document.q
+
+---
+
+>data.reduce((s,r)=>s+r.preferenze,0);
+function applyCorrenti(){data.forEach(r=>r.corrente=correnti[r.candidato]||'');}
+function tab(id,btn){current=id;document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+
+---
+
+erySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));btn?.classList.add('active');render();}
+function opts(id,label,values,value){return `<label class="filter-control"><span>${label}</span><select onchange="setF('${id}',this.value)"><option value="">Tutti</option>${values.map(v=>`<option ${v===value?'selected':''} value="${esc(v)}">${esc(v)}</option>`
+
+---
+
+${values.map(v=>`<option ${v===value?'selected':''} value="${esc(v)}">${esc(v)}</option>`).join('')}</select></label>`}
+function setF(k,v){filters[k]=v;render()}
+function clearF(){filters={prov:'',comune:'',candidato:'',corrente:'',camP:'',senP:'',lista:''};render()}
+function filtered(){const fp=filters.prov?norm(filters.prov):'';return data.filter(r=>(!fp||norm(PROV_FULL[PROV_
+
+---
+
+cted':''} value="${esc(v)}">${esc(v)}</option>`).join('')}</select></label>`}
+function setF(k,v){filters[k]=v;render()}
+function clearF(){filters={prov:'',comune:'',candidato:'',corrente:'',camP:'',senP:'',lista:''};render()}
+function filtered(){const fp=filters.prov?norm(filters.prov):'';return data.filter(r=>(!fp||norm(PROV_FULL[PROV_CODE[norm(r.prov)]||r.prov]||r.prov)===fp)
+
+---
+
+]=v;render()}
+function clearF(){filters={prov:'',comune:'',candidato:'',corrente:'',camP:'',senP:'',lista:''};render()}
+function filtered(){const fp=filters.prov?norm(filters.prov):'';return data.filter(r=>(!fp||norm(PROV_FULL[PROV_CODE[norm(r.prov)]||r.prov]||r.prov)===fp)&&(!filters.comune||norm(r.comune)===norm(filters.comune))&&(!filters.candidato||r.candidato===filters.can
+
+---
+
+a||r.lista===filters.lista)&&(!filters.camP||r.geo?.camP===filters.camP)&&(!filters.senP||r.geo?.senP===filters.senP))}
+function filterHTML(){let cm=[...new Set(data.filter(r=>!filters.prov||r.prov===filters.prov).map(r=>r.comune))].sort(),ca=[...CANDS],co=[...new Set(data.map(r=>r.corrente).filter(Boolean))].sort(),li=[...new Set(data.map(r=>r.lista))].sort();return opts('prov
+
+---
+
+ers.camP)+opts('senP','Senato P',SEN,filters.senP)+`<button class="btn bg2" onclick="clearF()">Azzera filtri</button>`}
+function agg(rows,key){let m={};rows.forEach(r=>{let k=key(r)||'Da classificare';m[k]=(m[k]||0)+r.preferenze});return Object.entries(m).sort((a,b)=>b[1]-a[1])}
+function renderHome(){document.getElementById('k-pref').textContent=total().toLocaleString('it-IT');
+
+---
+
+Each(r=>{let k=key(r)||'Da classificare';m[k]=(m[k]||0)+r.preferenze});return Object.entries(m).sort((a,b)=>b[1]-a[1])}
+function renderHome(){document.getElementById('k-pref').textContent=total().toLocaleString('it-IT');document.getElementById('k-comuni').textContent=new Set(GEO.map(g=>g.comune)).size.toLocaleString('it-IT');document.getElementById('k-candidati').textContent=CA
+
+---
+
+h-Object.values(correnti).filter(Boolean).length}</b><span>da classificare</span></div></div>`;barChart('provChart',p)}
+function barChart(id,arr){
+ let c=document.getElementById(id);if(!c)return;
+ let x=c.getContext('2d'),w=c.clientWidth||700,h=c.clientHeight||300;
+ /* Renderizza a risoluzione superiore alla dimensione CSS: testo e numeri molto piu nitidi anche su monitor ad al
+
+---
+
+00 13px Arial';x.fillStyle='#f2f7fb';
+   x.fillText(a[1].toLocaleString('it-IT'),Math.min(left+barW+10,w-92),y);
+ });
+}
+function renderPref(){
+  document.getElementById('prefFilters').innerHTML=filterHTML();
+  const rows=filtered();
+  const totals=agg(rows,r=>r.candidato);
+  document.getElementById('prefTable').innerHTML=totals.map((x,i)=>{
+    const c=x[0], corrente=correnti[c
+
+---
+
+ colspan="4"><div class="empty-state"><b>Nessun dato</b><span>Modifica i filtri selezionati.</span></div></td></tr>`;
+}
+function openCandidate(candidate){
+  const rows=data.filter(r=>r.candidato===candidate && (!filters.prov||r.prov===filters.prov) && (!filters.comune||r.comune===filters.comune) && (!filters.lista||r.lista===filters.lista) && (!filters.corrente||r.corrente===fi
+
+---
+
+g('it-IT')}</td></tr></tfoot></table></div></div></div></div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+function closeCandidate(){document.querySelector('.candidate-list-modal')?.remove();}
+
+function renderComuni(){document.getElementById('comuneFilters').innerHTML=filterHTML();let sums={};filtered().forEach(r=>{let k=r.prov+'|'+r.comune;sums[k]=(sums[k]||0)+r.p
+
+---
+
+djacentHTML('beforeend',html);
+}
+function closeCandidate(){document.querySelector('.candidate-list-modal')?.remove();}
+
+function renderComuni(){document.getElementById('comuneFilters').innerHTML=filterHTML();let sums={};filtered().forEach(r=>{let k=r.prov+'|'+r.comune;sums[k]=(sums[k]||0)+r.preferenze});let rows=GEO.filter(g=>(!filters.prov||g.prov===filters.prov)&&(!filters.co
+
+---
+
+}</td><td>${esc(g.senU)}</td><td><b>${(sums[g.prov+'|'+g.comune]||0).toLocaleString('it-IT')}</b></td></tr>`).join('')}
+function renderCand(){
+ const body=CANDS.map(c=>{let rs=data.filter(r=>r.candidato===c),x=rs[0],t=rs.reduce((s,r)=>s+r.preferenze,0);let provs=[...new Set(rs.map(r=>r.prov))];let tickets=provs.map(p=>ticketForCandidate(c,p)).filter(Boolean);let ticketLabel=tic
+
+---
+
+('data-ticket-id'); ticketGroups=ticketGroups.filter(t=>String(t.id)!==String(id)); saveTickets(); renderCand(); }));
+}
+function addTicketInline(){const prov=document.getElementById('tkProv')?.value||'',a=(document.getElementById('tkA')?.value||'').trim(),b=(document.getElementById('tkB')?.value||'').trim();if(!prov||!a||!b){alert('Compila Provincia, Candidato 1 e Candidato 2.'
+
+---
+
+cket esiste già.');return;}ticketGroups.push({id:'T'+Date.now(),prov,candidates:[ca,cb]});saveTickets();renderCand();}
+
+function openTicketManager(){const el=document.getElementById('ticketManagerInline');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});}
+
+function addTicket(){addTicketInline();}
+
+function removeTicket(id){ticketGroups=ticketGroups.filter(t=>t.id!==i
+
+---
+
+{const el=document.getElementById('ticketManagerInline');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});}
+
+function addTicket(){addTicketInline();}
+
+function removeTicket(id){ticketGroups=ticketGroups.filter(t=>t.id!==id);saveTickets();document.getElementById('ticketModal')?.remove();openTicketManager();}
+
+function listBars(a){let m=Math.max(...a.map(x=>x[1]),1);re
+
+---
+
+anagerInline');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});}
+
+function addTicket(){addTicketInline();}
+
+function removeTicket(id){ticketGroups=ticketGroups.filter(t=>t.id!==id);saveTickets();document.getElementById('ticketModal')?.remove();openTicketManager();}
+
+function listBars(a){let m=Math.max(...a.map(x=>x[1]),1);return a.map(x=>`<div class="list-bar"><span
+
+---
+
+ticketGroups.filter(t=>t.id!==id);saveTickets();document.getElementById('ticketModal')?.remove();openTicketManager();}
+
+function listBars(a){let m=Math.max(...a.map(x=>x[1]),1);return a.map(x=>`<div class="list-bar"><span>${esc(x[0])}</span><i><em style="width:${x[1]/m*100}%"></em></i><b>${x[1].toLocaleString('it-IT')}</b></div>`).join('')||'<span class="muted">Nessun dato</spa
+
+---
+
+1]/m*100}%"></em></i><b>${x[1].toLocaleString('it-IT')}</b></div>`).join('')||'<span class="muted">Nessun dato</span>'}
+function renderCollegi(){ if(window.renderCollegi && window.renderCollegi!==renderCollegi){ return window.renderCollegi(); } }
+function sumRows(rows){return rows.reduce((n,r)=>n+(Number(r.preferenze)||0),0)}
+function pct(n,d){return d?((n/d)*100).toFixed(1)+'%
+
+---
+
+n renderCollegi(){ if(window.renderCollegi && window.renderCollegi!==renderCollegi){ return window.renderCollegi(); } }
+function sumRows(rows){return rows.reduce((n,r)=>n+(Number(r.preferenze)||0),0)}
+function pct(n,d){return d?((n/d)*100).toFixed(1)+'%':'0.0%'}
+function groupRows(rows,key){let m={};rows.forEach(r=>{let k=key(r)||'Da classificare';m[k]=(m[k]||0)+(Number(r.prefe
+
+---
+
+i){ return window.renderCollegi(); } }
+function sumRows(rows){return rows.reduce((n,r)=>n+(Number(r.preferenze)||0),0)}
+function pct(n,d){return d?((n/d)*100).toFixed(1)+'%':'0.0%'}
+function groupRows(rows,key){let m={};rows.forEach(r=>{let k=key(r)||'Da classificare';m[k]=(m[k]||0)+(Number(r.preferenze)||0)});return Object.entries(m).sort((a,b)=>b[1]-a[1])}
+function analysisRo
+
+---
+
+return rows.reduce((n,r)=>n+(Number(r.preferenze)||0),0)}
+function pct(n,d){return d?((n/d)*100).toFixed(1)+'%':'0.0%'}
+function groupRows(rows,key){let m={};rows.forEach(r=>{let k=key(r)||'Da classificare';m[k]=(m[k]||0)+(Number(r.preferenze)||0)});return Object.entries(m).sort((a,b)=>b[1]-a[1])}
+function analysisRowClick(type,value){if(type==='camP'){filters.camP=value;filter
+
+---
+
+k=key(r)||'Da classificare';m[k]=(m[k]||0)+(Number(r.preferenze)||0)});return Object.entries(m).sort((a,b)=>b[1]-a[1])}
+function analysisRowClick(type,value){if(type==='camP'){filters.camP=value;filters.senP=''}else if(type==='senP'){filters.senP=value;filters.camP=''}else if(type==='candidato'){filters.candidato=value}render()}
+function analysisTable(rows,totalVal,type){return
+
+---
+
+else if(type==='senP'){filters.senP=value;filters.camP=''}else if(type==='candidato'){filters.candidato=value}render()}
+function analysisTable(rows,totalVal,type){return rows.slice(0,40).map((x,i)=>`<tr><td>${i+1}</td><td><button class="link-btn" onclick="analysisRowClick('${type}',${esc(JSON.stringify(x[0]))})">${esc(x[0])}</button></td><td>${x[1].toLocaleString('it-IT')}</td>
+
+---
+
+LocaleString('it-IT')}</td><td>${pct(x[1],totalVal)}</td></tr>`).join('')||'<tr><td colspan="4">Nessun dato</td></tr>'}
+function renderAnalisi(){
+ document.getElementById('analisiFilters').innerHTML=filterHTML();
+ const r=filtered(), t=sumRows(r), cand=groupRows(r,x=>x.candidato), corr=effectiveCurrentTotals(r), corrTotal=corr.reduce((s,x)=>s+x[1],0), prov=groupRows(r,x=>PROV_F
+
+---
+
+eString('it-IT')}</td><td>${x[1]?((x[2]/x[1]-1)*100).toFixed(1)+'%':'—'}</td></tr>`).join('')}</tbody></table></div>`;
+ function correnteCollegioTable(type){if(election!=='regionali')return '<div class="empty-state">Le correnti sono disponibili solo sulle Regionali 2023.</div>';const key=type==='cam'?x=>x.geo?.camP:x=>x.geo?.senP;const by=effectiveCurrentBy(r,key);const cols=[.
+
+---
+
+più forte</span></div><div><b>${topComuni[0]?esc(topComuni[0][0]):'—'}</b><span>comune più forte</span></div></div>`;
+}
+function exportAnalysisAdvanced(){const r=filtered(),out=['TIPO;NOME;PREFERENZE;PERCENTUALE'];groupRows(r,x=>x.corrente).forEach(x=>out.push(`CORRENTE;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.candidato).forEach(x
+
+---
+
+${x[1]};${pct(x[1],sumRows(r))}`));download(out.join('\n'),'analisi_avanzata_lombardia.csv','text/csv;charset=utf-8')}
+
+function renderCorrenti(){let a=effectiveCurrentTotals(data),t=a.reduce((s,x)=>s+x[1],0);document.getElementById('correntiTable').innerHTML=a.map(x=>`<tr><td><b>${esc(x[0])}</b></td><td>${new Set(data.filter(r=>(correnti[r.candidato]||'Da classificare')===x[0]
+
+---
+
+o)).size}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${t?((x[1]/t)*100).toFixed(2):'0.00'}%</td></tr>`).join('')} 
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')renderComuni();if(current==='candidati')renderCand();if(current==='collegi')renderCollegi();if(current==='analisi')renderAnalisi();if(current==='corrent
+
+---
+
+if(current==='collegi')renderCollegi();if(current==='analisi')renderAnalisi();if(current==='correnti')renderCorrenti()}
+function searchGlobal(){let q=prompt('Cerca comune, candidato o collegio:');if(!q)return;let n=norm(q),c=CANDS.find(x=>norm(x).includes(n)),g=GEO.find(x=>norm(x.comune).includes(n));if(c){filters={prov:'',comune:'',candidato:c,corrente:'',camP:'',senP:'',lista
+
+---
+
+,prov:g.prov,comune:g.comune};tab('comuni',document.querySelector('[onclick*=comuni]'))}else alert('Nessun risultato')}
+function exportCSV(){let rows=filtered(),out='PROVINCIA;COMUNE;CANDIDATO;LISTA;CORRENTE;PREFERENZE;CAMERA_P;SENATO_P\n'+rows.map(r=>[r.prov,r.comune,r.candidato,r.lista,r.corrente||'',r.preferenze,r.geo?.camP||'',r.geo?.senP||''].map(v=>`"${String(v).replace(/
+
+---
+
+eplace(/"/g,'""')}"`).join(';')).join('\n');download(out,'preferenze_lombardia_filtrate.csv','text/csv;charset=utf-8')}
+function exportAnalysis(){let a=agg(filtered(),r=>r.corrente),out='CORRENTE;PREFERENZE\n'+a.map(x=>`"${x[0]}";${x[1]}`).join('\n');download(out,'analisi_correnti_lombardia.csv','text/csv;charset=utf-8')}
+function download(t,n,m){let a=document.createElement('a
+
+---
+
+ZE\n'+a.map(x=>`"${x[0]}";${x[1]}`).join('\n');download(out,'analisi_correnti_lombardia.csv','text/csv;charset=utf-8')}
+function download(t,n,m){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click()}
+function toggleTheme(){document.body.classList.toggle('light-mode')}
+function resetCorrenti(){if(confirm('Cancellare tutte le 
+
+---
+
+oad(t,n,m){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click()}
+function toggleTheme(){document.body.classList.toggle('light-mode')}
+function resetCorrenti(){if(confirm('Cancellare tutte le correnti assegnate?')){correnti={};localStorage.removeItem('lombardia_correnti_2026');ticketGroups=[];localStorage.removeItem('lombard
+
+---
+
+RL(new Blob([t],{type:m}));a.download=n;a.click()}
+function toggleTheme(){document.body.classList.toggle('light-mode')}
+function resetCorrenti(){if(confirm('Cancellare tutte le correnti assegnate?')){correnti={};localStorage.removeItem('lombardia_correnti_2026');ticketGroups=[];localStorage.removeItem('lombardia_ticket_2026');render()}}
+render();
+</script><script>
+const EURO_RA
+
+---
+
+IA',SO:'SONDRIO',VA:'VARESE'};
+const PROV_CODE=Object.fromEntries(Object.entries(PROV_FULL).map(([k,v])=>[norm(v),k]));
+function makeGeoMap(){const m=new Map(); GEO.forEach(g=>{m.set(norm(g.prov)+'|'+norm(g.comune),g); const full=PROV_FULL[g.prov]||g.prov; m.set(norm(full)+'|'+norm(g.comune),g);}); return m;}
+geoMap=makeGeoMap();
+function setMacro(v,btn){
+  if(v!=='europee' && 
+
+---
+
+e),g); const full=PROV_FULL[g.prov]||g.prov; m.set(norm(full)+'|'+norm(g.comune),g);}); return m;}
+geoMap=makeGeoMap();
+function setMacro(v,btn){
+  if(v!=='europee' && v!=='regionali') return;
+  election=v;
+  closeComune();
+  closeCandidate();
+  setElectionData();
+  current='preferenze';
+  document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='ma
+
+---
+
+  render();
+}
+window.__dashboardSetMacro=function(v){setMacro(v);};
+window.dashboardSetMacro=function(v){setMacro(v);};
+function setElectionData(){
+  const raw=election==='europee'?EURO_RAW:RAW;
+  data=raw.map(r=>({...r,geo:geoMap.get(norm(r.prov)+'|'+norm(r.comune))||null}));
+  CANDS=[...new Set(data.map(r=>r.candidato).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));
+ 
+
+---
+
+RENZE');
+  document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+election));
+}
+function switchElection(v){setMacro(v);}
+function electionLabel(){return election==='europee'?'Europee 2024':'Regionali 2023';}
+function openComune(comune,prov){
+ const provCode=PROV_CODE[norm(prov)]||prov;
+ const provFull=PROV_FULL[provCode]||prov;
+ const mat
+
+---
+
+cro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+election));
+}
+function switchElection(v){setMacro(v);}
+function electionLabel(){return election==='europee'?'Europee 2024':'Regionali 2023';}
+function openComune(comune,prov){
+ const provCode=PROV_CODE[norm(prov)]||prov;
+ const provFull=PROV_FULL[provCode]||prov;
+ const matchRows=(arr)=>{
+   let rows=arr.filter(r=
+
+---
+
+ switchElection(v){setMacro(v);}
+function electionLabel(){return election==='europee'?'Europee 2024':'Regionali 2023';}
+function openComune(comune,prov){
+ const provCode=PROV_CODE[norm(prov)]||prov;
+ const provFull=PROV_FULL[provCode]||prov;
+ const matchRows=(arr)=>{
+   let rows=arr.filter(r=>norm(r.comune)===norm(comune) && (norm(r.prov)===norm(provCode)||norm(r.prov)===norm(p
+
+---
+
+</div></div>${renderRank(europeeRows)}</div></div></div></div>`;
+ document.body.insertAdjacentHTML('beforeend',html);
+}
+function closeComune(){document.querySelector('.modal-backdrop')?.remove();}
+function renderComuni(){
+ document.getElementById('comuneFilters').innerHTML=filterHTML();
+ let sums={}; filtered().forEach(r=>{let k=r.prov+'|'+r.comune;sums[k]=(sums[k]||0)+r.prefer
+
+---
+
+dy.insertAdjacentHTML('beforeend',html);
+}
+function closeComune(){document.querySelector('.modal-backdrop')?.remove();}
+function renderComuni(){
+ document.getElementById('comuneFilters').innerHTML=filterHTML();
+ let sums={}; filtered().forEach(r=>{let k=r.prov+'|'+r.comune;sums[k]=(sums[k]||0)+r.preferenze});
+ let rows=GEO.filter(g=>(!filters.prov||PROV_FULL[g.prov]===filters.p
+
+---
+
+ch(b=>b.addEventListener('click',e=>{e.preventDefault();window.openComuneCompare(b.dataset.comune,b.dataset.prov)}));
+}
+function renderMatrice(){
+  const prov=filters.prov||PROVS[0];
+  document.getElementById('matrixFilters').innerHTML=opts('prov','Provincia',PROVS,prov)+`<button class="btn bg2" onclick="filters.prov='';renderMatrice()">Azzera</button>`;
+  const provCode=PROV_C
+
+---
+
+h(b=>b.addEventListener('click',e=>{e.preventDefault();window.openComuneCompare(b.dataset.comune,b.dataset.prov)}));
+}
+
+function renderHome(){
+ document.getElementById('k-pref').textContent=total().toLocaleString('it-IT');
+ document.getElementById('k-comuni').textContent=new Set(data.map(r=>r.comune)).size.toLocaleString('it-IT');
+ document.getElementById('k-candidati').textCon
+
+---
+
+}%</span></div>`).join('');
+ document.querySelector('.home-toolbar-left small').textContent=electionLabel()+' · FdI';
+}
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')window.renderComuni ? window.renderComuni() : renderComuni();if(current==='matrice')window.renderMatrice ? window.renderMatrice() : renderMatrice();if(c
+
+---
+
+GIONALI · 2023';
+    if(typeof render==='function') render();
+  };
+  window.switchElection=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderColleg
+
+---
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.inner
+
+---
+
+ov)+'|'+norm(g.comune),g]));
+let data=RAW.map(r=>({...r,geo:geoMap.get(norm(r.prov)+'|'+norm(r.comune))||null}));
+const total=()=>data.reduce((s,r)=>s+r.preferenze,0);
+function applyCorrenti(){data.forEach(r=>r.corrente=correnti[r.candidato]||'');}
+function tab(id,btn){current=id;document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));document.getElementByI
+
+---
+
+openComune(comune,prov){
+ const provCode=PROV_CODE[norm(prov)]||prov;
+ const provFull=PROV_FULL[provCode]||prov;
+ const matchRows=(arr)=>{
+   let rows=arr.filter(r=>norm(r.comune)===norm(comune) && (norm(r.prov)===norm(provCode)||norm(r.prov)===norm(provFull)||norm(PROV_FULL[r.prov]||'')===norm(provFull)));
+   if(!rows.length) rows=arr.filter(r=>norm(r.comune)===norm(comune));
+
+
+---
+
+===norm(provCode)||norm(PROV_FULL[g.prov]||'')===norm(provFull))) || GEO.find(g=>norm(g.comune)===norm(comune));
+ const renderRank=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('')||'<div class="empty-state">Nessuna preferenza disponibile per questo comune</div>';
+ co
+
+---
+
+ies(Object.entries(FULL).map(([k,v])=>[N(v),k]));
+  const prov=v=>PC[N(v)]||String(v||'').trim().toUpperCase();
+  const same=(a,b)=>prov(a)===prov(b);
+  const rowsFor=(ds,c,p)=>ds.filter(r=>N(r.comune)===N(c)&&same(r.prov,p));
+  const val=(ds,c,p,cand)=>rowsFor(ds,c,p).filter(r=>r.candidato===cand).reduce((a,r)=>a+(+r.preferenze||0),0);
+  const esc0=v=>typeof esc==='function'?e
+
+---
+
+N(v),k]));
+  const prov=v=>PC[N(v)]||String(v||'').trim().toUpperCase();
+  const same=(a,b)=>prov(a)===prov(b);
+  const rowsFor=(ds,c,p)=>ds.filter(r=>N(r.comune)===N(c)&&same(r.prov,p));
+  const val=(ds,c,p,cand)=>rowsFor(ds,c,p).filter(r=>r.candidato===cand).reduce((a,r)=>a+(+r.preferenze||0),0);
+  const esc0=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>"']/g,
+
+---
+
+onst same=(a,b)=>prov(a)===prov(b);
+  const rowsFor=(ds,c,p)=>ds.filter(r=>N(r.comune)===N(c)&&same(r.prov,p));
+  const val=(ds,c,p,cand)=>rowsFor(ds,c,p).filter(r=>r.candidato===cand).reduce((a,r)=>a+(+r.preferenze||0),0);
+  const esc0=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  wi
+
+---
+
+document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const gs=territories(key,name); const prefs=filtered().filter(r=>r.geo&&r.geo[key]===name).reduce((a,r)=>a+(+r.preferenze||0),0); ret
+
+---
+
+opagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=
+
+---
+
+const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div
+
+---
+
+ctorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEa
+
+---
+
+SelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={ca
+
+---
+
+ if(eyebrow) eyebrow.textContent=v==='europee'?'DATI EUROPEE · PREFERENZE':'DATI REGIONALI · PREFERENZE';
+  render();
+}
+window.__dashboardSetMacro=function(v){setMacro(v);};
+window.dashboardSetMacro=function(v){setMacro(v);};
+function setElectionData(){
+  const raw=election==='europee'?EURO_RAW:RAW;
+  data=raw.map(r=>({...r,geo:geoMap.get(norm(r.prov)+'|'+norm(r.comune))||null}
+
+---
+
+UROPEE · PREFERENZE':'DATI REGIONALI · PREFERENZE';
+  render();
+}
+window.__dashboardSetMacro=function(v){setMacro(v);};
+window.dashboardSetMacro=function(v){setMacro(v);};
+function setElectionData(){
+  const raw=election==='europee'?EURO_RAW:RAW;
+  data=raw.map(r=>({...r,geo:geoMap.get(norm(r.prov)+'|'+norm(r.comune))||null}));
+  CANDS=[...new Set(data.map(r=>r.candidato).filte
+
+---
+
+tion'?esc(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  window.dashboardSetMacro=function(v){
+    if(v!=='europee'&&v!=='regionali') return;
+    try { if(typeof setMacro==='function') setMacro(v); else { election=v; if(typeof setElectionData==='function') setElectionData(); } }
+    catch(e){ election=v; if(typeof s
+
+---
+
+ction territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.
+
+---
+
+tn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun
+
+---
+
+ }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])|
+
+---
+
+ml);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,com
+
+---
+
+tml);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={camP:v}; localStorage.setItem('lombardia_collegi_manual_2026',JSON.stringify(store)); closeManualCollegi(); i
+
+---
+
+stringify(store)); closeManualCollegi(); if(typeof render==='function')render(); };
+
+  const oldRH=window.renderHome;
+  window.renderHome=function(){ if(typeof oldRH==='function')oldRH(); const q=document.getElementById('homeQuick'); if(q) q.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; const panel=document.getElementById('tab-analisi'); if(panel&&!document.getElementByI
