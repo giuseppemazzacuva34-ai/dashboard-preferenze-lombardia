@@ -64,8 +64,8 @@ jobs:
               "ELENCO GEO (prov|comune|istat):"
           ]
           lines += [f"{x.get('prov','')}|{x.get('comune','')}|{x.get('istat','')}" for x in sorted(geo,key=lambda z:(norm(z.get('prov')),norm(z.get('comune'))))]
-                    lines += ["", "TARGET ROWS:"]
-          for q in ["Ronago","Uggiate-Trevano","Campospinoso","Albaredo Arnoboldi","Albaredo Arnoboldi","Lirio","Montalto Pavese","Bardello","Bregano","Malgesso"]:
+          lines += ["", "TARGET ROWS:"]
+          for q in ["Ronago","Uggiate-Trevano","Campospinoso","Albaredo Arnoboldi","Lirio","Montalto Pavese","Bardello","Bregano","Malgesso"]:
               lines += [repr(x) for x in geo if norm(x.get("comune"))==norm(q)]
           Path("geo-check.txt").write_text("\n".join(lines),encoding="utf-8")
       - name: Commit inspection
