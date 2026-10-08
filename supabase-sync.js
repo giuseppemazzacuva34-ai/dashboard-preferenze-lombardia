@@ -1470,6 +1470,7 @@ function installSondaggiModule(){
     return String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9+]/g,"");
   }
   const LEGACY_PARTY_MAP=Object.fromEntries(POLLS.map(p=>[normalizePartyName(p[1]),p[0]]));
+  LEGACY_PARTY_MAP["ALLEANZAVERDISINISTRA"]="AVS";
 
   function syncFromLegacyV7(){
     try{
