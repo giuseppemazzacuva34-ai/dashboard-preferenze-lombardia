@@ -1,0 +1,32 @@
+name: Extract dashboard source
+on:
+  push:
+    paths-ignore:
+      - "debug/**"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs'), zlib=require('zlib');
+          const s=fs.readFileSync('index.html','utf8');
+          const m=s.match(/const b64="([^"]+)"/);
+          if(!m) throw new Error('b64 not found');
+          const html=zlib.gunzipSync(Buffer.from(m[1],'base64')).toString('utf8');
+          fs.mkdirSync('debug',{recursive:true});
+          fs.writeFileSync('debug/decompressed.html',html);
+          NODE
+      - name: Commit extracted source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add debug/decompressed.html
+          git commit -m "debug: estrai sorgente dashboard" || exit 0
+          git push
