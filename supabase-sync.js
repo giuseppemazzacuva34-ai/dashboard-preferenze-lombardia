@@ -1556,43 +1556,37 @@ function installSondaggiModule(){
     return best;
   }
 
+  const SPECIAL_SEATS={
+    camera:{estero:8,valleDAosta:1,trentinoAltoAdige:7,total:16,proportional:384},
+    senato:{estero:4,valleDAosta:1,trentinoAltoAdige:6,total:11,proportional:189}
+  };
+
   function nationalResults(){
     const camVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].camera)]));
     const senVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
     const bonus=bonusTarget();
-    const cam=allocate(camVals,bonus?330:400,"camera");
-    const sen=allocate(senVals,bonus?165:200,"senato");
+    const camBase=SPECIAL_SEATS.camera.proportional;
+    const senBase=SPECIAL_SEATS.senato.proportional;
+    const cam=allocate(camVals,bonus?camBase-70:camBase,"camera");
+    const sen=allocate(senVals,bonus?senBase-35:senBase,"senato");
 
     function applyBonus(res,amount,cap,chamber,winner){
       if(!bonus||!amount)return;
       const members=winner.members;
-      const total=members.reduce((s,k)=>s+(chamber==="camera"?camVals[k]:senVals[k]),0);
-      const current=members.reduce((s,k)=>s+(res.seats[k]||0),0);
+      const values=chamber==="camera"?camVals:senVals;
+      const total=members.reduce((s,k)=>s+(values[k]||0),0);
+      if(total<=0)return;
+      let current=members.reduce((s,k)=>s+(res.seats[k]||0),0);
       const add=Math.min(amount,Math.max(0,cap-current));
       if(!add)return;
       let used=0;
       members.forEach(k=>{
-        const v=chamber==="camera"?camVals[k]:senVals[k];
-        const q=Math.floor(add*(v/Math.max(total,0.0001)));
-        res.seats[k]=(res.seats[k]||0)+q;used+=q;
+        const q=Math.floor(add*(values[k]/total));
+        res.seats[k]=(res.seats[k]||0)+q;
+        used+=q;
       });
-      const best=members.slice().sort((a,b)=>(chamber==="camera"?camVals[b]:senVals[b])-(chamber==="camera"?camVals[a]:senVals[a]))[0];
+      const best=members.slice().sort((a,b)=>(values[b]||0)-(values[a]||0))[0];
       if(best)res.seats[best]=(res.seats[best]||0)+(add-used);
-
-      const targetSeats=chamber==="camera"?400:200;
-      const currentTotal=Object.values(res.seats).reduce((s,v)=>s+v,0);
-      let missing=targetSeats-currentTotal;
-      if(missing>0){
-        const others=Object.keys(res.seats).filter(k=>!members.includes(k));
-        const pool=others.reduce((s,k)=>s+(chamber==="camera"?camVals[k]:senVals[k]),0);
-        if(pool>0){
-          const extra=others.map(k=>({k,raw:missing*(chamber==="camera"?camVals[k]:senVals[k])/pool}));
-          extra.forEach(x=>{const q=Math.floor(x.raw);res.seats[x.k]=(res.seats[x.k]||0)+q;});
-          let usedExtra=extra.reduce((s,x)=>s+Math.floor(x.raw),0);
-          extra.sort((a,b)=>(b.raw-Math.floor(b.raw))-(a.raw-Math.floor(a.raw)));
-          for(let i=usedExtra;i<missing&&extra.length;i++)res.seats[extra[i-usedExtra]?.k||extra[0].k]++;
-        }
-      }
       res.bonusSeats=add;
     }
 
@@ -1600,7 +1594,11 @@ function installSondaggiModule(){
       applyBonus(cam,70,220,"camera",bonus);
       applyBonus(sen,35,113,"senato",bonus);
     }
-    return {cam,sen,bonus};
+
+    return {
+      cam,sen,bonus,
+      special:{camera:{...SPECIAL_SEATS.camera},senato:{...SPECIAL_SEATS.senato}}
+    };
   }
 
   function saveValue(slug,kind,value){
