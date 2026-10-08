@@ -573,7 +573,95 @@ setTimeout(cleanupStrayMobileText,1200);
 function installMobilePreferences(){
   const st=document.createElement("style");
   st.id="mobile-pref-v4";
-  st.textContent='@media(max-width:820px){#tab-preferenze .pref-table-wrap{display:none!important}#tab-preferenze .pref-mobile-list{display:block!important}.pref-mobile-card{background:#0c2137;border:1px solid #1e3d59;border-radius:11px;padding:11px;margin-bottom:8px}.pref-mobile-top{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:7px;align-items:start}.pref-mobile-name{background:none;border:0;color:#e8f3fb;text-align:left;font-size:12px;font-weight:900;overflow-wrap:anywhere;padding:0}.pref-mobile-total{font-size:14px;font-weight:900;white-space:nowrap}.pref-mobile-label{margin:9px 0 4px 35px;font-size:8px;color:#8da2b8;text-transform:uppercase;font-weight:800}.pref-mobile-edit{display:grid;grid-template-columns:minmax(0,1fr) 58px;gap:6px;margin-left:35px}.pref-mobile-input{width:100%;min-width:0;box-sizing:border-box;height:36px;background:#0d1826;color:#fff;border:1px solid #2a4058;border-radius:8px;padding:7px 9px;pointer-events:auto}.pref-mobile-save{width:58px!important;min-width:58px!important;height:36px!important;padding:0 5px!important}@media(max-width:420px){.pref-mobile-edit{margin-left:31px;grid-template-columns:minmax(0,1fr) 54px}.pref-mobile-save{width:54px!important;min-width:54px!important}.pref-mobile-label{margin-left:31px}}}@media(min-width:821px){.pref-mobile-list{display:none!important}}';
+  st.textContent='/*
+  MOBILE V2 — layout dedicato per smartphone.
+  Trasforma le tabelle dense in schede leggibili e impedisce
+  che la griglia desktop venga semplicemente compressa.
+*/
+@media(max-width:640px){
+  #tab-sondaggi{padding:0!important}
+  .sg-wrap{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
+  .sg-head{display:flex!important;flex-direction:column!important;gap:9px!important;margin-bottom:10px!important}
+  .sg-head h1{font-size:20px!important;line-height:1.15!important}
+  .sg-head p{font-size:10px!important;line-height:1.45!important}
+  .sg-head .sg-btn{width:100%!important}
+  .sg-law{font-size:7px!important;line-height:1.4!important;padding:8px!important}
+  .sg-layout{display:flex!important;flex-direction:column!important;gap:9px!important}
+  .sg-map-card,.sg-main .sg-card,.sg-results .sg-card,.sg-card{width:100%!important;min-width:0!important}
+  .sg-map-card{order:1!important}
+  .sg-main{order:2!important;min-width:0!important}
+  .sg-map{padding:7px!important}
+  .sg-map img{height:245px!important;width:100%!important}
+  .sg-map-caption{font-size:7px!important}
+  .sg-regions{grid-template-columns:1fr 1fr!important;gap:4px!important;max-height:220px!important}
+  .sg-regions button{font-size:7px!important;padding:7px 6px!important}
+  .sg-controls{display:flex!important;flex-direction:column!important;gap:6px!important}
+  .sg-controls>div{width:100%!important}
+  .sg-controls label{font-size:7px!important}
+  .sg-controls select{font-size:9px!important;padding:9px!important}
+  .sg-results{display:flex!important;flex-direction:column!important;gap:8px!important}
+  .sg-two{display:flex!important;flex-direction:column!important;gap:8px!important}
+  .sg-actions{display:flex!important;flex-direction:column!important;gap:6px!important}
+  .sg-actions .sg-btn{width:100%!important}
+  .sg-card-title{align-items:flex-start!important}
+  .sg-card-title b{font-size:11px!important}
+  .sg-card-title span{font-size:7px!important}
+  .sg-table-wrap{overflow:visible!important}
+  .sg-table{display:block!important;width:100%!important;font-size:9px!important}
+  .sg-table thead{display:none!important}
+  .sg-table tbody{display:block!important;width:100%!important}
+  .sg-table tbody tr{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 92px!important;
+    gap:5px 8px!important;
+    padding:8px 7px!important;
+    margin:0 0 5px!important;
+    background:#10283e!important;
+    border:1px solid #23455f!important;
+    border-radius:8px!important;
+  }
+  .sg-table tbody td{
+    display:flex!important;
+    align-items:center!important;
+    min-width:0!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+    font-size:8px!important;
+  }
+  .sg-table tbody td:first-child{
+    grid-column:1/-1!important;
+    font-size:10px!important;
+    font-weight:800!important;
+    padding-bottom:2px!important;
+    border-bottom:1px solid rgba(255,255,255,.08)!important;
+  }
+  .sg-table tbody td:nth-child(2),
+  .sg-table tbody td:nth-child(3),
+  .sg-table tbody td:nth-child(4),
+  .sg-table tbody td:nth-child(5),
+  .sg-table tbody td:nth-child(6){
+    justify-content:space-between!important;
+  }
+  .sg-table tbody td:nth-child(2)::before{content:"Camera naz."!important;color:#7f9bb0;font-size:7px!important;margin-right:5px}
+  .sg-table tbody td:nth-child(3)::before{content:"Senato naz."!important;color:#7f9bb0;font-size:7px!important;margin-right:5px}
+  .sg-table tbody td:nth-child(4)::before{content:"Senato regione"!important;color:#7f9bb0;font-size:7px!important;margin-right:5px}
+  .sg-table tbody td:nth-child(5)::before{content:"Collegio"!important;color:#7f9bb0;font-size:7px!important;margin-right:5px}
+  .sg-table tbody td:nth-child(6)::before{content:"Coalizione"!important;color:#7f9bb0;font-size:7px!important;margin-right:5px}
+  .sg-table tbody td:nth-child(n+2) input{width:82px!important;max-width:82px!important;padding:6px!important;font-size:9px!important}
+  .sg-coal{padding:8px!important}
+  .sg-members{grid-template-columns:1fr 1fr!important;gap:4px!important}
+  .sg-members label{font-size:7px!important;padding:6px!important}
+  .sg-results .sg-card{padding:9px!important}
+  .sg-results .sg-table tbody tr{
+    grid-template-columns:minmax(0,1fr) 70px!important;
+  }
+  .sg-results .sg-table tbody td:nth-child(2)::before{content:"%"!important}
+  .sg-results .sg-table tbody td:nth-child(3)::before{content:"Seggi"!important}
+  .sg-results .sg-table tbody td:nth-child(n+4){display:none!important}
+}
+
+@media(max-width:820px){#tab-preferenze .pref-table-wrap{display:none!important}#tab-preferenze .pref-mobile-list{display:block!important}.pref-mobile-card{background:#0c2137;border:1px solid #1e3d59;border-radius:11px;padding:11px;margin-bottom:8px}.pref-mobile-top{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:7px;align-items:start}.pref-mobile-name{background:none;border:0;color:#e8f3fb;text-align:left;font-size:12px;font-weight:900;overflow-wrap:anywhere;padding:0}.pref-mobile-total{font-size:14px;font-weight:900;white-space:nowrap}.pref-mobile-label{margin:9px 0 4px 35px;font-size:8px;color:#8da2b8;text-transform:uppercase;font-weight:800}.pref-mobile-edit{display:grid;grid-template-columns:minmax(0,1fr) 58px;gap:6px;margin-left:35px}.pref-mobile-input{width:100%;min-width:0;box-sizing:border-box;height:36px;background:#0d1826;color:#fff;border:1px solid #2a4058;border-radius:8px;padding:7px 9px;pointer-events:auto}.pref-mobile-save{width:58px!important;min-width:58px!important;height:36px!important;padding:0 5px!important}@media(max-width:420px){.pref-mobile-edit{margin-left:31px;grid-template-columns:minmax(0,1fr) 54px}.pref-mobile-save{width:54px!important;min-width:54px!important}.pref-mobile-label{margin-left:31px}}}@media(min-width:821px){.pref-mobile-list{display:none!important}}';
   document.head.appendChild(st);
 
   const card=document.querySelector("#tab-preferenze .pref-card");
