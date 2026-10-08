@@ -30,7 +30,8 @@ jobs:
                   hits.append("TERM="+t+" IDX="+str(i)+"\n"+src[max(0,i-3500):i+12000])
           Path("home-snippet.txt").write_text("\n====\n".join(hits) or "NESSUN MATCH",encoding="utf-8")
 
-          # Analisi GEO: elenco amministrativo usato dalla dashboard.
+          # Analisi GEO: elenco amministrativo usato dalla dashboard. 
+          # Verifica richiesta.
           gi=src.find("const GEO=")
           if gi<0: gi=src.find("GEO=[")
           if gi<0: raise SystemExit("GEO non trovato")
