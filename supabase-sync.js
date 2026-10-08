@@ -561,6 +561,55 @@ function installMobileLayout(){
 }
 
 installMobileLayout();
+installMobilePreferences();
 
 loadShared();
+
+function installMobilePreferences(){
+  const st=document.createElement("style");
+  st.id="mobile-pref-v4";
+  st.textContent='@media(max-width:820px){#tab-preferenze .pref-table-wrap{display:none!important}#tab-preferenze .pref-mobile-list{display:block!important}.pref-mobile-card{background:#0c2137;border:1px solid #1e3d59;border-radius:11px;padding:11px;margin-bottom:8px}.pref-mobile-top{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:7px;align-items:start}.pref-mobile-name{background:none;border:0;color:#e8f3fb;text-align:left;font-size:12px;font-weight:900;overflow-wrap:anywhere;padding:0}.pref-mobile-total{font-size:14px;font-weight:900;white-space:nowrap}.pref-mobile-label{margin:9px 0 4px 35px;font-size:8px;color:#8da2b8;text-transform:uppercase;font-weight:800}.pref-mobile-edit{display:grid;grid-template-columns:minmax(0,1fr) 58px;gap:6px;margin-left:35px}.pref-mobile-input{width:100%;min-width:0;box-sizing:border-box;height:36px;background:#0d1826;color:#fff;border:1px solid #2a4058;border-radius:8px;padding:7px 9px;pointer-events:auto}.pref-mobile-save{width:58px!important;min-width:58px!important;height:36px!important;padding:0 5px!important}@media(max-width:420px){.pref-mobile-edit{margin-left:31px;grid-template-columns:minmax(0,1fr) 54px}.pref-mobile-save{width:54px!important;min-width:54px!important}.pref-mobile-label{margin-left:31px}}}@media(min-width:821px){.pref-mobile-list{display:none!important}}';
+  document.head.appendChild(st);
+
+  const card=document.querySelector("#tab-preferenze .pref-card");
+  if(!card) return;
+  let list=document.getElementById("prefMobileList");
+  if(!list){
+    list=document.createElement("div");
+    list.id="prefMobileList";
+    list.className="pref-mobile-list";
+    card.appendChild(list);
+  }
+
+  const renderMobile=()=>{
+    if(!window.matchMedia("(max-width:820px)").matches) return;
+    try{
+      const totals=agg(filtered(),r=>r.candidato);
+      list.innerHTML=totals.map((x,i)=>{
+        const name=String(x[0]);
+        const val=String((correnti[name]||""));
+        return '<div class="pref-mobile-card"><div class="pref-mobile-top"><div>'+String(i+1)+'</div><button type="button" class="pref-mobile-name" data-name="'+esc(name).replace(/"/g,"&quot;")+'">'+esc(name)+'</button><div class="pref-mobile-total">'+Number(x[1]||0).toLocaleString("it-IT")+'</div></div><div class="pref-mobile-label">Corrente FdI</div><div class="pref-mobile-edit"><input type="text" class="pref-mobile-input" value="'+esc(val)+'" placeholder="Scrivi il nome della corrente"><button type="button" class="btn bg2 pref-mobile-save">Salva</button></div></div>';
+      }).join("");
+      list.querySelectorAll(".pref-mobile-card").forEach(box=>{
+        const b=box.querySelector(".pref-mobile-name");
+        const input=box.querySelector(".pref-mobile-input");
+        const save=box.querySelector(".pref-mobile-save");
+        const name=b.getAttribute("data-name")||"";
+        b.addEventListener("click",()=>typeof openCandidate==="function"&&openCandidate(name));
+        const doSave=()=>typeof saveCorrente==="function"&&saveCorrente(name,input.value);
+        save.addEventListener("click",doSave);
+        input.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();doSave();}});
+      });
+    }catch(e){console.error("Mobile preferenze",e);}
+  };
+
+  const t=document.getElementById("prefTable");
+  if(t&&typeof MutationObserver!=="undefined"){
+    let busy=false;
+    new MutationObserver(()=>{if(busy)return;busy=true;Promise.resolve().then(()=>{renderMobile();busy=false;});}).observe(t,{childList:true,subtree:true});
+  }
+  setTimeout(renderMobile,100);
+  window.addEventListener("resize",renderMobile);
+}
+
 })();
