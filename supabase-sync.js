@@ -567,6 +567,7 @@ installMobileAnalysisToolsStatic();
 cleanupStrayMobileText();
 
 loadShared();
+setTimeout(cleanupStrayMobileText,1200);
 
 
 function installMobilePreferences(){
