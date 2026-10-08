@@ -561,7 +561,148 @@ function installMobileLayout(){
 }
 
 installMobileLayout();
+
+function installMobileAnalysisTools(){
+  const style=document.createElement("style");
+  style.id="mobile-analysis-tools-v1";
+  style.textContent="@media(max-width:820px){" +
+    "#tab-analisi .mobile-analysis-tools{display:block!important}"+
+    ".mobile-analysis-tools{margin-top:12px}"+
+    ".mobile-tools-card{background:#0b2035;border:1px solid #1e3d59;border-radius:12px;padding:12px;margin-bottom:10px}"+
+    ".mobile-tools-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}"+
+    ".mobile-tools-title b{font-size:13px;color:#eaf4fb}.mobile-tools-title small{font-size:8px;color:#89a2ba}"+
+    ".mobile-correnti-list{display:grid;gap:7px}.mobile-corrente-row{display:grid;grid-template-columns:28px minmax(0,1fr);gap:7px;align-items:center;padding:8px;background:#0e2740;border:1px solid #203e59;border-radius:9px}"+
+    ".mobile-corrente-rank{font-size:10px;font-weight:900;color:#84a5bf;text-align:center}.mobile-corrente-main{min-width:0}"+
+    ".mobile-corrente-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:start}.mobile-corrente-name{font-size:11px;font-weight:900;color:#edf6fb;overflow-wrap:anywhere}.mobile-corrente-total{font-size:12px;font-weight:900;white-space:nowrap;color:#d9ecf8}"+
+    ".mobile-corrente-edit{display:grid;grid-template-columns:minmax(0,1fr) 58px;gap:6px;margin-top:6px}.mobile-corrente-input{width:100%;min-width:0;height:34px;box-sizing:border-box;background:#0b1725;color:#fff;border:1px solid #2d4860;border-radius:8px;padding:7px 9px;font-size:10px;pointer-events:auto}"+
+    ".mobile-corrente-save,.mobile-ticket-save{height:34px!important;min-width:58px!important;width:58px!important;padding:0 5px!important;font-size:9px!important}"+
+    ".mobile-ticket-grid{display:grid;grid-template-columns:1fr;gap:7px}.mobile-ticket-grid label{display:block;font-size:8px;color:#89a2ba;text-transform:uppercase;font-weight:800;margin-bottom:3px}"+
+    ".mobile-ticket-grid select{width:100%;min-width:0;box-sizing:border-box;background:#0b1725;color:#fff;border:1px solid #2d4860;border-radius:8px;padding:8px;font-size:10px}.mobile-ticket-actions{display:grid;grid-template-columns:1fr;gap:7px;margin-top:8px}.mobile-ticket-list{display:grid;gap:7px;margin-top:10px}"+
+    ".mobile-ticket-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px;background:#0e2740;border:1px solid #203e59;border-radius:9px}.mobile-ticket-info{min-width:0}.mobile-ticket-prov{font-size:8px;color:#89a2ba;text-transform:uppercase;font-weight:800;margin-bottom:3px}.mobile-ticket-cands{font-size:10px;font-weight:900;color:#edf6fb;overflow-wrap:anywhere}.mobile-ticket-value{font-size:12px;font-weight:900;color:#f1f7fb;white-space:nowrap}.mobile-ticket-delete{height:30px!important;font-size:8px!important;padding:0 8px!important;margin-top:5px}"+
+    "}@media(min-width:821px){.mobile-analysis-tools{display:none!important}}";
+
+  document.head.appendChild(style);
+
+  const getMount=()=>{
+    const tab=document.getElementById("tab-analisi");
+    if(!tab) return null;
+    let mount=tab.querySelector(".mobile-analysis-tools");
+    if(!mount){
+      mount=document.createElement("div");
+      mount.className="mobile-analysis-tools";
+      tab.appendChild(mount);
+    }
+    return mount;
+  };
+
+  const render=()=>{
+    if(!window.matchMedia("(max-width:820px)").matches) return;
+    const mount=getMount();
+    if(!mount) return;
+    try{
+      const candidates=(Array.isArray(CANDS)?CANDS:[]).map(name=>{
+        const total=(Array.isArray(data)?data:[]).reduce((sum,r)=>sum+(String(r.candidato||"")===String(name)?(Number(r.preferenze)||0):0),0);
+        return {name:String(name),total};
+      }).sort((a,b)=>b.total-a.total);
+
+      const correnteRows=candidates.map((x,i)=>{
+        const current=String(correnti[x.name]||"");
+        return "<div class=\"mobile-corrente-row\"><div class=\"mobile-corrente-rank\">"+(i+1)+"</div><div class=\"mobile-corrente-main\">"+
+          "<div class=\"mobile-corrente-head\"><div class=\"mobile-corrente-name\">"+esc(x.name)+"</div><div class=\"mobile-corrente-total\">"+x.total.toLocaleString("it-IT")+"</div></div>"+
+          "<div class=\"mobile-corrente-edit\"><input type=\"text\" class=\"mobile-corrente-input\" value=\""+esc(current)+"\" placeholder=\"Nome della corrente\"><button type=\"button\" class=\"btn bg2 mobile-corrente-save\">Salva</button></div>"+
+          "</div></div>";
+      }).join("") || "<div class=\"muted\">Nessun candidato disponibile.</div>";
+
+      const provOptions=Object.keys(PROV_FULL||{}).map(code=>"<option value=\""+esc(code)+"\">"+esc(PROV_FULL[code])+"</option>").join("");
+      const candOptions=(Array.isArray(CANDS)?CANDS:[]).map(name=>"<option value=\""+esc(name)+"\">"+esc(name)+"</option>").join("");
+
+      const ticketRows=(Array.isArray(ticketGroups)?ticketGroups:[]).map(t=>{
+        const prov=PROV_FULL[PROV_CODE[norm(t.prov)]]||t.prov;
+        const value=typeof ticketValue==="function"?ticketValue(t):0;
+        return "<div class=\"mobile-ticket-row\"><div class=\"mobile-ticket-info\"><div class=\"mobile-ticket-prov\">"+esc(prov)+"</div><div class=\"mobile-ticket-cands\">"+t.candidates.map(esc).join(" + ")+"</div>"+
+          "<button type=\"button\" class=\"btn bg2 mobile-ticket-delete\" data-mobile-ticket-id=\""+esc(t.id)+"\">Elimina ticket</button></div><div class=\"mobile-ticket-value\">"+value.toLocaleString("it-IT")+"</div></div>";
+      }).join("") || "<div class=\"muted\">Nessun ticket inserito.</div>";
+
+      mount.innerHTML=
+        "<div class=\"mobile-tools-card\"><div class=\"mobile-tools-title\"><b>Analisi delle correnti</b><small>Registra la corrente di ogni candidato</small></div><div class=\"mobile-correnti-list\">"+correnteRows+"</div></div>"+
+        "<div class=\"mobile-tools-card\"><div class=\"mobile-tools-title\"><b>Ticket</b><small>Gestione dei ticket per provincia</small></div>"+
+          "<div class=\"mobile-ticket-grid\">"+
+            "<div><label>Provincia</label><select id=\"mobileTkProv\"><option value=\"\">Seleziona provincia</option>"+provOptions+"</select></div>"+
+            "<div><label>Candidato 1</label><select id=\"mobileTkA\"><option value=\"\">Seleziona candidato</option>"+candOptions+"</select></div>"+
+            "<div><label>Candidato 2</label><select id=\"mobileTkB\"><option value=\"\">Seleziona candidato</option>"+candOptions+"</select></div>"+
+          "</div>"+
+          "<div class=\"mobile-ticket-actions\"><button type=\"button\" class=\"btn bg2\" id=\"mobileAddTicket\">AGGIUNGI TICKET</button></div>"+
+          "<div class=\"mobile-ticket-list\">"+ticketRows+"</div>"+
+        "</div>";
+
+      mount.querySelectorAll(".mobile-corrente-row").forEach(row=>{
+        const name=row.querySelector(".mobile-corrente-name")?.textContent||"";
+        const input=row.querySelector(".mobile-corrente-input");
+        const btn=row.querySelector(".mobile-corrente-save");
+        const save=()=>{
+          if(typeof saveCorrente==="function"){
+            saveCorrente(name,input?.value||"");
+            setTimeout(render,80);
+          }
+        };
+        btn?.addEventListener("click",save);
+        input?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();save();}});
+      });
+
+      document.getElementById("mobileAddTicket")?.addEventListener("click",()=>{
+        const prov=document.getElementById("mobileTkProv")?.value||"";
+        const a=document.getElementById("mobileTkA")?.value||"";
+        const b=document.getElementById("mobileTkB")?.value||"";
+        if(!prov||!a||!b){alert("Compila Provincia, Candidato 1 e Candidato 2.");return;}
+        const ca=(Array.isArray(CANDS)?CANDS:[]).find(c=>norm(c)===norm(a));
+        const cb=(Array.isArray(CANDS)?CANDS:[]).find(c=>norm(c)===norm(b));
+        if(!ca||!cb){alert("I due candidati devono essere selezionati dall’elenco.");return;}
+        if(ca===cb){alert("Seleziona due candidati diversi.");return;}
+        const exists=(Array.isArray(ticketGroups)?ticketGroups:[]).some(t=>t.prov===prov&&t.candidates.includes(ca)&&t.candidates.includes(cb));
+        if(exists){alert("Questo ticket esiste già.");return;}
+        const item={id:"T"+Date.now(),prov,candidates:[ca,cb]};
+        ticketGroups.push(item);
+        if(typeof saveTickets==="function") saveTickets();
+        if(typeof uploadTickets==="function") uploadTickets([item]).catch(err=>console.error("Supabase ticket mobile",err));
+        if(typeof refreshTicketList==="function") refreshTicketList();
+        if(typeof refreshTicketColumn==="function") refreshTicketColumn();
+        render();
+        setTimeout(render,80);
+      });
+
+      mount.querySelectorAll("[data-mobile-ticket-id]").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const id=btn.getAttribute("data-mobile-ticket-id");
+          if(typeof removeTicket==="function") removeTicket(id);
+          setTimeout(render,80);
+        });
+      });
+    }catch(e){console.error("Mobile analisi/ticket",e);}
+  };
+
+  const ensure=()=>{if(window.matchMedia("(max-width:820px)").matches)setTimeout(render,0);};
+  if(typeof MutationObserver!=="undefined"){
+    const tab=document.getElementById("tab-analisi");
+    if(tab){
+      let running=false;
+      new MutationObserver(()=>{
+        if(running)return;
+        running=true;
+        Promise.resolve().then(()=>{render();running=false;});
+      }).observe(tab,{childList:true,subtree:true});
+    }
+  }
+  document.addEventListener("click",ev=>{
+    if(ev.target?.closest?.(".side-tab")) ensure();
+    if(ev.target?.closest?.("[data-tab='analisi'],[data-target='analisi']")) ensure();
+  });
+  window.addEventListener("resize",ensure);
+  setTimeout(render,180);
+}
+
+installMobileLayout();
 installMobilePreferences();
+installMobileAnalysisTools();
 
 loadShared();
 
