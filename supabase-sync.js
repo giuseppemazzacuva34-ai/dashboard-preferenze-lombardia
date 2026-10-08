@@ -488,6 +488,74 @@ function installMobileLayout(){
 @media (min-width: 821px){
   #dashboard-mobile-fixes{display:none}
 }
+
+  @media (max-width: 820px){
+    #tab-preferenze .pref-table,
+    #tab-preferenze .pref-table tbody,
+    #tab-preferenze .pref-table tbody tr,
+    #tab-preferenze .pref-table tbody td{
+      width:100%!important;
+      max-width:100%!important;
+      min-width:0!important;
+      box-sizing:border-box!important;
+    }
+    #tab-preferenze .pref-table tbody tr{
+      grid-template-columns:28px minmax(0,1fr)!important;
+      grid-template-areas:
+        "rank candidate"
+        "rank total"
+        "rank corrente"!important;
+      overflow:hidden!important;
+    }
+    #tab-preferenze .pref-table tbody td:nth-child(1){grid-area:rank!important}
+    #tab-preferenze .pref-table tbody td:nth-child(2){grid-area:candidate!important;min-width:0!important;max-width:100%!important}
+    #tab-preferenze .pref-table tbody td:nth-child(3){grid-area:corrente!important;min-width:0!important;max-width:100%!important;width:100%!important}
+    #tab-preferenze .pref-table tbody td:nth-child(4){grid-area:total!important;min-width:0!important;max-width:100%!important;width:100%!important;text-align:left!important;font-size:14px!important}
+    #tab-preferenze .pref-table td:nth-child(3)>div{
+      width:100%!important;
+      max-width:100%!important;
+      min-width:0!important;
+      box-sizing:border-box!important;
+      display:grid!important;
+      grid-template-columns:minmax(0,1fr) 58px!important;
+      gap:6px!important;
+    }
+    #tab-preferenze .pref-table td:nth-child(3) .inline-input{
+      width:100%!important;
+      min-width:0!important;
+      max-width:100%!important;
+      box-sizing:border-box!important;
+      height:34px!important;
+    }
+    #tab-preferenze .pref-table td:nth-child(3) .btn{
+      width:58px!important;
+      min-width:58px!important;
+      max-width:58px!important;
+      padding:0 5px!important;
+      box-sizing:border-box!important;
+    }
+    #tab-preferenze .pref-table .candidate-total{
+      max-width:100%!important;
+      overflow-wrap:anywhere!important;
+      word-break:break-word!important;
+    }
+  }
+
+  @media (max-width: 420px){
+    #tab-preferenze .pref-table tbody tr{
+      grid-template-columns:25px minmax(0,1fr)!important;
+    }
+    #tab-preferenze .pref-table td:nth-child(3)>div{
+      grid-template-columns:minmax(0,1fr) 54px!important;
+      gap:5px!important;
+    }
+    #tab-preferenze .pref-table td:nth-child(3) .btn{
+      width:54px!important;
+      min-width:54px!important;
+      max-width:54px!important;
+      font-size:8px!important;
+    }
+  }
 `;
   document.head.appendChild(style);
 }
