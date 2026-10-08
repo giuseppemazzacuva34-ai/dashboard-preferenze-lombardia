@@ -681,20 +681,10 @@ function installMobileAnalysisTools(){
   };
 
   const ensure=()=>{if(window.matchMedia("(max-width:820px)").matches)setTimeout(render,0);};
-  if(typeof MutationObserver!=="undefined"){
-    const tab=document.getElementById("tab-analisi");
-    if(tab){
-      let running=false;
-      new MutationObserver(()=>{
-        if(running)return;
-        running=true;
-        Promise.resolve().then(()=>{render();running=false;});
-      }).observe(tab,{childList:true,subtree:true});
-    }
-  }
+  // Non osserviamo tutto il DOM di Analisi: il renderer modifica la propria
+  // area e un MutationObserver sul subtree causerebbe un loop continuo.
   document.addEventListener("click",ev=>{
-    if(ev.target?.closest?.(".side-tab")) ensure();
-    if(ev.target?.closest?.("[data-tab='analisi'],[data-target='analisi']")) ensure();
+    if(ev.target?.closest?.(".side-tab")) setTimeout(render,120);
   });
   window.addEventListener("resize",ensure);
   setTimeout(render,180);
