@@ -660,8 +660,11 @@ function installMobileAnalysisToolsStatic(){
     }
 
     const candidates=(Array.isArray(CANDS)?CANDS:[]).map(name=>{
-      const total=(Array.isArray(data)?data:[]).reduce((sum,r)=>
-        sum+(String(r.candidato||"")===String(name)?(Number(r.preferenze)||0):0),0);
+      const total=(Array.isArray(data)?data:[]).reduce((sum,r)=>{
+        const a=norm(r.candidato);
+        const b=norm(name);
+        return sum+(a===b?(Number(r.preferenze)||0):0);
+      },0);
       return {name:String(name),total};
     }).sort((a,b)=>b.total-a.total);
 
@@ -688,7 +691,16 @@ function installMobileAnalysisToolsStatic(){
 
     const ticketRows=(Array.isArray(ticketGroups)?ticketGroups:[]).map(t=>{
       const prov=PROV_FULL[PROV_CODE[norm(t.prov)]]||t.prov;
-      const value=typeof ticketValue==="function"?ticketValue(t):0;
+      const sums={};
+      (Array.isArray(data)?data:[]).forEach(r=>{
+        const provOk=norm(r.prov)===norm(t.prov);
+        if(!provOk) return;
+        const candidate=String(r.candidato||"");
+        if(!t.candidates.some(c=>norm(c)===norm(candidate))) return;
+        const key=t.candidates.find(c=>norm(c)===norm(candidate))||candidate;
+        sums[key]=(sums[key]||0)+(Number(r.preferenze)||0);
+      });
+      const value=Math.max(0,...t.candidates.map(c=>Number(sums[c]||0)));
       return '<div class="mobile-static-ticket">'+
         '<div><div class="mobile-static-ticket-prov">'+esc(prov)+'</div>'+
         '<div class="mobile-static-ticket-cands">'+t.candidates.map(esc).join(" + ")+'</div>'+
