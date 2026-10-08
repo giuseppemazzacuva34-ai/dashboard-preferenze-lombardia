@@ -1510,3 +1510,13 @@ VA|Venegono Superiore|12137
 VA|Vergiate|12138
 VA|Viggiù|12139
 VA|Vizzola Ticino|12140
+
+TARGET ROWS:
+{'comune': 'Ronago', 'prov': 'CO', 'istat': '13199', 'camP': 'Lombardia 2 - P02', 'camU': 'Lombardia 2 - U03', 'senP': 'Lombardia - P01', 'senU': 'Lombardia - U02'}
+{'comune': 'Uggiate-Trevano', 'prov': 'CO', 'istat': '13228', 'camP': 'Lombardia 2 - P02', 'camU': 'Lombardia 2 - U03', 'senP': 'Lombardia - P01', 'senU': 'Lombardia - U02'}
+{'comune': 'Campospinoso', 'prov': 'PV', 'istat': '18026', 'camP': 'Lombardia 4 - P01', 'camU': 'Lombardia 4 - U01', 'senP': 'Lombardia - P02', 'senU': 'Lombardia - U10'}
+{'comune': 'Lirio', 'prov': 'PV', 'istat': '18082', 'camP': 'Lombardia 4 - P01', 'camU': 'Lombardia 4 - U01', 'senP': 'Lombardia - P02', 'senU': 'Lombardia - U10'}
+{'comune': 'Montalto Pavese', 'prov': 'PV', 'istat': '18094', 'camP': 'Lombardia 4 - P01', 'camU': 'Lombardia 4 - U01', 'senP': 'Lombardia - P02', 'senU': 'Lombardia - U10'}
+{'comune': 'Bardello', 'prov': 'VA', 'istat': '12009', 'camP': 'Lombardia 2 - P01', 'camU': 'Lombardia 2 - U01', 'senP': 'Lombardia - P01', 'senU': 'Lombardia - U01'}
+{'comune': 'Bregano', 'prov': 'VA', 'istat': '12018', 'camP': 'Lombardia 2 - P01', 'camU': 'Lombardia 2 - U01', 'senP': 'Lombardia - P01', 'senU': 'Lombardia - U01'}
+{'comune': 'Malgesso', 'prov': 'VA', 'istat': '12095', 'camP': 'Lombardia 2 - P01', 'camU': 'Lombardia 2 - U01', 'senP': 'Lombardia - P01', 'senU': 'Lombardia - U01'}
