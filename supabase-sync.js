@@ -798,4 +798,147 @@ function cleanupStrayMobileText(){
 }
 
 
+function installAnalysisCompareFix(){
+  const style=document.createElement("style");
+  style.id="analysis-compare-fix-v1";
+  style.textContent=
+    "#tab-analisi #analisiCandidateCompare{color:#eaf4fb!important;background:transparent!important}" +
+    "#tab-analisi .analysis-c2{background:#0b2137;border:1px solid #24455f;border-radius:10px;padding:12px}" +
+    "#tab-analisi .analysis-c2-controls{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:10px}" +
+    "#tab-analisi .analysis-c2-field{min-width:0}" +
+    "#tab-analisi .analysis-c2-field label{display:block;margin-bottom:4px;font-size:8px;text-transform:uppercase;font-weight:900;color:#86a1b8}" +
+    "#tab-analisi .analysis-c2-field select{width:100%;box-sizing:border-box;background:#091827!important;color:#eff7fb!important;border:1px solid #2a4861!important;border-radius:8px;padding:9px 10px;font-size:10px!important;outline:none!important}" +
+    "#tab-analisi .analysis-c2-field select:focus{border-color:#4b8ebd!important;box-shadow:0 0 0 2px #2a6e9d33!important}" +
+    "#tab-analisi .analysis-c2-main{display:grid;grid-template-columns:1fr 40px 1fr;gap:8px;align-items:stretch}" +
+    "#tab-analisi .analysis-c2-player{background:#0e2942;border:1px solid #28506c;border-radius:9px;padding:10px;min-width:0}" +
+    "#tab-analisi .analysis-c2-player small{display:block;font-size:7px;color:#8aa6bb;text-transform:uppercase;font-weight:800}" +
+    "#tab-analisi .analysis-c2-player strong{display:block;margin-top:4px;font-size:11px;color:#eef7fb;overflow-wrap:anywhere}" +
+    "#tab-analisi .analysis-c2-player b{display:block;margin-top:7px;font-size:22px;color:#fff}" +
+    "#tab-analisi .analysis-c2-player span{display:block;margin-top:2px;font-size:8px;color:#93aec1}" +
+    "#tab-analisi .analysis-c2-vs{display:flex;align-items:center;justify-content:center;color:#7f9bb0;font-weight:900;font-size:10px}" +
+    "#tab-analisi .analysis-c2-delta{margin-top:8px;padding:9px;border-radius:8px;background:#102a41;border:1px solid #24475f;font-size:9px;color:#a8bfd0}" +
+    "#tab-analisi .analysis-c2-delta b{color:#fff;font-size:12px}" +
+    "#tab-analisi .analysis-c2-note{margin-top:8px;font-size:8px;line-height:1.45;color:#8fa9bc}" +
+    "#tab-analisi #analisiInsight{overflow:visible!important}" +
+    "#tab-analisi .analysis-s2{display:grid;grid-template-columns:1fr 1fr;gap:7px}" +
+    "#tab-analisi .analysis-s2-item{background:#0e2942;border:1px solid #28506c;border-radius:9px;padding:9px;min-width:0}" +
+    "#tab-analisi .analysis-s2-item small{display:block;font-size:7px;color:#7f9bb0;text-transform:uppercase;font-weight:900}" +
+    "#tab-analisi .analysis-s2-item b{display:block;margin-top:4px;font-size:10px;color:#eff7fb;overflow-wrap:anywhere;line-height:1.25}" +
+    "#tab-analisi .analysis-s2-item span{display:block;margin-top:4px;font-size:8px;color:#94adbf;line-height:1.4}" +
+    "@media(max-width:820px){#tab-analisi .analysis-c2-controls{grid-template-columns:1fr;gap:7px}#tab-analisi .analysis-c2-main{grid-template-columns:1fr;gap:7px}#tab-analisi .analysis-c2-vs{height:18px}#tab-analisi .analysis-s2{grid-template-columns:1fr 1fr;gap:6px}}" +
+    "@media(max-width:420px){#tab-analisi .analysis-s2{grid-template-columns:1fr}}" ;
+  document.head.appendChild(style);
+
+  const fmt=n=>Number(n||0).toLocaleString("it-IT");
+  const pct2=(n,d)=>d?((Number(n||0)/Number(d))*100).toFixed(1)+"%":"0.0%";
+
+  function group(rows,key){
+    const m={};
+    (Array.isArray(rows)?rows:[]).forEach(r=>{
+      const k=String(key(r)||"").trim();
+      if(!k) return;
+      m[k]=(m[k]||0)+(Number(r.preferenze)||0);
+    });
+    return Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  }
+  function uniqueCandidates(rows){
+    return group(rows,r=>r.candidato).map(x=>x[0]);
+  }
+
+  const state={a:"",b:""};
+
+  function enhance(){
+    try{
+      const compare=document.getElementById("analisiCandidateCompare");
+      const insight=document.getElementById("analisiInsight");
+      if(!compare&&!insight)return;
+
+      const rows=typeof filtered==="function"?filtered():[];
+      const candidates=uniqueCandidates(rows);
+      if(candidates.length<2){
+        if(compare) compare.innerHTML='<div class="analysis-c2"><div class="analysis-c2-note">Servono almeno due candidati nel perimetro selezionato per effettuare il confronto.</div></div>';
+      }else{
+        if(!candidates.includes(state.a)) state.a=candidates[0];
+        if(!candidates.includes(state.b)||state.b===state.a) state.b=candidates[1]||candidates[0];
+
+        const list=candidates.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join("");
+        const aRows=rows.filter(r=>String(r.candidato||"")===state.a);
+        const bRows=rows.filter(r=>String(r.candidato||"")===state.b);
+        const aTotal=aRows.reduce((n,r)=>n+(Number(r.preferenze)||0),0);
+        const bTotal=bRows.reduce((n,r)=>n+(Number(r.preferenze)||0),0);
+        const total=rows.reduce((n,r)=>n+(Number(r.preferenze)||0),0);
+        const d=aTotal-bTotal;
+
+        compare.innerHTML=
+          '<div class="analysis-c2">'+
+          '<div class="analysis-c2-controls">'+
+            '<div class="analysis-c2-field"><label>Candidato A</label><select id="analysisCompareA">'+list+'</select></div>'+
+            '<div class="analysis-c2-field"><label>Candidato B</label><select id="analysisCompareB">'+list+'</select></div>'+
+            '<button type="button" class="btn bg2" id="analysisCompareApply">CONFRONTA</button>'+
+          '</div>'+
+          '<div class="analysis-c2-main">'+
+            '<div class="analysis-c2-player"><small>Candidato A</small><strong>'+esc(state.a)+'</strong><b>'+fmt(aTotal)+'</b><span>'+pct2(aTotal,total)+' delle preferenze nel filtro</span></div>'+
+            '<div class="analysis-c2-vs">VS</div>'+
+            '<div class="analysis-c2-player"><small>Candidato B</small><strong>'+esc(state.b)+'</strong><b>'+fmt(bTotal)+'</b><span>'+pct2(bTotal,total)+' delle preferenze nel filtro</span></div>'+
+          '</div>'+
+          '<div class="analysis-c2-delta">Distacco: <b>'+(d>=0?"+":"")+fmt(d)+'</b> preferenze</div>'+
+          '<div class="analysis-c2-note">Il confronto usa esclusivamente il perimetro attualmente filtrato. Cliccando CONFRONTA il confronto resta indipendente dagli altri filtri.</div>'+
+          '</div>';
+
+        const sa=document.getElementById("analysisCompareA");
+        const sb=document.getElementById("analysisCompareB");
+        if(sa)sa.value=state.a;
+        if(sb)sb.value=state.b;
+        document.getElementById("analysisCompareApply")?.addEventListener("click",()=>{
+          state.a=sa?.value||state.a;
+          state.b=sb?.value||state.b;
+          enhance();
+        });
+      }
+
+      if(insight){
+        const total=rows.reduce((n,r)=>n+(Number(r.preferenze)||0),0);
+        const prov=group(rows,r=>r.prov);
+        const cand=group(rows,r=>r.candidato);
+        const corr=typeof effectiveCurrentTotals==="function"?effectiveCurrentTotals(rows):[];
+        const cam=group(rows,r=>r.geo?.camP);
+        const sen=group(rows,r=>r.geo?.senP);
+        const comuni=group(rows,r=>r.comune);
+
+        const items=[
+          ["Provincia dominante",prov[0]?((typeof PROV_FULL==="object"?PROV_FULL[PROV_CODE[norm(prov[0][0])]]||prov[0][0]:prov[0][0])):"—",
+           prov[0]?fmt(prov[0][1])+" preferenze · "+pct2(prov[0][1],total):"Nessun dato"],
+          ["Candidato leader",cand[0]?cand[0][0]:"—",cand[0]?fmt(cand[0][1])+" preferenze · "+pct2(cand[0][1],total):"Nessun dato"],
+          ["Corrente più forte",election==="regionali"&&corr[0]?corr[0][0]:"—",
+           election==="regionali"&&corr[0]?fmt(corr[0][1])+" preferenze · "+pct2(corr[0][1],total):"Disponibile per le Regionali"],
+          ["Camera più forte",cam[0]?cam[0][0]:"—",cam[0]?fmt(cam[0][1])+" preferenze · "+pct2(cam[0][1],total):"Nessun dato"],
+          ["Senato più forte",sen[0]?sen[0][0]:"—",sen[0]?fmt(sen[0][1])+" preferenze · "+pct2(sen[0][1],total):"Nessun dato"],
+          ["Comune più forte",comuni[0]?comuni[0][0]:"—",comuni[0]?fmt(comuni[0][1])+" preferenze · "+pct2(comuni[0][1],total):"Nessun dato"]
+        ];
+
+        insight.innerHTML='<div class="analysis-s2">'+items.map(x=>
+          '<div class="analysis-s2-item"><small>'+esc(x[0])+'</small><b>'+esc(x[1])+'</b><span>'+esc(x[2])+'</span></div>'
+        ).join("")+'</div>';
+      }
+    }catch(err){
+      console.error("Fix confronto/lettura strategica",err);
+    }
+  }
+
+  const base=window.renderAnalisi;
+  if(typeof base==="function" && !base.__analysisWrapped){
+    const wrapped=function(){
+      const ret=base.apply(this,arguments);
+      setTimeout(enhance,0);
+      return ret;
+    };
+    wrapped.__analysisWrapped=true;
+    window.renderAnalisi=wrapped;
+  }
+  setTimeout(enhance,250);
+  setTimeout(enhance,900);
+}
+installAnalysisCompareFix();
+
+
 })();
