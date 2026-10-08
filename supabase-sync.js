@@ -1846,3 +1846,86 @@ installSondaggiModule();
 
 
 })();
+
+/* ===== FIX HOME EUROPEE / REGIONALI ===== */
+(function(){
+  function homeDatasetComuneCount(){
+    const rows=Array.isArray(window.data)?window.data:(typeof data!=="undefined"?data:[]);
+    const normalize=(v)=>String(v??"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toUpperCase().replace(/\\s+/g," ").trim();
+    const seen=new Set();
+    rows.forEach(r=>seen.add(normalize(r.prov)+"|"+normalize(r.comune)));
+    return seen.size;
+  }
+
+  function refreshHomeForElection(){
+    try{
+      const label=(typeof election!=="undefined"&&election==="europee")
+        ?"Europee 2024 · FdI"
+        :"Regionali 2023 · FdI";
+
+      document.querySelectorAll('[id="homeElectionLabel"]').forEach(el=>{el.textContent=label});
+
+      const kComuni=document.getElementById("k-comuni");
+      if(kComuni)kComuni.textContent=homeDatasetComuneCount().toLocaleString("it-IT");
+
+      const currentCandidates=Array.isArray(window.CANDS)
+        ?window.CANDS
+        :(typeof CANDS!=="undefined"?CANDS:[]);
+      const kCand=document.getElementById("k-candidati");
+      if(kCand)kCand.textContent=currentCandidates.length.toLocaleString("it-IT");
+
+      const corrMap=(typeof correnti!=="undefined"&&correnti&&typeof correnti==="object")?correnti:{};
+      const assigned=currentCandidates.filter(c=>String(corrMap[c]||"").trim()).length;
+      const kCorr=document.getElementById("k-correnti");
+      if(kCorr)kCorr.textContent=assigned.toLocaleString("it-IT");
+
+      const quick=document.getElementById("homeQuick");
+      if(quick){
+        quick.querySelectorAll(".quick-item").forEach((item,idx)=>{
+          if(idx===0){
+            const small=item.querySelector("small");
+            if(small)small.textContent=homeDatasetComuneCount().toLocaleString("it-IT")+" comuni nel dataset";
+          }
+          if(idx===3){
+            const small=item.querySelector("small");
+            if(small)small.textContent="Europee + Regionali";
+            const em=item.querySelector("em");
+            if(em)em.textContent=label.replace(" · FdI","");
+          }
+        });
+      }
+    }catch(err){console.error("Home election refresh",err)}
+  }
+
+  const originalMacro=window.dashboardSetMacro;
+  window.dashboardSetMacro=function(v){
+    if(v!=="europee"&&v!=="regionali")return;
+    try{
+      if(typeof election!=="undefined")election=v;
+      if(typeof setElectionData==="function")setElectionData();
+      if(typeof current!=="undefined")current="home";
+      document.querySelectorAll(".macro-tab").forEach(x=>x.classList.toggle("active",x.id==="macro-"+v));
+      document.querySelectorAll(".side-tab,.side-home").forEach(x=>x.classList.remove("active"));
+      document.querySelector(".side-home")?.classList.add("active");
+      if(typeof render==="function")render();
+      refreshHomeForElection();
+    }catch(err){
+      console.error("Cambio macro Home",err);
+      if(typeof originalMacro==="function")originalMacro(v);
+      refreshHomeForElection();
+    }
+  };
+  window.switchElection=window.dashboardSetMacro;
+  window.refreshHomeForElection=refreshHomeForElection;
+
+  const originalRenderHome=window.renderHome;
+  if(typeof originalRenderHome==="function"){
+    window.renderHome=function(){
+      originalRenderHome();
+      refreshHomeForElection();
+    };
+  }
+
+  setTimeout(refreshHomeForElection,0);
+})();
+
