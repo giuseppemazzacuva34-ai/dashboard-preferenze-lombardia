@@ -33,15 +33,19 @@ jobs:
           }
           fs.writeFileSync('debug/excerpts.txt',out);
           
-          const buttons=[...html.matchAll(/<button\\b[^>]*>([\\s\\S]*?)<\\/button>/gi)].map(m=>m[1].replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim()).filter(Boolean);
-          const funcs=[...html.matchAll(/(?:async\\s+)?function\\s+([A-Za-z0-9_$]+)/g)].map(m=>m[1]);
-          fs.writeFileSync('debug/buttons.txt',[...new Set(buttons)].join("\\n"));
-          fs.writeFileSync('debug/functions.txt',[...new Set(funcs)].join("\\n"));
-          NODE
+          const lines=html.split(/\r?\n/);
+          const hits=[];
+          for(let i=0;i<lines.length;i++){
+            const low=lines[i].toLowerCase();
+            if(low.includes('ticket')||low.includes('aggiungi')||low.includes('corrente')||low.includes('salva')){
+              hits.push('\\n===== LINE '+(i+1)+' =====\\n'+lines.slice(Math.max(0,i-12),Math.min(lines.length,i+13)).join('\\n'));
+            }
+          }
+          fs.writeFileSync('debug/key-lines.txt',hits.slice(0,120).join('\\n'));
       - name: Commit extracted source
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add debug/decompressed.html debug/excerpts.txt
+          git add debug/decompressed.html debug/excerpts.txt debug/key-lines.txt
           git commit -m "debug: estrai sorgente dashboard" || exit 0
           git push
