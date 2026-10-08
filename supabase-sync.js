@@ -1767,10 +1767,12 @@ function installSondaggiModule(){
       cam.premiumSeats=70;
       cam.bonusSeats=70;
 
-      // Senate: 189 proportional seats with the winner capped at 78 ordinary
-      // seats, plus 35 premium seats. In this national simulator the regional
-      // compensation is represented by a national largest-remainder redistribution.
-      const baseSen=allocate(senVals,189,"senato");
+      // Senate: 154 ordinary proportional seats plus 35 premium seats.
+      // The winner is capped at 78 ordinary seats, so the final winner maximum
+      // is 78 + 35 = 113. The regional compensation is represented here by
+      // a national largest-remainder redistribution because the UI stores one
+      // editable regional poll at a time.
+      const baseSen=allocate(senVals,154,"senato");
       const winnerSen=senPlan.units.find(u=>u.id===winnerId);
       let winnerOrd=0;
       if(winnerSen)winnerOrd=(winnerSen.members||[]).reduce((sum,k)=>sum+(baseSen.seats[k]||0),0);
