@@ -1,0 +1,48 @@
+name: Inspect dashboard calculations
+
+on:
+  push:
+    paths:
+      - 'index.html'
+      - '.github/workflows/inspect-dashboard.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode and extract targeted code
+        run: |
+          python - <<'PY'
+          import base64, gzip, re
+          html=open("index.html","r",encoding="utf-8").read()
+          m=re.search(r'const b64="([^"]+)"',html)
+          text=gzip.decompress(base64.b64decode(m.group(1))).decode("utf-8")
+          needles=["seggi","special","premio","scenario","riparto","collegio","coalizione","collegi","42","maggioranza"]
+          out=[]
+          low=text.lower()
+          for needle in needles:
+              start=0
+              count=0
+              while True:
+                  i=low.find(needle.lower(),start)
+                  if i<0 or count>=120: break
+                  a=max(0,i-1200); b=min(len(text),i+2600)
+                  chunk=text[a:b]
+                  if chunk not in out:
+                      out.append(f"### {needle} @ {i}\n{chunk}")
+                  start=i+len(needle); count+=1
+          open("calculation-inspection.txt","w",encoding="utf-8").write("\n\n===== =====\n\n".join(out))
+          print("inspection chunks",len(out))
+          PY
+      - name: Commit inspection
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add calculation-inspection.txt
+          git diff --cached --quiet && exit 0
+          git commit -m "Inspect dashboard calculation logic"
+          git push
