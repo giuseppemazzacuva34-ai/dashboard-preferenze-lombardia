@@ -1,4 +1,4 @@
-name: Inspect dashboard calculations
+name: Inspect dashboard functions
 
 on:
   push:
@@ -14,42 +14,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Extract Sondaggi code
+      - name: Extract function map
         run: |
           python - <<'PY'
           import base64,gzip,re
           html=open("index.html","r",encoding="utf-8").read()
           m=re.search(r'const b64="([^"]+)"',html)
           src=gzip.decompress(base64.b64decode(m.group(1))).decode("utf-8")
-          low=src.lower()
-          terms=["sondaggi","premio","seggi","scenario","simulazione","riparto","capolista","coalizione","quota","uninominale","plurinominale","42"]
           out=[]
-          for t in terms:
-              start=0; n=0
-              while n<25:
-                  i=low.find(t,start)
-                  if i<0: break
-                  out.append(f"## TERM {t} @ {i}\n"+src[max(0,i-2500):min(len(src),i+7000)])
-                  start=i+len(t); n+=1
-          # include function headers
-          for m0 in list(re.finditer(r'function\\s+([A-Za-z0-9_$]+)\\s*\\([^)]*\\)\\s*\\{',src))[:]:
-              i=m0.start()
-              window=src[max(0,i-3000):min(len(src),i+9000)].lower()
-              if any(t in window for t in ["sondaggi","premio","seggi","scenario","simulazione","riparto","capolista","coalizione"]):
-                  out.append("## FUNCTION "+m0.group(1)+"\n"+src[max(0,i-1500):min(len(src),i+12000)])
-          seen=[]; uniq=[]
+          for pat in [
+              r'function\s+[A-Za-z0-9_$]+\s*\([^)]*\)',
+              r'(?:window\.)?[A-Za-z0-9_$]+\s*=\s*(?:async\s*)?\([^)]*\)\s*=>',
+              r'(?:window\.)?[A-Za-z0-9_$]+\s*=\s*function\s*\([^)]*\)'
+          ]:
+              for m0 in re.finditer(pat,src):
+                  i=m0.start()
+                  out.append(src[max(0,i-120):min(len(src),i+260)])
+          seen=set(); uniq=[]
           for x in out:
-              if x not in seen: seen.append(x); uniq.append(x)
-          text="\n\n===== =====\n\n".join(uniq)
-          if len(text)>120000: text=text[:120000]
-          open("target-code.txt","w",encoding="utf-8").write(text)
-          print("target chars",len(text))
+              if x not in seen: seen.add(x); uniq.append(x)
+          text="\n\n---\n\n".join(uniq)
+          open("function-map.txt","w",encoding="utf-8").write(text)
+          print("functions",len(uniq),"chars",len(text))
           PY
-      - name: Commit target code
+      - name: Commit function map
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add target-code.txt
+          git add function-map.txt
           git diff --cached --quiet && exit 0
-          git commit -m "Extract Sondaggi seat calculation code"
+          git commit -m "Map dashboard calculation functions"
           git push
