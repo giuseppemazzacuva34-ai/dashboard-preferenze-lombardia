@@ -46,6 +46,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add debug/decompressed.html debug/excerpts.txt debug/key-lines.txt
+          git add debug/decompressed.html debug/excerpts.txt debug/key-lines.txt debug/summary.txt
           git commit -m "debug: estrai sorgente dashboard" || exit 0
           git push
