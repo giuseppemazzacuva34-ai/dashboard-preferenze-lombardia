@@ -29,11 +29,46 @@ jobs:
               if i>=0:
                   hits.append("TERM="+t+" IDX="+str(i)+"\n"+src[max(0,i-3500):i+12000])
           Path("home-snippet.txt").write_text("\n====\n".join(hits) or "NESSUN MATCH",encoding="utf-8")
+
+          # Analisi GEO: elenco amministrativo usato dalla dashboard.
+          gi=src.find("const GEO=")
+          if gi<0: gi=src.find("GEO=[")
+          if gi<0: raise SystemExit("GEO non trovato")
+          start=src.find("[",gi)
+          end=src.find("];",start)
+          if start<0 or end<0: raise SystemExit("array GEO non trovato")
+          # Il dataset è JavaScript valido: isola l'array e prova a valutarlo.
+          import json
+          arrtxt=src[start:end+1]
+          try:
+              geo=json.loads(arrtxt)
+          except Exception:
+              # normalizzazione minima per eventuali apici JS
+              import ast
+              geo=ast.literal_eval(arrtxt.replace("null","None").replace("true","True").replace("false","False"))
+          from collections import Counter
+          def norm(v):
+              import unicodedata,re
+              return re.sub(r"\\s+"," ",unicodedata.normalize("NFD",str(v or "")).encode("ascii","ignore").decode()).upper().strip()
+          by_istat=Counter(str(x.get("istat","")) for x in geo)
+          by_name=Counter((norm(x.get("prov")),norm(x.get("comune"))) for x in geo)
+          dup_istat=[(k,v) for k,v in by_istat.items() if k and v>1]
+          dup_name=[(k,v) for k,v in by_name.items() if k and v>1]
+          lines=[
+              "GEO_LEN="+str(len(geo)),
+              "UNIQUE_ISTAT="+str(len({str(x.get('istat','')) for x in geo if x.get('istat')})),
+              "DUP_ISTAT="+repr(dup_istat),
+              "DUP_NAME="+repr(dup_name),
+              "",
+              "ELENCO GEO (prov|comune|istat):"
+          ]
+          lines += [f"{x.get('prov','')}|{x.get('comune','')}|{x.get('istat','')}" for x in sorted(geo,key=lambda z:(norm(z.get('prov')),norm(z.get('comune'))))]
+          Path("geo-check.txt").write_text("\n".join(lines),encoding="utf-8")
       - name: Commit inspection
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add home-snippet.txt
+          git add home-snippet.txt geo-check.txt
           git commit -m "Inspect home logic" || exit 0
           git push
