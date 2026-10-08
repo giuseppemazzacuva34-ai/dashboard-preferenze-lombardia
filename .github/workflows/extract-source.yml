@@ -32,6 +32,11 @@ jobs:
             }
           }
           fs.writeFileSync('debug/excerpts.txt',out);
+          
+          const buttons=[...html.matchAll(/<button\\b[^>]*>([\\s\\S]*?)<\\/button>/gi)].map(m=>m[1].replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim()).filter(Boolean);
+          const funcs=[...html.matchAll(/(?:async\\s+)?function\\s+([A-Za-z0-9_$]+)/g)].map(m=>m[1]);
+          fs.writeFileSync('debug/buttons.txt',[...new Set(buttons)].join("\\n"));
+          fs.writeFileSync('debug/functions.txt',[...new Set(funcs)].join("\\n"));
           NODE
       - name: Commit extracted source
         run: |
