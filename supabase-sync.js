@@ -1404,6 +1404,7 @@ function installSondaggiModule(){
       parties:{},
       regionalSenate:{},
       regionalCustom:{},
+      meta:{legacyBridgeInitialized:false},
       collegeValues:{camera:{},senato:{}},
       coalitions:defaultCoalitions(),
       coalitionPresetVersion:COALITION_PRESET_VERSION
@@ -1426,6 +1427,7 @@ function installSondaggiModule(){
       base.parties={...freshState().parties,...(saved.parties||{})};
       base.regionalSenate=saved.regionalSenate&&typeof saved.regionalSenate==="object"?saved.regionalSenate:{};
       if(!base.regionalSenate || typeof base.regionalSenate!=="object")base.regionalSenate={};
+      base.meta=saved.meta&&typeof saved.meta==="object"?saved.meta:{legacyBridgeInitialized:false};
       base.regionalCustom=saved.regionalCustom&&typeof saved.regionalCustom==="object"?saved.regionalCustom:{};
       [...SENATE_PROP_REGIONS,"Valle d'Aosta","Trentino-Alto Adige/Südtirol"].forEach(region=>{
         base.regionalSenate[region]=base.regionalSenate[region]&&typeof base.regionalSenate[region]==="object"
@@ -1499,24 +1501,64 @@ function installSondaggiModule(){
         : [];
       if(mappedCoalitions.length)S.coalitions=mappedCoalitions;
 
+      const firstBridge=!S.meta?.legacyBridgeInitialized;
+      const beforeRegions={};
+      SENATE_PROP_REGIONS.forEach(region=>{beforeRegions[region]={...(S.regionalSenate[region]||{})};});
+
+      // Al primo allineamento partiamo da un legame pulito: tutte le regioni
+      // ereditano il nazionale. Da quel momento una regione diventa
+      // PERSONALIZZATA solo quando viene modificata esplicitamente o aggiornata
+      // dal vecchio modulo territoriale.
       const legacyRegions=legacy.circVotes?.senato||{};
       SENATE_PROP_REGIONS.forEach(region=>{
         const source=legacyRegions[region];
+        const currentBefore=beforeRegions[region]||{};
+        let sourceChanged=false;
         if(source&&typeof source==="object"){
-          S.regionalSenate[region]??={};
-          let differs=false;
           Object.keys(S.parties).forEach(k=>{
             const legacyName=POLLS.find(p=>p[0]===k)?.[1];
             if(legacyName&&source[legacyName]!=null){
               const value=num(source[legacyName]);
-              S.regionalSenate[region][k]=value;
-              if(Math.abs(value-num(S.parties[k].senate))>0.0001)differs=true;
+              if(Math.abs(value-num(currentBefore[k]??S.parties[k].senate))>0.0001)sourceChanged=true;
             }
           });
-          S.regionalCustom[region]=differs;
-          if(!differs)S.regionalSenate[region]={...Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]))};
+        }
+
+        if(firstBridge){
+          S.regionalCustom[region]=false;
+          S.regionalSenate[region]=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
+        }else if(S.regionalCustom[region]){
+          // Una regione già personalizzata resta indipendente dal nazionale.
+          // Se l'utente ha modificato quel territorio dal vecchio modulo v7,
+          // importiamo anche il nuovo valore.
+          if(sourceChanged&&source&&typeof source==="object"){
+            Object.keys(S.parties).forEach(k=>{
+              const legacyName=POLLS.find(p=>p[0]===k)?.[1];
+              if(legacyName&&source[legacyName]!=null)S.regionalSenate[region][k]=num(source[legacyName]);
+            });
+          }
+        }else{
+          // Regione collegata al nazionale: segue automaticamente il nuovo
+          // sondaggio nazionale e ignora vecchi valori regionali rimasti indietro.
+          S.regionalSenate[region]=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
+          if(sourceChanged&&source&&typeof source==="object"){
+            // Una modifica effettiva fatta nel vecchio modulo rende la regione
+            // indipendente dal nazionale.
+            const looksUserEdited=Object.keys(S.parties).some(k=>{
+              const legacyName=POLLS.find(p=>p[0]===k)?.[1];
+              return legacyName&&source[legacyName]!=null&&Math.abs(num(source[legacyName])-num(S.parties[k].senate))>0.0001;
+            });
+            if(looksUserEdited){
+              S.regionalCustom[region]=true;
+              Object.keys(S.parties).forEach(k=>{
+                const legacyName=POLLS.find(p=>p[0]===k)?.[1];
+                if(legacyName&&source[legacyName]!=null)S.regionalSenate[region][k]=num(source[legacyName]);
+              });
+            }
+          }
         }
       });
+      S.meta.legacyBridgeInitialized=true;
       return true;
     }catch(err){
       console.error("Sync Sondaggi v7",err);
