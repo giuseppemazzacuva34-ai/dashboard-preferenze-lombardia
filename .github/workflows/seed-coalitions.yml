@@ -1,0 +1,141 @@
+name: Seed editable survey coalitions
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Patch default coalitions
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("supabase-sync.js")
+          s = path.read_text(encoding="utf-8")
+
+          old1 = """  const POLLS=[
+    ["FdI","Fratelli d'Italia",26.8],
+    ["PD","Partito Democratico",20.4],
+    ["M5S","Movimento 5 Stelle",12.8],
+    ["FN","Futuro Nazionale",7.7],
+    ["FI","Forza Italia",7.4],
+    ["AVS","Alleanza Verdi e Sinistra",6.3],
+    ["LEGA","Lega",5.7],
+    ["AZ","Azione",3.2],
+    ["IV","Italia Viva",2.2],
+    ["PIU","+Europa",1.7],
+    ["PLD","Partito Liberaldemocratico",1.3],
+    ["NM","Noi Moderati",1.1],
+    ["ALTRI","Altri",4.4]
+  ];
+
+  function freshState(){
+"""
+          new1 = """  const POLLS=[
+    ["FdI","Fratelli d'Italia",26.8],
+    ["PD","Partito Democratico",20.4],
+    ["M5S","Movimento 5 Stelle",12.8],
+    ["FN","Futuro Nazionale",7.7],
+    ["FI","Forza Italia",7.4],
+    ["AVS","Alleanza Verdi e Sinistra",6.3],
+    ["LEGA","Lega",5.7],
+    ["AZ","Azione",3.2],
+    ["IV","Italia Viva",2.2],
+    ["PIU","+Europa",1.7],
+    ["PLD","Partito Liberaldemocratico",1.3],
+    ["NM","Noi Moderati",1.1],
+    ["ALTRI","Altri",4.4]
+  ];
+
+  const COALITION_PRESET_VERSION=2;
+  const DEFAULT_COALITIONS=[
+    {id:"C-CD",name:"Centrodestra",members:["FdI","LEGA","FI","NM"]},
+    {id:"C-CS",name:"Centrosinistra",members:["PD","M5S","AVS","PIU","IV"]}
+  ];
+
+  function defaultCoalitions(){
+    return DEFAULT_COALITIONS.map(c=>({...c,members:[...(c.members||[])]}));
+  }
+
+  function freshState(){
+"""
+          if old1 not in s:
+              raise SystemExit("Blocco POLLS/freshState non trovato")
+          s = s.replace(old1, new1, 1)
+
+          old2 = """      parties:{},
+      regionalSenate:{},
+      collegeValues:{camera:{},senato:{}},
+      coalitions:[]
+    };
+"""
+          new2 = """      parties:{},
+      regionalSenate:{},
+      collegeValues:{camera:{},senato:{}},
+      coalitions:defaultCoalitions(),
+      coalitionPresetVersion:COALITION_PRESET_VERSION
+    };
+"""
+          if old2 not in s:
+              raise SystemExit("Blocco freshState non trovato")
+          s = s.replace(old2, new2, 1)
+
+          old3 = """      if(!base.collegeValues.camera)base.collegeValues.camera={};
+      if(!base.collegeValues.senato)base.collegeValues.senato={};
+      base.coalitions=Array.isArray(saved.coalitions)?saved.coalitions:[];
+      POLLS.forEach(p=>{
+"""
+          new3 = """      if(!base.collegeValues.camera)base.collegeValues.camera={};
+      if(!base.collegeValues.senato)base.collegeValues.senato={};
+
+      const savedCoalitions=Array.isArray(saved.coalitions)?saved.coalitions:null;
+      base.coalitions=savedCoalitions?savedCoalitions:[];
+      base.coalitionPresetVersion=Number(saved.coalitionPresetVersion)||0;
+
+      // Migrazione una tantum: le versioni precedenti avevano coalizioni vuote.
+      // Se non ci sono coalizioni salvate, inseriamo quelle preimpostate senza
+      // impedire all'utente di modificarle o eliminarle successivamente.
+      if((base.coalitionPresetVersion<COALITION_PRESET_VERSION) && (!savedCoalitions || savedCoalitions.length===0)){
+        base.coalitions=defaultCoalitions();
+      }
+      base.coalitionPresetVersion=COALITION_PRESET_VERSION;
+
+      POLLS.forEach(p=>{
+"""
+          if old3 not in s:
+              raise SystemExit("Blocco loadState non trovato")
+          s = s.replace(old3, new3, 1)
+
+          old4 = """    const coalRows=S.coalitions.map(co=>{
+      const vals=S.chamber==="camera"?cVals:rVals;
+"""
+          new4 = """    const coalRows=S.coalitions.map(co=>{
+      const vals=S.chamber==="camera"?cVals:rVals;
+"""
+          # no-op anchor check; the real UI text patch follows below.
+          if old4 not in s:
+              raise SystemExit("Blocco coalRows non trovato")
+
+          old5 = """            '<div class="sg-card"><div class="sg-card-title"><b>Coalizioni possibili</b><span><button type="button" class="sg-btn small" id="sgNewCoal">+ NUOVA COALIZIONE</button></span></div>'+coalRows+'</div>'+
+"""
+          new5 = """            '<div class="sg-card"><div class="sg-card-title"><b>Coalizioni preimpostate e modificabili</b><span><button type="button" class="sg-btn small" id="sgNewCoal">+ NUOVA COALIZIONE</button></span></div><div class="sg-note">Le coalizioni di base sono già caricate. Spunta un partito per aggiungerlo o togli la spunta per rimuoverlo; ogni partito può appartenere a una sola coalizione alla volta.</div>'+coalRows+'</div>'+
+"""
+          if old5 not in s:
+              raise SystemExit("HTML coalizioni non trovato")
+          s = s.replace(old5, new5, 1)
+
+          path.write_text(s, encoding="utf-8")
