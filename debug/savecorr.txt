@@ -1,0 +1,71 @@
+IA","BERLANDA CRISTIANO","BERLINO GIUSEPPE","BERNARDELLI EDOARDO DETTO EDO","BESTETTI MARCO","BONAZZI DI SANNICANDRO GIOMMARIA DETTO BONAZZI","BONFIGLIO MARIA STEFANIA","BONTEMPI GIORGIO","BRAVO CARLO","BRIZIO FEDERICA","BULBARELLI PAOLA","BURO ANTONELLA DANIELA","CACUCCI MAIRA DETTA MAIRA DETTA MARIA","CARLINI SARAH","CARRERI PAOLA","CARUSO FRANCESCA","CASPIATI ROBERTO","CASTIGLIA ANTONIO","CENTURELLI CORRADO","CIOCCARELLI CARLA","DALLA BELLA ALEX DETTO DALLA, BELLA, DI BELLA, DELLA BELLA","DE BERNARDI MARTIGNONI GIUSEPPE DETTO MARTIGNONI","DELL'ERBA ROMANA DETTA ROMANA DETTA ALTAMURA","DOTTI ANNA","FEDEGARI ELISABETTA","FELTRI VITTORIO","FOGGETTI STEFANO","FOLEGANI LUCA DETTO FOLE","FORTE MATTEO","FRANCO PAOLO DETTO PAOLO","FRIGERIO ELEONORA","GARAVAGLIA CHRISTIAN DETTO CRISTIAN","GOZZI PIETRANGELO","INSELVINI PAOLO","INVERNICI DIEGO","LINGERI CLAUDIA","LO PALO LUCIA","LUCENTE FRANCO","MACCONI PIETRO","MAGLI LAURA","MAGONI LARA","MANGIAROTTI CLAUDIO","MARCORA ENRICO","MARINO PALMIRA FRANCESCA","MASTROBERARDINO FABIO PIO DETTO MASTRO","MAULLU SILVIA DETTA MAULLO DETTA MAULO DETTA MAULU","MAZZALI BARBARA","MAZZOLENI ALBERTO","MELIS LUIGI SALVATORE","MELORO MARCO","MEOLA LUCE DETTA LUCE","MOLINARI STEFANO","MOLTENI LAURA","PINI CORRADO","RAZZI SILVIA","ROCCHI EMANUELA LUCIA DETTA SALA","ROMANI FEDERICO","SCARAVILLI DONATELLA MARIA ROSA","SCHIAVI MICHELE","SERRA ROSANNA","SONCINI EMMA","SORRENTINO CARLO","TESAURO GIANFRANCA","TODESCHINI MONIA","TOSO CLAUDIA","TUGNOLI VALENTINA","TURATO GIULIA","VALCEPINA CHIARA DETTA VALCE DETTA VALPECINA","VENTURA MARCELLO MARIA","VERONESI ALBERTO","VETTESE SIMONA","VILLA ALESSIA","VIVALDINI MARIATERESA","ZAMPERINI GIACOMO DETTO ZAMPE","ZANGA ANTONIETTA","ZECCHI STEFANO","ZERBINATI UBALDO","ZOCCHI LUIGI","ZUCCON BARBARA"];
+let PROVS=["BERGAMO","BRESCIA","COMO","CREMONA","LECCO","LODI","MANTOVA","MILANO","MONZA E DELLA BRIANZA","PAVIA","SONDRIO","VARESE"];
+let CAM=["Lombardia 1 - P01","Lombardia 1 - P02","Lombardia 2 - P01","Lombardia 2 - P02","Lombardia 3 - P01","Lombardia 3 - P02","Lombardia 4 - P01"];
+let SEN=["Lombardia - P01","Lombardia - P02","Lombardia - P03"];
+let current='home', filters={prov:'',comune:'',candidato:'',corrente:'',camP:'',senP:'',lista:''};
+let correnti={}; try{correnti=JSON.parse(window.localStorage.getItem('lombardia_correnti_2026')||'{}');}catch(e){correnti={};}
+let ticketGroups=[]; try{ticketGroups=JSON.parse(window.localStorage.getItem('lombardia_ticket_2026')||'[]');}catch(e){ticketGroups=[];}
+function saveCorrente(c,v){correnti[c]=String(v||'').trim();localStorage.setItem('lombardia_correnti_2026',JSON.stringify(correnti));applyCorrenti();render();}
+function saveTickets(){localStorage.setItem('lombardia_ticket_2026',JSON.stringify(ticketGroups));render();}
+function ticketForCandidate(c,prov){return ticketGroups.find(t=>t.prov===prov && t.candidates.includes(c));}
+function effectiveCurrentTotals(rows){
+ const groups={},used=new Set(),out={};
+ rows.forEach(r=>{const tg=ticketForCandidate(r.candidato,r.prov); if(tg){if(!groups[tg.id])groups[tg.id]=[]; groups[tg.id].push(r);}});
+ rows.forEach(r=>{const tg=ticketForCandidate(r.candidato,r.prov); if(tg){if(used.has(tg.id))return; used.add(tg.id); const rr=groups[tg.id]||[]; const byCand={}; rr.forEach(x=>byCand[x.candidato]=(byCand[x.candidato]||0)+(Number(x.preferenze)||0)); const winner=Object.entries(byCand).sort((a,b)=>b[1]-a[1])[0]; if(!winner)return; const cur=correnti[winner[0]]||'Da classificare'; out[cur]=(out[cur]||0)+winner[1];} else {const cur=correnti[r.candidato]||'Da classificare'; out[cur]=(out[cur]||0)+(Number(r.preferenze)||0);}});
+ return Object.entries(out).sort((a,b)=>b[1]-a[1]);
+}
+function effectiveCurrentBy(rows,groupKey){
+ const out={}; const groups={}; const used=new Set();
+ rows.forEach(r=>{const g=groupKey(r)||'Da classificare'; const tg=ticketForCandidate(r.candidato,r.prov); if(tg){const k=g+'\u001f'+tg.id; if(!groups[k])groups[k]=[]; groups[k].push(r);} });
+ rows.forEach(r=>{const g=groupKey(r)||'Da classificare'; const tg=ticketForCandidate(r.candidato,r.prov); if(tg){const k=g+'\u001f'+tg.id; if(used.has(k))return; used.add(k); const byCand={}; (groups[k]||[]).forEach(x=>byCand[x.candidato]=(byCand[x.candidato]||0)+(Number(x.preferenze)||0)); const winner=Object.entries(byCand).sort((a,b)=>b[1]-a[1])[0]; if(!winner)return; const cur=correnti[winner[0]]||'Da classificare'; if(!out[g])out[g]={}; out[g][cur]=(out[g][cur]||0)+winner[1];} else {const cur=correnti[r.candidato]||'Da classificare'; if(!out[g])out[g]={}; out[g][cur]=(out[g][cur]||0)+(Number(r.preferenze)||0);}});
+ return out;
+}
+function ticketValue(t,rows=data){const vals=t.candidates.map(c=>rows.filter(r=>r.prov===t.prov&&r.candidato===c).reduce((a,r)=>a+(Number(r.preferenze)||0),0));return vals.length?Math.max(...vals):0;}
+const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let geoMap=new Map(GEO.map(g=>[norm(g.prov)+'|'+norm(g.comune),g]));
+let data=RAW.map(r=>({...r,geo:geoMap.get(norm(r.prov)+'|'+norm(r.comune))||null}));
+const total=()=>data.reduce((s,r)=>s+r.preferenze,0);
+function applyCorrenti(){data.forEach(r=>r.corrente=correnti[r.candidato]||'');}
+function tab(id,btn){current=id;document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));btn?.classList.add('active');render();}
+function opts(id,label,values,value){return `<label class="filter-control"><span>${label}</span><select onchange="setF('${id}',this.value)"><option value="">Tutti</option>${values.map(v=>`<option ${v===value?'selected':''} value="${esc(v)}">${esc(v)}</option>`).join('')}</select></label>`}
+function setF(k,v){filters[k]=v;render()}
+function clearF(){filters={prov:'',comune:'',candidato:'',corrente:'',camP:'',senP:'',lista:''};render()}
+function filtered(){const fp=filters.prov?norm(filters.prov):'';return data.filter(r=>(!fp||norm(PROV_FULL[PROV_CODE[norm(r.prov)]||r.prov]||r.prov)===fp)&&(!filters.comune||norm(r.comune)===norm(filters.comune))&&(!filters.candidato||r.candidato===filters.candidato)&&(!filters.corrente||r.corrente===filters.corrente)&&(!filters.lista||r.lista===filters.lista)&&(!filters.camP||r.geo?.camP===filters.camP)&&(!filters.senP||r.geo?.senP===filters.senP))}
+function filterHTML(){let cm=[...new Set(data.filter(r=>!filters.prov||r.prov===filters.prov).map(r=>r.comune))].sort(),ca=[...CANDS],co=[...new Set(data.map(r=>r.corrente).filter(Boolean))].sort(),li=[...new Set(data.map(r=>r.lista))].sort();return opts('prov','Provincia',PROVS,filters.prov)+opts('comune','Comune',cm,filters.comune)+opts('candidato','Candidato',ca,filters.candidato)+opts('corrente','Corrente',co,filters.corrente)+opts('lista','Lista',li,filters.lista)+opts('camP','Camera P',CAM,filters.camP)+opts('senP','Senato P',SEN,filters.senP)+`<button class="btn bg2" onclick="clearF()">Azzera filtri</button>`}
+function agg(rows,key){let m={};rows.forEach(r=>{let k=key(r)||'Da classificare';m[k]=(m[k]||0)+r.preferenze});return Object.entries(m).sort((a,b)=>b[1]-a[1])}
+function renderHome(){document.getElementById('k-pref').textContent=total().toLocaleString('it-IT');document.getElementById('k-comuni').textContent=new Set(GEO.map(g=>g.comune)).size.toLocaleString('it-IT');document.getElementById('k-candidati').textContent=CANDS.length;document.getElementById('k-correnti').textContent=new Set(Object.values(correnti).filter(Boolean)).size;document.getElementById('k-collegi').textContent=CAM.length+SEN.length;let p=agg(data,r=>r.prov),top=agg(data,r=>r.candidato).slice(0,8);document.getElementById('topCandidates').innerHTML=top.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc(x[0])}</strong><small>${x[1].toLocaleString('it-IT')} preferenze</small></div><span>${(x[1]/total()*100).toFixed(1)}%</span></div>`).join('');document.getElementById('homeQuick').innerHTML=[['▦','TERRITORIO',GEO.length+' righe territoriali','Comune → collegio'],['♟','CANDIDATI',CANDS.length+' candidati','Corrente modificabile'],['⌖','COLLEGI',CAM.length+' Camera · '+SEN.length+' Senato','P + U'],['↔','CONFRONTO','Europee + Regionali','Pronto per il prossimo dataset']].map(x=>`<div class="quick-item"><span>${x[0]}</span><div><b>${x[1]}</b><small>${x[2]}</small><em>${x[3]}</em></div></div>`).join('');document.getElementById('correnteStatus').innerHTML=`<div class="status-list"><div><b>${CANDS.length}</b><span>candidati</span></div><div><b>${Object.values(correnti).filter(Boolean).length}</b><span>classificati</span></div><div><b>${CANDS.length-Object.values(correnti).filter(Boolean).length}</b><span>da classificare</span></div></div>`;barChart('provChart',p)}
+function barChart(id,arr){
+ let c=document.getElementById(id);if(!c)return;
+ let x=c.getContext('2d'),w=c.clientWidth||700,h=c.clientHeight||300;
+ /* Renderizza a risoluzione superiore alla dimensione CSS: testo e numeri molto piu nitidi anche su monitor ad alta densita. */
+ let d=Math.max(2,window.devicePixelRatio||1);
+ c.width=Math.round(w*d);c.height=Math.round(h*d);x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,w,h);
+ let rows=arr.slice().sort((a,b)=>b[1]-a[1]),max=Math.max(...rows.map(a=>a[1]),1);
+ const names={'MONZA E DELLA BRIANZA':'MONZA E BRIANZA'};
+ let left=Math.min(225,Math.max(195,w*.32)),right=105,top=10,bottom=10;
+ let rowH=Math.max(21,(h-top-bottom)/Math.max(rows.length,1));
+ rows.forEach((a,i)=>{
+   let y=top+i*rowH+rowH/2,barMax=Math.max(45,w-left-right),barW=barMax*(a[1]/max);
+   let color=['#2b8cff','#22c88a','#8b5cf6','#f0a500'][i%4];
+   x.textBaseline='middle';x.textAlign='right';x.font='600 13px Arial';x.fillStyle='#d7e5f2';
+   x.fillText(names[a[0]]||a[0],left-12,y);
+   x.fillStyle='rgba(16,44,69,.9)';x.fillRect(left,y-6,barMax,12);
+   x.fillStyle=color;x.fillRect(left,y-6,Math.max(4,barW),12);
+   x.textAlign='left';x.font='700 13px Arial';x.fillStyle='#f2f7fb';
+   x.fillText(a[1].toLocaleString('it-IT'),Math.min(left+barW+10,w-92),y);
+ });
+}
+function renderPref(){
+  document.getElementById('prefFilters').innerHTML=filterHTML();
+  const rows=filtered();
+  const totals=agg(rows,r=>r.candidato);
+  document.getElementById('prefTable').innerHTML=totals.map((x,i)=>{
+    const c=x[0], corrente=correnti[c]||'—';
+    return `<tr class="candidate-total-row"><td>${i+1}</td><td><button class="link-btn candidate-total" onclick="openCandidate(${JSON.stringify(c)})">${esc(c)}</button></td><td><div style="display:flex;gap:6px"><input class="inline-input" value="${esc(corrente==='—'?'':corrente)}" placeholder="Inserisci corrente" onchange="saveCorrente(${JSON.stringify(c)},this.value)"><button class="btn bg2" onclick="saveCorrente(${JSON.stringify(c)},this.previousElementSibling.value)">Salva</button></div></td><td><b>${x[1].toLocaleString('it-IT')}</b></td></tr>`;
+  }).join('') || `<tr><td colspan="4"><div class="empty-state"><b>Nessun dato</b><span>Modifica i filtri selezionati.</span></div></td></tr>`;
+}
+function openCandidate(candidate){
+  const rows=data.filter(r=>r.candidato===candidate && (!filters.prov||r.prov===filters.prov) && (!filters.comune||r.comune===filters.comune) && (!filters.lista||r.lista===filters.lista) && (!filters.corrente||r.corrente===filters.corrente));
+  const byComune=agg(rows,r=>r.comune);
+  const tota
