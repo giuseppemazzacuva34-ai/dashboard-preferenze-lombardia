@@ -1360,7 +1360,7 @@ function installSondaggiModule(){
     ["PIU","+Europa",1.7],
     ["PLD","Partito Liberaldemocratico",1.3],
     ["NM","Noi Moderati",1.1],
-    ["ALTRI","Altri",4.4]
+    ["ALTRI","Altri",3.4]
   ];
 
   const COALITION_PRESET_VERSION=2;
@@ -1403,6 +1403,7 @@ function installSondaggiModule(){
       college:"Lombardia 1 - P01",
       parties:{},
       regionalSenate:{},
+      regionalCustom:{},
       collegeValues:{camera:{},senato:{}},
       coalitions:defaultCoalitions(),
       coalitionPresetVersion:COALITION_PRESET_VERSION
@@ -1425,6 +1426,7 @@ function installSondaggiModule(){
       base.parties={...freshState().parties,...(saved.parties||{})};
       base.regionalSenate=saved.regionalSenate&&typeof saved.regionalSenate==="object"?saved.regionalSenate:{};
       if(!base.regionalSenate || typeof base.regionalSenate!=="object")base.regionalSenate={};
+      base.regionalCustom=saved.regionalCustom&&typeof saved.regionalCustom==="object"?saved.regionalCustom:{};
       [...SENATE_PROP_REGIONS,"Valle d'Aosta","Trentino-Alto Adige/Südtirol"].forEach(region=>{
         base.regionalSenate[region]=base.regionalSenate[region]&&typeof base.regionalSenate[region]==="object"
           ?base.regionalSenate[region]
@@ -1432,6 +1434,9 @@ function installSondaggiModule(){
         POLLS.forEach(p=>{
           if(base.regionalSenate[region][p[0]]==null)base.regionalSenate[region][p[0]]=Number(base.parties[p[0]]?.senate??p[2]);
         });
+      });
+      [...SENATE_PROP_REGIONS,"Valle d'Aosta","Trentino-Alto Adige/Südtirol"].forEach(region=>{
+        if(base.regionalCustom[region]===undefined)base.regionalCustom[region]=false;
       });
       base.collegeValues=saved.collegeValues&&typeof saved.collegeValues==="object"?saved.collegeValues:{camera:{},senato:{}};
       if(!base.collegeValues.camera)base.collegeValues.camera={};
@@ -1458,7 +1463,93 @@ function installSondaggiModule(){
 
   let S=loadState();
 
-  function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+  function normalizePartyName(v){
+    return String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9+]/g,"");
+  }
+  const LEGACY_PARTY_MAP=Object.fromEntries(POLLS.map(p=>[normalizePartyName(p[1]),p[0]]));
+
+  function syncFromLegacyV7(){
+    try{
+      const raw=localStorage.getItem("lombardia_sondaggi_v7");
+      if(!raw)return false;
+      const legacy=JSON.parse(raw);
+      if(!legacy||typeof legacy!=="object")return false;
+
+      ["camera","senato"].forEach(ch=>{
+        const source=legacy.nationalVotes?.[ch]||{};
+        Object.entries(source).forEach(([name,value])=>{
+          const slug=LEGACY_PARTY_MAP[normalizePartyName(name)];
+          if(slug&&S.parties[slug]){
+            if(ch==="camera")S.parties[slug].camera=num(value);
+            else S.parties[slug].senate=num(value);
+          }
+        });
+      });
+
+      const mappedCoalitions=Array.isArray(legacy.coalitions)
+        ?legacy.coalitions.map((c,i)=>({
+          id:String(c.id||("C"+i)),
+          name:String(c.name||("Coalizione "+(i+1))),
+          members:(c.members||[]).map(name=>LEGACY_PARTY_MAP[normalizePartyName(name)]).filter(Boolean)
+        })).filter(c=>c.members.length)
+        : [];
+      if(mappedCoalitions.length)S.coalitions=mappedCoalitions;
+
+      const legacyRegions=legacy.circVotes?.senato||{};
+      SENATE_PROP_REGIONS.forEach(region=>{
+        const source=legacyRegions[region];
+        if(source&&typeof source==="object"){
+          S.regionalSenate[region]??={};
+          Object.keys(S.parties).forEach(k=>{
+            const legacyName=POLLS.find(p=>p[0]===k)?.[1];
+            if(legacyName&&source[legacyName]!=null)S.regionalSenate[region][k]=num(source[legacyName]);
+          });
+        }
+      });
+      return true;
+    }catch(err){
+      console.error("Sync Sondaggi v7",err);
+      return false;
+    }
+  }
+
+  function mirrorToLegacyV7(){
+    try{
+      const legacy=JSON.parse(localStorage.getItem("lombardia_sondaggi_v7")||"{}");
+      legacy.parties=legacy.parties&&typeof legacy.parties==="object"?legacy.parties:{};
+      legacy.nationalVotes=legacy.nationalVotes&&typeof legacy.nationalVotes==="object"?legacy.nationalVotes:{};
+      legacy.nationalVotes.camera={};
+      legacy.nationalVotes.senato={};
+      Object.entries(S.parties).forEach(([slug,p])=>{
+        const name=p.name||POLLS.find(x=>x[0]===slug)?.[1]||slug;
+        legacy.parties[name]=num(p.senate);
+        legacy.nationalVotes.camera[name]=num(p.camera);
+        legacy.nationalVotes.senato[name]=num(p.senate);
+      });
+      legacy.coalitions=S.coalitions.map(c=>({
+        id:c.id,name:c.name,members:(c.members||[]).map(slug=>S.parties[slug]?.name||slug)
+      }));
+      legacy.circVotes=legacy.circVotes&&typeof legacy.circVotes==="object"?legacy.circVotes:{camera:{},senato:{}};
+      legacy.circVotes.senato=legacy.circVotes.senato||{};
+      SENATE_PROP_REGIONS.forEach(region=>{
+        legacy.circVotes.senato[region]={};
+        Object.entries(S.parties).forEach(([slug,p])=>{
+          const name=p.name||POLLS.find(x=>x[0]===slug)?.[1]||slug;
+          legacy.circVotes.senato[region][name]=num(S.regionalSenate[region]?.[slug]??p.senate);
+        });
+      });
+      legacy.meta=legacy.meta&&typeof legacy.meta==="object"?legacy.meta:{};
+      legacy.meta.bridgeUpdatedAt=new Date().toISOString();
+      localStorage.setItem("lombardia_sondaggi_v7",JSON.stringify(legacy));
+      window.dispatchEvent(new CustomEvent("sondaggi-data-sync"));
+    }catch(err){
+      console.error("Mirror Sondaggi v7",err);
+    }
+  }
+
+  syncFromLegacyV7();
+
+  function save(){localStorage.setItem(KEY,JSON.stringify(S));mirrorToLegacyV7();}
 
   function esc2(v){
     try{return typeof esc==="function"?esc(String(v??"")):String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
@@ -1611,11 +1702,16 @@ function installSondaggiModule(){
     catch(_){return false;}
   }
 
-  function coalitionFigure(members,values,chamber){
-    const positive=(members||[]).filter(k=>(values[k]||0)>0);
-    const onePlus=positive.filter(k=>(values[k]||0)>=1);
-    let total=onePlus.reduce((sum,k)=>sum+(values[k]||0),0);
-    return {total,onePlus};
+  function coalitionFigure(members,values,chamber,regionContext=null){
+    const all=[...(members||[])];
+    const admitted=all.filter(k=>(values[k]||0)>=3 || (chamber==="senato"&&regionContext&&senate20Exception(k,regionContext)));
+    const admittedTotal=admitted.reduce((sum,k)=>sum+(values[k]||0),0);
+    const qualifies=admitted.length>0&&admittedTotal>=10;
+    const nationalValues=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(chamber==="camera"?S.parties[k].camera:S.parties[k].senate)]));
+    const below=all.filter(k=>!admitted.includes(k)).sort((a,b)=>(nationalValues[b]||0)-(nationalValues[a]||0)||String(a).localeCompare(String(b),"it"));
+    const ripCandidate=qualifies?(below[0]||null):null;
+    const total=admittedTotal+(ripCandidate?(values[ripCandidate]||0):0);
+    return {total,admitted,ripCandidate,qualifies};
   }
 
   function allocationUnits(values,chamber,regionContext=null){
@@ -1627,34 +1723,21 @@ function installSondaggiModule(){
     S.coalitions.forEach(c=>{
       const members=(c.members||[]).filter(k=>values[k]!=null);
       if(!members.length)return;
-      const stats=coalitionFigure(members,values,chamber);
-      const qualifiesCoalition=stats.total>=10;
-      if(!qualifiesCoalition)return;
+      const stats=coalitionFigure(members,values,chamber,regionContext);
+      if(!stats.qualifies)return;
 
-      const admitted=members.filter(k=>(values[k]||0)>=3 || (chamber==="senato"&&senate20Exception(k,regionContext)));
-      const admittedSet=new Set(admitted);
-      const ripCandidate=members
-        .filter(k=>!admittedSet.has(k) && (values[k]||0)>0)
-        .sort((a,b)=>(values[b]||0)-(values[a]||0)||String(a).localeCompare(String(b),"it"))[0];
-      if(ripCandidate)admitted.push(ripCandidate);
+      const admitted=[...stats.admitted];
+      const rip=stats.ripCandidate;
+      if(rip&&!admitted.includes(rip))admitted.push(rip);
 
-      let figure=members.filter(k=>(values[k]||0)>=1).reduce((sum,k)=>sum+(values[k]||0),0);
-      if(ripCandidate && (values[ripCandidate]||0)<1)figure+=(values[ripCandidate]||0);
-
-      const uniqueMembers=[...new Set(admitted)];
-      admittedByCoalition.set(c.id,uniqueMembers);
-      const unitId="C:"+c.id;
-      units.push({id:unitId,type:"coalition",coalitionId:c.id,members:uniqueMembers,votes:figure,name:c.name});
-      coalStats.push({id:c.id,members,figure,admitted:uniqueMembers});
+      admittedByCoalition.set(c.id,admitted);
+      units.push({id:"C:"+c.id,type:"coalition",coalitionId:c.id,members:admitted,votes:stats.total,name:c.name});
+      coalStats.push({id:c.id,members,figure:stats.total,admitted});
     });
 
-    const coalitionIds=new Set(S.coalitions.filter(c=>{
-      const stats=coalitionFigure((c.members||[]).filter(k=>values[k]!=null),values,chamber);
-      return stats.total>=10;
-    }).map(c=>c.id));
-
+    const coalitionIds=new Set(coalStats.map(c=>c.id));
     Object.keys(values).forEach(k=>{
-      if(cmap[k] && coalitionIds.has(cmap[k]))return;
+      if(cmap[k]&&coalitionIds.has(cmap[k]))return;
       const v=values[k]||0;
       const eligible=v>=3 || (chamber==="senato"&&senate20Exception(k,regionContext));
       if(eligible)units.push({id:"P:"+k,type:"list",members:[k],votes:v,name:k});
@@ -1762,8 +1845,7 @@ function installSondaggiModule(){
   }
 
   function isRegionalCustom(region){
-    const vals=senateRegionalValues(region);
-    return Object.keys(S.parties).some(k=>Math.abs(vals[k]-num(S.parties[k].senate))>0.0001);
+    return !!S.regionalCustom?.[region];
   }
 
   function hamiltonDetailed(items,seats){
@@ -1967,6 +2049,7 @@ function installSondaggiModule(){
     if(kind==="region"){
       S.regionalSenate[S.region]??={};
       S.regionalSenate[S.region][slug]=num(value);
+      S.regionalCustom[S.region]=true;
     }
     if(kind==="college"){
       S.collegeValues[S.chamber]??={};
@@ -2032,7 +2115,7 @@ function installSondaggiModule(){
 
     const coalRows=S.coalitions.map(co=>{
       const vals=S.chamber==="camera"?cVals:rVals;
-      const total=(co.members||[]).reduce((s,k)=>s+(vals[k]||0),0);
+      const total=coalitionFigure(co.members,vals,S.chamber,S.chamber==="senato"?S.region:null).total;
       const members=partyKeys.map(k=>
         '<label><input type="checkbox" data-member="'+esc2(co.id)+'" data-party="'+esc2(k)+'" '+((co.members||[]).includes(k)?"checked":"")+'>'+esc2(S.parties[k].name)+'</label>'
       ).join("");
@@ -2109,7 +2192,7 @@ function installSondaggiModule(){
       const msg="Copiare il sondaggio nazionale del Senato in tutte le "+SENATE_PROP_REGIONS.length+" regioni proporzionali? Le modifiche regionali verranno sovrascritte.";
       if(!confirm(msg))return;
       const nationalVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
-      SENATE_PROP_REGIONS.forEach(region=>{S.regionalSenate[region]={...nationalVals};});
+      SENATE_PROP_REGIONS.forEach(region=>{S.regionalSenate[region]={...nationalVals};S.regionalCustom[region]=false;});
       save();render();
     });
     host.querySelectorAll("[data-region-jump]").forEach(btn=>btn.addEventListener("click",()=>{
