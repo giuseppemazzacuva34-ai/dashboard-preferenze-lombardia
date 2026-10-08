@@ -79,3 +79,33 @@ create policy "tickets_authenticated_delete"
 
 grant select, insert, update, delete on public.correnti to authenticated;
 grant select, insert, update, delete on public.ticket_groups to authenticated;
+
+-- Accesso condiviso della dashboard pubblica.
+-- Le modifiche sono volutamente condivise tra i visitatori del sito.
+drop policy if exists "correnti_anon_select" on public.correnti;
+create policy "correnti_anon_select" on public.correnti for select to anon using (true);
+
+drop policy if exists "correnti_anon_insert" on public.correnti;
+create policy "correnti_anon_insert" on public.correnti for insert to anon with check (true);
+
+drop policy if exists "correnti_anon_update" on public.correnti;
+create policy "correnti_anon_update" on public.correnti for update to anon using (true) with check (true);
+
+drop policy if exists "correnti_anon_delete" on public.correnti;
+create policy "correnti_anon_delete" on public.correnti for delete to anon using (true);
+
+grant select, insert, update, delete on public.correnti to anon;
+
+drop policy if exists "ticket_groups_anon_select" on public.ticket_groups;
+create policy "ticket_groups_anon_select" on public.ticket_groups for select to anon using (true);
+
+drop policy if exists "ticket_groups_anon_insert" on public.ticket_groups;
+create policy "ticket_groups_anon_insert" on public.ticket_groups for insert to anon with check (true);
+
+drop policy if exists "ticket_groups_anon_update" on public.ticket_groups;
+create policy "ticket_groups_anon_update" on public.ticket_groups for update to anon using (true) with check (true);
+
+drop policy if exists "ticket_groups_anon_delete" on public.ticket_groups;
+create policy "ticket_groups_anon_delete" on public.ticket_groups for delete to anon using (true);
+
+grant select, insert, update, delete on public.ticket_groups to anon;
