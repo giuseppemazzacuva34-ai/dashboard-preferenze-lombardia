@@ -1547,8 +1547,6 @@ function installSondaggiModule(){
     }
   }
 
-  syncFromLegacyV7();
-
   function save(){localStorage.setItem(KEY,JSON.stringify(S));mirrorToLegacyV7();}
 
   function esc2(v){
@@ -1562,6 +1560,15 @@ function installSondaggiModule(){
     const n=parseFloat(String(v??"").replace(",","."));
     return Number.isFinite(n)?Math.min(100,Math.max(0,n)):0;
   };
+
+  syncFromLegacyV7();
+  window.addEventListener("sondaggi-v7-updated",()=>{
+    try{
+      syncFromLegacyV7();
+      localStorage.setItem(KEY,JSON.stringify(S));
+      render();
+    }catch(err){console.error("Sync aggiornamento Sondaggi v7",err);}
+  });
 
   function ensureNav(){
     const side=document.querySelector(".app-sidebar");
