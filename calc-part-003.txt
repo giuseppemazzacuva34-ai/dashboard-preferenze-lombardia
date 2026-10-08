@@ -1,0 +1,627 @@
+mune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHt
+
+===== =====
+
+### collegio @ 5996514
+ · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  }
+
+===== =====
+
+### collegio @ 5996641
+-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManu
+
+===== =====
+
+### collegio @ 5996784
+>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>
+
+===== =====
+
+### collegio @ 5997020
+ato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,comune:r.comune,prov:r.prov});});
+    const html=`<div class="modal-backdrop manual-collegi-modal" onclick="if(event.target===this)closeM
+
+===== =====
+
+### collegio @ 5997061
+ruttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,comune:r.comune,prov:r.prov});});
+    const html=`<div class="modal-backdrop manual-collegi-modal" onclick="if(event.target===this)closeManualCollegi()"><div class="modal-card"><
+
+===== =====
+
+### collegio @ 5998370
+onst rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,comune:r.comune,prov:r.prov});});
+    const html=`<div class="modal-backdrop manual-collegi-modal" onclick="if(event.target===this)closeManualCollegi()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">GESTIONE TERRITORIALE</div><h2>Comuni da classificare</h2><p>${issues.length} comuni dei dati elettorali non agganciati automaticamente alla struttura territoriale.</p></div><button class="btn bg2" onclick="closeManualCollegi()">Chiudi ✕</button></div><div class="dash-card">${issues.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.clo
+
+===== =====
+
+### collegio @ 6000100
+un dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,comune:r.comune,prov:r.prov});});
+    const html=`<div class="modal-backdrop manual-collegi-modal" onclick="if(event.target===this)closeManualCollegi()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">GESTIONE TERRITORIALE</div><h2>Comuni da classificare</h2><p>${issues.length} comuni dei dati elettorali non agganciati automaticamente alla struttura territoriale.</p></div><button class="btn bg2" onclick="closeManualCollegi()">Chiudi ✕</button></div><div class="dash-card">${issues.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={camP:v}; localStorage.setItem('lombardia_collegi_manual_2026',JSON.stringify(store)); closeManualCollegi(); if(typeof render==='function')render(); };
+
+  const oldRH=window.renderHome;
+  window.renderHome=function(){ if(typeof oldRH==='function')oldRH(); const q=document.getElementById('homeQuick'); if(q) q.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; const panel=document.getElementById('tab-analisi'); if(panel&&!document.getElementById('manualCollegiBtn')){const h=panel.querySelector('.home-head'); if(h)h.insertAdjacentHTML('beforeend','<button id="manualCollegiBtn" class="btn bg2" style="margin-top:12px" onclick="openManualCollegi()">Comuni da classificare</button>');}}
+  /* API pubblica unica: evita che gli handler inline chiamino una versione locale/sovrascritta. */
+  window.tab=tab;
+  window.setMacro=setMacro;
+  window.render=render;
+  window.renderComuni=renderComuni;
+  window.renderMatrice=renderMatrice;
+  window.openComune=window.openComuneCompare;
+  window.closeComune=closeComune;
+  window.renderCollegi=window.renderCollegi||renderCollegi;
+  window.render();
+})();
+</script>
+
+
+<style id="collegi-dark-theme">
+/* Collegi: card scure coerenti con la dashboard */
+#camCards, #senCards{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;align-content:start!important}
+#camCards .mini-card, #senCards .mini-card{
+  position:relative; box-sizing:border-box; width:100%; min-height:78px; margin:0!important;
+  padding:14px 16px!i
+
+===== =====
+
+### collegi @ 65587
+}
+#tab-preferenze .pref-table td:nth-child(3) .btn{flex:0 0 78px!important;width:78px!important;height:40px!important;white-space:nowrap!important}
+#tab-preferenze .pref-table tbody tr{height:60px!important}
+@media(max-width:900px){#tab-preferenze table.pref-table{min-width:1080px!important}#tab-preferenze .pref-table th:nth-child(2),#tab-preferenze .pref-table td:nth-child(2){width:320px!important;min-width:320px!important}#tab-preferenze .pref-table th:nth-child(3),#tab-preferenze .pref-table td:nth-child(3){width:500px!important;min-width:500px!important}#tab-preferenze .pref-table td:nth-child(3) .inline-input{min-width:330px!important}}
+</style>
+</head><body>
+<header class="app-header">
+<div class="brand-block"><div class="brand-mark">LO</div><div><div class="brand-title">Dashboard <span>Preferenze</span></div><div class="brand-sub">Lombardia · Analisi territoriale ed elettorale</div></div></div>
+<div class="header-center"><div class="province-select" style="display:flex;gap:8px;align-items:center"><strong id="macroTitle">DATI REGIONALI · 2023</strong><span>· 12 province</span></div><button class="global-search" onclick="window.searchGlobal()">⌕ <span>Cerca comune, candidato, collegio...</span></button></div>
+<div class="header-actions"><button class="btn bg2" onclick="exportCSV()">Esporta CSV</button><button class="btn bg2" onclick="exportAnalysis()">Esporta analisi</button><span class="sync-state"><i></i><span>Locale</span></span><button class="icon-action" onclick="toggleTheme()">◐</button><button class="icon-action" onclick="window.print()">⎙</button></div>
+</header>
+<aside class="app-sidebar">
+<button class="side-home active" onclick="tab('home',this)"><span>⌂</span> Home</button>
+<div class="side-label">MACRO DATI</div>
+<button class="macro-tab active" id="macro-europee" onclick="window.dashboardSetMacro('europee')"><span>🇪🇺</span> DATI EUROPEE <small>2024</small></button>
+<button class="macro-tab" id="macro-regionali" onclick="window.dashboardSetMacro('regionali')"><span>▣</span> DATI REGIONALI <small>2023</small></button>
+<div class="side-label">MODULI DATI</div>
+<button class="tab side-tab" onclick="tab('preferenze',this)"><span>☷</span> Preferenze</button>
+<button class="tab side-tab" onclick="tab('comuni',this)"><span>▦</span> Comuni</button>
+<button class="tab side-tab" onclick="tab('matrice',this)"><span>▤</span> Matrice Comuni</button>
+<button class="tab side-tab" onclick="tab('candidati',this)"><span>♟</span> Candidati</button>
+<button class="tab side-tab" onclick="tab('collegi',this)"><span>⌖</span> Collegi</button>
+<div class="side-label">ANALISI</div>
+<button class="tab side-tab" onclick="tab('analisi',this)"><span>▥</span> Analisi</button>
+<button class="tab side-tab" onclick="tab('correnti',this)"><span>◈</span> Correnti</button>
+<button class="tab side-tab" onclick="tab('confronto',this)"><span>↔</span> Confronto</button>
+<div class="side-label">GESTIONE</div>
+<button class="tab side-tab" onclick="tab('importa',this)"><span>⇅</span> Importa / Esporta</button>
+<button class="tab side-tab" onclick="tab('impostazioni',this)"><span>⚙</span> Impostazioni</button>
+</aside>
+<main>
+<div class="panel active" id="tab-home">
+<section class="hero-dashboard"><div class="hero-art"><div class="hero-orb orb-a"></div><div class="hero-orb orb-b"></div><div class="hero-gridline"></div><div class="hero-building"><span></span><i></i><b></b><em></em><small></small></div></div>
+<div class="hero-copy"><div class="hero-kicker"><span class="pulse-dot"></span> LOMBARDIA · DASHBOARD PREFERENZE</div><h2>Analisi elettorale Lombardia</h2><p>Comuni, candidati, correnti e collegi in un unico sistema</p></div>
+<div class="hero-quote"><span>“</span><b>Dati territoriali,<br>analisi delle preferenze.</b><small>Regionali · Europee · Collegi</
+
+===== =====
+
+### collegi @ 66922
+ class="btn bg2" onclick="exportAnalysis()">Esporta analisi</button><span class="sync-state"><i></i><span>Locale</span></span><button class="icon-action" onclick="toggleTheme()">◐</button><button class="icon-action" onclick="window.print()">⎙</button></div>
+</header>
+<aside class="app-sidebar">
+<button class="side-home active" onclick="tab('home',this)"><span>⌂</span> Home</button>
+<div class="side-label">MACRO DATI</div>
+<button class="macro-tab active" id="macro-europee" onclick="window.dashboardSetMacro('europee')"><span>🇪🇺</span> DATI EUROPEE <small>2024</small></button>
+<button class="macro-tab" id="macro-regionali" onclick="window.dashboardSetMacro('regionali')"><span>▣</span> DATI REGIONALI <small>2023</small></button>
+<div class="side-label">MODULI DATI</div>
+<button class="tab side-tab" onclick="tab('preferenze',this)"><span>☷</span> Preferenze</button>
+<button class="tab side-tab" onclick="tab('comuni',this)"><span>▦</span> Comuni</button>
+<button class="tab side-tab" onclick="tab('matrice',this)"><span>▤</span> Matrice Comuni</button>
+<button class="tab side-tab" onclick="tab('candidati',this)"><span>♟</span> Candidati</button>
+<button class="tab side-tab" onclick="tab('collegi',this)"><span>⌖</span> Collegi</button>
+<div class="side-label">ANALISI</div>
+<button class="tab side-tab" onclick="tab('analisi',this)"><span>▥</span> Analisi</button>
+<button class="tab side-tab" onclick="tab('correnti',this)"><span>◈</span> Correnti</button>
+<button class="tab side-tab" onclick="tab('confronto',this)"><span>↔</span> Confronto</button>
+<div class="side-label">GESTIONE</div>
+<button class="tab side-tab" onclick="tab('importa',this)"><span>⇅</span> Importa / Esporta</button>
+<button class="tab side-tab" onclick="tab('impostazioni',this)"><span>⚙</span> Impostazioni</button>
+</aside>
+<main>
+<div class="panel active" id="tab-home">
+<section class="hero-dashboard"><div class="hero-art"><div class="hero-orb orb-a"></div><div class="hero-orb orb-b"></div><div class="hero-gridline"></div><div class="hero-building"><span></span><i></i><b></b><em></em><small></small></div></div>
+<div class="hero-copy"><div class="hero-kicker"><span class="pulse-dot"></span> LOMBARDIA · DASHBOARD PREFERENZE</div><h2>Analisi elettorale Lombardia</h2><p>Comuni, candidati, correnti e collegi in un unico sistema</p></div>
+<div class="hero-quote"><span>“</span><b>Dati territoriali,<br>analisi delle preferenze.</b><small>Regionali · Europee · Collegi</small></div><div class="hero-map-mark"><span>LO</span><i>●</i></div></section>
+<div class="home-toolbar"><div class="home-toolbar-left"><span class="live-dot"></span><b>Database locale</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div><button class="hero-action" onclick="tab('analisi',document.querySelector('[onclick*=analisi]'))">▥ <span>Analisi</span></button><button class="hero-action" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))">♟ <span>Candidati</span></button></div>
+<div class="home-kpis premium-kpis">
+<button class="home-kpi premium blue" onclick="tab('preferenze',document.querySelector('[onclick*=preferenze]'))"><span class="kicon">☷</span><div><strong id="k-pref">0</strong><small>PREFERENZE</small></div><em><b>↗</b> dati caricati</em></button>
+<button class="home-kpi premium green" onclick="tab('comuni',document.querySelector('[onclick*=comuni]'))"><span class="kicon">▦</span><div><strong id="k-comuni">0</strong><small>COMUNI</small></div><em><b>12</b> province</em></button>
+<button class="home-kpi premium purple" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))"><span class="kicon">♟</span><div><strong id="k-candidati">0</strong><small>CANDIDATI</small></div><em><b id="k-correnti">0</b> correnti assegnate</em></button>
+<button class="hom
+
+===== =====
+
+### collegi @ 66953
+tAnalysis()">Esporta analisi</button><span class="sync-state"><i></i><span>Locale</span></span><button class="icon-action" onclick="toggleTheme()">◐</button><button class="icon-action" onclick="window.print()">⎙</button></div>
+</header>
+<aside class="app-sidebar">
+<button class="side-home active" onclick="tab('home',this)"><span>⌂</span> Home</button>
+<div class="side-label">MACRO DATI</div>
+<button class="macro-tab active" id="macro-europee" onclick="window.dashboardSetMacro('europee')"><span>🇪🇺</span> DATI EUROPEE <small>2024</small></button>
+<button class="macro-tab" id="macro-regionali" onclick="window.dashboardSetMacro('regionali')"><span>▣</span> DATI REGIONALI <small>2023</small></button>
+<div class="side-label">MODULI DATI</div>
+<button class="tab side-tab" onclick="tab('preferenze',this)"><span>☷</span> Preferenze</button>
+<button class="tab side-tab" onclick="tab('comuni',this)"><span>▦</span> Comuni</button>
+<button class="tab side-tab" onclick="tab('matrice',this)"><span>▤</span> Matrice Comuni</button>
+<button class="tab side-tab" onclick="tab('candidati',this)"><span>♟</span> Candidati</button>
+<button class="tab side-tab" onclick="tab('collegi',this)"><span>⌖</span> Collegi</button>
+<div class="side-label">ANALISI</div>
+<button class="tab side-tab" onclick="tab('analisi',this)"><span>▥</span> Analisi</button>
+<button class="tab side-tab" onclick="tab('correnti',this)"><span>◈</span> Correnti</button>
+<button class="tab side-tab" onclick="tab('confronto',this)"><span>↔</span> Confronto</button>
+<div class="side-label">GESTIONE</div>
+<button class="tab side-tab" onclick="tab('importa',this)"><span>⇅</span> Importa / Esporta</button>
+<button class="tab side-tab" onclick="tab('impostazioni',this)"><span>⚙</span> Impostazioni</button>
+</aside>
+<main>
+<div class="panel active" id="tab-home">
+<section class="hero-dashboard"><div class="hero-art"><div class="hero-orb orb-a"></div><div class="hero-orb orb-b"></div><div class="hero-gridline"></div><div class="hero-building"><span></span><i></i><b></b><em></em><small></small></div></div>
+<div class="hero-copy"><div class="hero-kicker"><span class="pulse-dot"></span> LOMBARDIA · DASHBOARD PREFERENZE</div><h2>Analisi elettorale Lombardia</h2><p>Comuni, candidati, correnti e collegi in un unico sistema</p></div>
+<div class="hero-quote"><span>“</span><b>Dati territoriali,<br>analisi delle preferenze.</b><small>Regionali · Europee · Collegi</small></div><div class="hero-map-mark"><span>LO</span><i>●</i></div></section>
+<div class="home-toolbar"><div class="home-toolbar-left"><span class="live-dot"></span><b>Database locale</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div><button class="hero-action" onclick="tab('analisi',document.querySelector('[onclick*=analisi]'))">▥ <span>Analisi</span></button><button class="hero-action" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))">♟ <span>Candidati</span></button></div>
+<div class="home-kpis premium-kpis">
+<button class="home-kpi premium blue" onclick="tab('preferenze',document.querySelector('[onclick*=preferenze]'))"><span class="kicon">☷</span><div><strong id="k-pref">0</strong><small>PREFERENZE</small></div><em><b>↗</b> dati caricati</em></button>
+<button class="home-kpi premium green" onclick="tab('comuni',document.querySelector('[onclick*=comuni]'))"><span class="kicon">▦</span><div><strong id="k-comuni">0</strong><small>COMUNI</small></div><em><b>12</b> province</em></button>
+<button class="home-kpi premium purple" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))"><span class="kicon">♟</span><div><strong id="k-candidati">0</strong><small>CANDIDATI</small></div><em><b id="k-correnti">0</b> correnti assegnate</em></button>
+<button class="home-kpi premium orange" onclick="
+
+===== =====
+
+### collegi @ 68019
+k="tab('candidati',this)"><span>♟</span> Candidati</button>
+<button class="tab side-tab" onclick="tab('collegi',this)"><span>⌖</span> Collegi</button>
+<div class="side-label">ANALISI</div>
+<button class="tab side-tab" onclick="tab('analisi',this)"><span>▥</span> Analisi</button>
+<button class="tab side-tab" onclick="tab('correnti',this)"><span>◈</span> Correnti</button>
+<button class="tab side-tab" onclick="tab('confronto',this)"><span>↔</span> Confronto</button>
+<div class="side-label">GESTIONE</div>
+<button class="tab side-tab" onclick="tab('importa',this)"><span>⇅</span> Importa / Esporta</button>
+<button class="tab side-tab" onclick="tab('impostazioni',this)"><span>⚙</span> Impostazioni</button>
+</aside>
+<main>
+<div class="panel active" id="tab-home">
+<section class="hero-dashboard"><div class="hero-art"><div class="hero-orb orb-a"></div><div class="hero-orb orb-b"></div><div class="hero-gridline"></div><div class="hero-building"><span></span><i></i><b></b><em></em><small></small></div></div>
+<div class="hero-copy"><div class="hero-kicker"><span class="pulse-dot"></span> LOMBARDIA · DASHBOARD PREFERENZE</div><h2>Analisi elettorale Lombardia</h2><p>Comuni, candidati, correnti e collegi in un unico sistema</p></div>
+<div class="hero-quote"><span>“</span><b>Dati territoriali,<br>analisi delle preferenze.</b><small>Regionali · Europee · Collegi</small></div><div class="hero-map-mark"><span>LO</span><i>●</i></div></section>
+<div class="home-toolbar"><div class="home-toolbar-left"><span class="live-dot"></span><b>Database locale</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div><button class="hero-action" onclick="tab('analisi',document.querySelector('[onclick*=analisi]'))">▥ <span>Analisi</span></button><button class="hero-action" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))">♟ <span>Candidati</span></button></div>
+<div class="home-kpis premium-kpis">
+<button class="home-kpi premium blue" onclick="tab('preferenze',document.querySelector('[onclick*=preferenze]'))"><span class="kicon">☷</span><div><strong id="k-pref">0</strong><small>PREFERENZE</small></div><em><b>↗</b> dati caricati</em></button>
+<button class="home-kpi premium green" onclick="tab('comuni',document.querySelector('[onclick*=comuni]'))"><span class="kicon">▦</span><div><strong id="k-comuni">0</strong><small>COMUNI</small></div><em><b>12</b> province</em></button>
+<button class="home-kpi premium purple" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))"><span class="kicon">♟</span><div><strong id="k-candidati">0</strong><small>CANDIDATI</small></div><em><b id="k-correnti">0</b> correnti assegnate</em></button>
+<button class="home-kpi premium orange" onclick="tab('collegi',document.querySelector('[onclick*=collegi]'))"><span class="kicon">⌖</span><div><strong id="k-collegi">0</strong><small>COLLEGI P</small></div><em><b>Camera + Senato</b></em></button>
+</div>
+<div class="dashboard-grid">
+<section class="dash-card chart-card"><div class="card-title"><div><b>Preferenze per provincia</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div></div><div style="height:300px"><canvas id="provChart"></canvas></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Primi candidati</b><small>Preferenze complessive</small></div></div><div id="topCandidates"></div></section>
+<section class="dash-card wide"><div class="card-title"><div><b>Struttura del database</b><small>Pronto per Europee, Regionali e correnti</small></div></div><div class="quick-grid" id="homeQuick"></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Stato correnti</b><small>Classificazione modificabile</small></div></div><div id="correnteStatus"></div></section>
+</div></div>
+
+<div class="panel" id=
+
+===== =====
+
+### collegi @ 68178
+ss="side-label">ANALISI</div>
+<button class="tab side-tab" onclick="tab('analisi',this)"><span>▥</span> Analisi</button>
+<button class="tab side-tab" onclick="tab('correnti',this)"><span>◈</span> Correnti</button>
+<button class="tab side-tab" onclick="tab('confronto',this)"><span>↔</span> Confronto</button>
+<div class="side-label">GESTIONE</div>
+<button class="tab side-tab" onclick="tab('importa',this)"><span>⇅</span> Importa / Esporta</button>
+<button class="tab side-tab" onclick="tab('impostazioni',this)"><span>⚙</span> Impostazioni</button>
+</aside>
+<main>
+<div class="panel active" id="tab-home">
+<section class="hero-dashboard"><div class="hero-art"><div class="hero-orb orb-a"></div><div class="hero-orb orb-b"></div><div class="hero-gridline"></div><div class="hero-building"><span></span><i></i><b></b><em></em><small></small></div></div>
+<div class="hero-copy"><div class="hero-kicker"><span class="pulse-dot"></span> LOMBARDIA · DASHBOARD PREFERENZE</div><h2>Analisi elettorale Lombardia</h2><p>Comuni, candidati, correnti e collegi in un unico sistema</p></div>
+<div class="hero-quote"><span>“</span><b>Dati territoriali,<br>analisi delle preferenze.</b><small>Regionali · Europee · Collegi</small></div><div class="hero-map-mark"><span>LO</span><i>●</i></div></section>
+<div class="home-toolbar"><div class="home-toolbar-left"><span class="live-dot"></span><b>Database locale</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div><button class="hero-action" onclick="tab('analisi',document.querySelector('[onclick*=analisi]'))">▥ <span>Analisi</span></button><button class="hero-action" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))">♟ <span>Candidati</span></button></div>
+<div class="home-kpis premium-kpis">
+<button class="home-kpi premium blue" onclick="tab('preferenze',document.querySelector('[onclick*=preferenze]'))"><span class="kicon">☷</span><div><strong id="k-pref">0</strong><small>PREFERENZE</small></div><em><b>↗</b> dati caricati</em></button>
+<button class="home-kpi premium green" onclick="tab('comuni',document.querySelector('[onclick*=comuni]'))"><span class="kicon">▦</span><div><strong id="k-comuni">0</strong><small>COMUNI</small></div><em><b>12</b> province</em></button>
+<button class="home-kpi premium purple" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))"><span class="kicon">♟</span><div><strong id="k-candidati">0</strong><small>CANDIDATI</small></div><em><b id="k-correnti">0</b> correnti assegnate</em></button>
+<button class="home-kpi premium orange" onclick="tab('collegi',document.querySelector('[onclick*=collegi]'))"><span class="kicon">⌖</span><div><strong id="k-collegi">0</strong><small>COLLEGI P</small></div><em><b>Camera + Senato</b></em></button>
+</div>
+<div class="dashboard-grid">
+<section class="dash-card chart-card"><div class="card-title"><div><b>Preferenze per provincia</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div></div><div style="height:300px"><canvas id="provChart"></canvas></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Primi candidati</b><small>Preferenze complessive</small></div></div><div id="topCandidates"></div></section>
+<section class="dash-card wide"><div class="card-title"><div><b>Struttura del database</b><small>Pronto per Europee, Regionali e correnti</small></div></div><div class="quick-grid" id="homeQuick"></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Stato correnti</b><small>Classificazione modificabile</small></div></div><div id="correnteStatus"></div></section>
+</div></div>
+
+<div class="panel" id="tab-preferenze"><div class="home-head"><div><div class="eyebrow" id="prefEyebrow">DATI REGIONALI · PREFERENZE</div><h2>Preferenze</h2><p>Elenco dei candidati 
+
+===== =====
+
+### collegi @ 69558
+tabase locale</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div><button class="hero-action" onclick="tab('analisi',document.querySelector('[onclick*=analisi]'))">▥ <span>Analisi</span></button><button class="hero-action" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))">♟ <span>Candidati</span></button></div>
+<div class="home-kpis premium-kpis">
+<button class="home-kpi premium blue" onclick="tab('preferenze',document.querySelector('[onclick*=preferenze]'))"><span class="kicon">☷</span><div><strong id="k-pref">0</strong><small>PREFERENZE</small></div><em><b>↗</b> dati caricati</em></button>
+<button class="home-kpi premium green" onclick="tab('comuni',document.querySelector('[onclick*=comuni]'))"><span class="kicon">▦</span><div><strong id="k-comuni">0</strong><small>COMUNI</small></div><em><b>12</b> province</em></button>
+<button class="home-kpi premium purple" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))"><span class="kicon">♟</span><div><strong id="k-candidati">0</strong><small>CANDIDATI</small></div><em><b id="k-correnti">0</b> correnti assegnate</em></button>
+<button class="home-kpi premium orange" onclick="tab('collegi',document.querySelector('[onclick*=collegi]'))"><span class="kicon">⌖</span><div><strong id="k-collegi">0</strong><small>COLLEGI P</small></div><em><b>Camera + Senato</b></em></button>
+</div>
+<div class="dashboard-grid">
+<section class="dash-card chart-card"><div class="card-title"><div><b>Preferenze per provincia</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div></div><div style="height:300px"><canvas id="provChart"></canvas></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Primi candidati</b><small>Preferenze complessive</small></div></div><div id="topCandidates"></div></section>
+<section class="dash-card wide"><div class="card-title"><div><b>Struttura del database</b><small>Pronto per Europee, Regionali e correnti</small></div></div><div class="quick-grid" id="homeQuick"></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Stato correnti</b><small>Classificazione modificabile</small></div></div><div id="correnteStatus"></div></section>
+</div></div>
+
+<div class="panel" id="tab-preferenze"><div class="home-head"><div><div class="eyebrow" id="prefEyebrow">DATI REGIONALI · PREFERENZE</div><h2>Preferenze</h2><p>Elenco dei candidati con il totale delle preferenze. Clicca sul candidato per vedere tutti i Comuni e i voti ottenuti.</p></div></div><div class="filter-bar" id="prefFilters"></div><div class="dash-card pref-card" style="margin-top:14px"><div class="table-wrap pref-table-wrap"><table class="data-table pref-table"><thead><tr><th>#</th><th>Candidato</th><th>Corrente FdI</th><th>Totale preferenze</th></tr></thead><tbody id="prefTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-comuni"><div class="home-head"><div><div class="eyebrow">TERRITORIO</div><h2>Comuni</h2><p>Ogni comune è collegato alla geografia Camera/Senato.</p></div></div><div class="filter-bar" id="comuneFilters"></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Prov.</th><th>ISTAT</th><th>Camera P</th><th>Camera U</th><th>Senato P</th><th>Senato U</th><th>Preferenze</th></tr></thead><tbody id="comuneTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-matrice"><div class="home-head"><div><div class="eyebrow">ANALISI TERRITORIALE</div><h2>Matrice Comuni × Candidati</h2><p>Seleziona una provincia. A sinistra trovi i Comuni; in alto i candidati ordinati per preferenze nella provincia. Clicca un Comune per aprire la classifica.</p></div></div><div class="filter-bar" id="matrixFilters"></div><div class="d
+
+===== =====
+
+### collegi @ 69601
+l>Regionali 2023 · FdI</small></div><button class="hero-action" onclick="tab('analisi',document.querySelector('[onclick*=analisi]'))">▥ <span>Analisi</span></button><button class="hero-action" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))">♟ <span>Candidati</span></button></div>
+<div class="home-kpis premium-kpis">
+<button class="home-kpi premium blue" onclick="tab('preferenze',document.querySelector('[onclick*=preferenze]'))"><span class="kicon">☷</span><div><strong id="k-pref">0</strong><small>PREFERENZE</small></div><em><b>↗</b> dati caricati</em></button>
+<button class="home-kpi premium green" onclick="tab('comuni',document.querySelector('[onclick*=comuni]'))"><span class="kicon">▦</span><div><strong id="k-comuni">0</strong><small>COMUNI</small></div><em><b>12</b> province</em></button>
+<button class="home-kpi premium purple" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))"><span class="kicon">♟</span><div><strong id="k-candidati">0</strong><small>CANDIDATI</small></div><em><b id="k-correnti">0</b> correnti assegnate</em></button>
+<button class="home-kpi premium orange" onclick="tab('collegi',document.querySelector('[onclick*=collegi]'))"><span class="kicon">⌖</span><div><strong id="k-collegi">0</strong><small>COLLEGI P</small></div><em><b>Camera + Senato</b></em></button>
+</div>
+<div class="dashboard-grid">
+<section class="dash-card chart-card"><div class="card-title"><div><b>Preferenze per provincia</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div></div><div style="height:300px"><canvas id="provChart"></canvas></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Primi candidati</b><small>Preferenze complessive</small></div></div><div id="topCandidates"></div></section>
+<section class="dash-card wide"><div class="card-title"><div><b>Struttura del database</b><small>Pronto per Europee, Regionali e correnti</small></div></div><div class="quick-grid" id="homeQuick"></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Stato correnti</b><small>Classificazione modificabile</small></div></div><div id="correnteStatus"></div></section>
+</div></div>
+
+<div class="panel" id="tab-preferenze"><div class="home-head"><div><div class="eyebrow" id="prefEyebrow">DATI REGIONALI · PREFERENZE</div><h2>Preferenze</h2><p>Elenco dei candidati con il totale delle preferenze. Clicca sul candidato per vedere tutti i Comuni e i voti ottenuti.</p></div></div><div class="filter-bar" id="prefFilters"></div><div class="dash-card pref-card" style="margin-top:14px"><div class="table-wrap pref-table-wrap"><table class="data-table pref-table"><thead><tr><th>#</th><th>Candidato</th><th>Corrente FdI</th><th>Totale preferenze</th></tr></thead><tbody id="prefTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-comuni"><div class="home-head"><div><div class="eyebrow">TERRITORIO</div><h2>Comuni</h2><p>Ogni comune è collegato alla geografia Camera/Senato.</p></div></div><div class="filter-bar" id="comuneFilters"></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Prov.</th><th>ISTAT</th><th>Camera P</th><th>Camera U</th><th>Senato P</th><th>Senato U</th><th>Preferenze</th></tr></thead><tbody id="comuneTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-matrice"><div class="home-head"><div><div class="eyebrow">ANALISI TERRITORIALE</div><h2>Matrice Comuni × Candidati</h2><p>Seleziona una provincia. A sinistra trovi i Comuni; in alto i candidati ordinati per preferenze nella provincia. Clicca un Comune per aprire la classifica.</p></div></div><div class="filter-bar" id="matrixFilters"></div><div class="dash-card" style="margin-top:14px"><div clas
+
+===== =====
+
+### collegi @ 69661
+on" onclick="tab('analisi',document.querySelector('[onclick*=analisi]'))">▥ <span>Analisi</span></button><button class="hero-action" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))">♟ <span>Candidati</span></button></div>
+<div class="home-kpis premium-kpis">
+<button class="home-kpi premium blue" onclick="tab('preferenze',document.querySelector('[onclick*=preferenze]'))"><span class="kicon">☷</span><div><strong id="k-pref">0</strong><small>PREFERENZE</small></div><em><b>↗</b> dati caricati</em></button>
+<button class="home-kpi premium green" onclick="tab('comuni',document.querySelector('[onclick*=comuni]'))"><span class="kicon">▦</span><div><strong id="k-comuni">0</strong><small>COMUNI</small></div><em><b>12</b> province</em></button>
+<button class="home-kpi premium purple" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))"><span class="kicon">♟</span><div><strong id="k-candidati">0</strong><small>CANDIDATI</small></div><em><b id="k-correnti">0</b> correnti assegnate</em></button>
+<button class="home-kpi premium orange" onclick="tab('collegi',document.querySelector('[onclick*=collegi]'))"><span class="kicon">⌖</span><div><strong id="k-collegi">0</strong><small>COLLEGI P</small></div><em><b>Camera + Senato</b></em></button>
+</div>
+<div class="dashboard-grid">
+<section class="dash-card chart-card"><div class="card-title"><div><b>Preferenze per provincia</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div></div><div style="height:300px"><canvas id="provChart"></canvas></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Primi candidati</b><small>Preferenze complessive</small></div></div><div id="topCandidates"></div></section>
+<section class="dash-card wide"><div class="card-title"><div><b>Struttura del database</b><small>Pronto per Europee, Regionali e correnti</small></div></div><div class="quick-grid" id="homeQuick"></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Stato correnti</b><small>Classificazione modificabile</small></div></div><div id="correnteStatus"></div></section>
+</div></div>
+
+<div class="panel" id="tab-preferenze"><div class="home-head"><div><div class="eyebrow" id="prefEyebrow">DATI REGIONALI · PREFERENZE</div><h2>Preferenze</h2><p>Elenco dei candidati con il totale delle preferenze. Clicca sul candidato per vedere tutti i Comuni e i voti ottenuti.</p></div></div><div class="filter-bar" id="prefFilters"></div><div class="dash-card pref-card" style="margin-top:14px"><div class="table-wrap pref-table-wrap"><table class="data-table pref-table"><thead><tr><th>#</th><th>Candidato</th><th>Corrente FdI</th><th>Totale preferenze</th></tr></thead><tbody id="prefTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-comuni"><div class="home-head"><div><div class="eyebrow">TERRITORIO</div><h2>Comuni</h2><p>Ogni comune è collegato alla geografia Camera/Senato.</p></div></div><div class="filter-bar" id="comuneFilters"></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Prov.</th><th>ISTAT</th><th>Camera P</th><th>Camera U</th><th>Senato P</th><th>Senato U</th><th>Preferenze</th></tr></thead><tbody id="comuneTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-matrice"><div class="home-head"><div><div class="eyebrow">ANALISI TERRITORIALE</div><h2>Matrice Comuni × Candidati</h2><p>Seleziona una provincia. A sinistra trovi i Comuni; in alto i candidati ordinati per preferenze nella provincia. Clicca un Comune per aprire la classifica.</p></div></div><div class="filter-bar" id="matrixFilters"></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap" id="matrixWrap"></div></div></div>
+
+<div clas
+
+===== =====
+
+### collegi @ 69687
+,document.querySelector('[onclick*=analisi]'))">▥ <span>Analisi</span></button><button class="hero-action" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))">♟ <span>Candidati</span></button></div>
+<div class="home-kpis premium-kpis">
+<button class="home-kpi premium blue" onclick="tab('preferenze',document.querySelector('[onclick*=preferenze]'))"><span class="kicon">☷</span><div><strong id="k-pref">0</strong><small>PREFERENZE</small></div><em><b>↗</b> dati caricati</em></button>
+<button class="home-kpi premium green" onclick="tab('comuni',document.querySelector('[onclick*=comuni]'))"><span class="kicon">▦</span><div><strong id="k-comuni">0</strong><small>COMUNI</small></div><em><b>12</b> province</em></button>
+<button class="home-kpi premium purple" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))"><span class="kicon">♟</span><div><strong id="k-candidati">0</strong><small>CANDIDATI</small></div><em><b id="k-correnti">0</b> correnti assegnate</em></button>
+<button class="home-kpi premium orange" onclick="tab('collegi',document.querySelector('[onclick*=collegi]'))"><span class="kicon">⌖</span><div><strong id="k-collegi">0</strong><small>COLLEGI P</small></div><em><b>Camera + Senato</b></em></button>
+</div>
+<div class="dashboard-grid">
+<section class="dash-card chart-card"><div class="card-title"><div><b>Preferenze per provincia</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div></div><div style="height:300px"><canvas id="provChart"></canvas></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Primi candidati</b><small>Preferenze complessive</small></div></div><div id="topCandidates"></div></section>
+<section class="dash-card wide"><div class="card-title"><div><b>Struttura del database</b><small>Pronto per Europee, Regionali e correnti</small></div></div><div class="quick-grid" id="homeQuick"></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Stato correnti</b><small>Classificazione modificabile</small></div></div><div id="correnteStatus"></div></section>
+</div></div>
+
+<div class="panel" id="tab-preferenze"><div class="home-head"><div><div class="eyebrow" id="prefEyebrow">DATI REGIONALI · PREFERENZE</div><h2>Preferenze</h2><p>Elenco dei candidati con il totale delle preferenze. Clicca sul candidato per vedere tutti i Comuni e i voti ottenuti.</p></div></div><div class="filter-bar" id="prefFilters"></div><div class="dash-card pref-card" style="margin-top:14px"><div class="table-wrap pref-table-wrap"><table class="data-table pref-table"><thead><tr><th>#</th><th>Candidato</th><th>Corrente FdI</th><th>Totale preferenze</th></tr></thead><tbody id="prefTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-comuni"><div class="home-head"><div><div class="eyebrow">TERRITORIO</div><h2>Comuni</h2><p>Ogni comune è collegato alla geografia Camera/Senato.</p></div></div><div class="filter-bar" id="comuneFilters"></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Prov.</th><th>ISTAT</th><th>Camera P</th><th>Camera U</th><th>Senato P</th><th>Senato U</th><th>Preferenze</th></tr></thead><tbody id="comuneTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-matrice"><div class="home-head"><div><div class="eyebrow">ANALISI TERRITORIALE</div><h2>Matrice Comuni × Candidati</h2><p>Seleziona una provincia. A sinistra trovi i Comuni; in alto i candidati ordinati per preferenze nella provincia. Clicca un Comune per aprire la classifica.</p></div></div><div class="filter-bar" id="matrixFilters"></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap" id="matrixWrap"></div></div></div>
+
+<div class="panel" id="tab-candidat
+
+===== =====
+
+### collegi @ 72838
+amera U</th><th>Senato P</th><th>Senato U</th><th>Preferenze</th></tr></thead><tbody id="comuneTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-matrice"><div class="home-head"><div><div class="eyebrow">ANALISI TERRITORIALE</div><h2>Matrice Comuni × Candidati</h2><p>Seleziona una provincia. A sinistra trovi i Comuni; in alto i candidati ordinati per preferenze nella provincia. Clicca un Comune per aprire la classifica.</p></div></div><div class="filter-bar" id="matrixFilters"></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap" id="matrixWrap"></div></div></div>
+
+<div class="panel" id="tab-candidati"><div class="home-head"><div><div class="eyebrow">ANAGRAFICA POLITICA</div><h2>Candidati e correnti</h2><p>Assegna qui la corrente a ciascun candidato. La classificazione resta separata dai dati originali.</p></div></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap"><table class="data-table"><thead><tr><th>Candidato</th><th>Lista</th><th>Data nascita</th><th>Luogo</th><th>Preferenze</th><th>Corrente FdI</th><th>Ticket</th></tr></thead><tbody id="candTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-collegi"><div class="home-head"><div><div class="eyebrow">GEOGRAFIA ELETTORALE</div><h2>Collegi</h2><p>Collegi plurinominali e territori che li compongono.</p></div></div><div class="filter-bar" id="collegioFilters"></div><div class="dashboard-grid" style="margin-top:14px"><section class="dash-card"><div class="card-title"><b>Camera</b></div><div id="camCards"></div></section><section class="dash-card"><div class="card-title"><b>Senato</b></div><div id="senCards"></div></section></div></div>
+
+<div class="panel" id="tab-analisi">
+<div class="home-head"><div><div class="eyebrow">ANALISI AVANZATA</div><h2>Analisi collegi · territorio · correnti</h2><p>Analisi operativa delle preferenze, con particolare attenzione ai collegi uninominali Camera/Senato e alle correnti interne di Fratelli d’Italia. Le correnti vengono applicate ai candidati delle Regionali 2023.</p></div></div>
+<div class="filter-bar" id="analisiFilters"></div>
+<div id="analisiKpi" class="dashboard-grid" style="margin-top:14px"></div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>1 · Forza delle correnti</b><small>Preferenze e peso % nel perimetro filtrato</small></div><div id="correnteBars"></div></section>
+<section class="dash-card"><div class="card-title"><b>2 · Ranking candidati</b><small>Totale e quota sul filtro</small></div><div id="analisiCandidates"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card"><div class="card-title"><b>3 · Province</b><small>Preferenze per provincia</small></div><div id="analisiProv"></div></section>
+<section class="dash-card"><div class="card-title"><b>4 · Camera</b><small>Forza per collegio</small></div><div id="analisiCam"></div></section>
+<section class="dash-card"><div class="card-title"><b>5 · Senato</b><small>Forza per collegio</small></div><div id="analisiSen"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>6 · Dettaglio collegi Camera</b><small>Clicca un collegio per filtrare l'analisi</small></div><div id="analisiCamTable" class="table-wrap"></div></section>
+<section class="dash-card wide"><div class="card-title"><b>7 · Dettaglio collegi Senato</b><small>Clicca un collegio per filtrare l'analisi</small></div><div id="analisiSenTable" class="table-wrap"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>8 · Confronto candidati</b><small>Il candidato selezionato viene
+
+===== =====
+
+### collegi @ 72926
+"comuneTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-matrice"><div class="home-head"><div><div class="eyebrow">ANALISI TERRITORIALE</div><h2>Matrice Comuni × Candidati</h2><p>Seleziona una provincia. A sinistra trovi i Comuni; in alto i candidati ordinati per preferenze nella provincia. Clicca un Comune per aprire la classifica.</p></div></div><div class="filter-bar" id="matrixFilters"></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap" id="matrixWrap"></div></div></div>
+
+<div class="panel" id="tab-candidati"><div class="home-head"><div><div class="eyebrow">ANAGRAFICA POLITICA</div><h2>Candidati e correnti</h2><p>Assegna qui la corrente a ciascun candidato. La classificazione resta separata dai dati originali.</p></div></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap"><table class="data-table"><thead><tr><th>Candidato</th><th>Lista</th><th>Data nascita</th><th>Luogo</th><th>Preferenze</th><th>Corrente FdI</th><th>Ticket</th></tr></thead><tbody id="candTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-collegi"><div class="home-head"><div><div class="eyebrow">GEOGRAFIA ELETTORALE</div><h2>Collegi</h2><p>Collegi plurinominali e territori che li compongono.</p></div></div><div class="filter-bar" id="collegioFilters"></div><div class="dashboard-grid" style="margin-top:14px"><section class="dash-card"><div class="card-title"><b>Camera</b></div><div id="camCards"></div></section><section class="dash-card"><div class="card-title"><b>Senato</b></div><div id="senCards"></div></section></div></div>
+
+<div class="panel" id="tab-analisi">
+<div class="home-head"><div><div class="eyebrow">ANALISI AVANZATA</div><h2>Analisi collegi · territorio · correnti</h2><p>Analisi operativa delle preferenze, con particolare attenzione ai collegi uninominali Camera/Senato e alle correnti interne di Fratelli d’Italia. Le correnti vengono applicate ai candidati delle Regionali 2023.</p></div></div>
+<div class="filter-bar" id="analisiFilters"></div>
+<div id="analisiKpi" class="dashboard-grid" style="margin-top:14px"></div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>1 · Forza delle correnti</b><small>Preferenze e peso % nel perimetro filtrato</small></div><div id="correnteBars"></div></section>
+<section class="dash-card"><div class="card-title"><b>2 · Ranking candidati</b><small>Totale e quota sul filtro</small></div><div id="analisiCandidates"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card"><div class="card-title"><b>3 · Province</b><small>Preferenze per provincia</small></div><div id="analisiProv"></div></section>
+<section class="dash-card"><div class="card-title"><b>4 · Camera</b><small>Forza per collegio</small></div><div id="analisiCam"></div></section>
+<section class="dash-card"><div class="card-title"><b>5 · Senato</b><small>Forza per collegio</small></div><div id="analisiSen"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>6 · Dettaglio collegi Camera</b><small>Clicca un collegio per filtrare l'analisi</small></div><div id="analisiCamTable" class="table-wrap"></div></section>
+<section class="dash-card wide"><div class="card-title"><b>7 · Dettaglio collegi Senato</b><small>Clicca un collegio per filtrare l'analisi</small></div><div id="analisiSenTable" class="table-wrap"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>8 · Confronto candidati</b><small>Il candidato selezionato viene confrontato con il resto del campo</small></div><div id="analisiCandidateCompare"></div
+
+===== =====
+
+### collegi @ 72941
+/tbody></table></div></div></div>
+
+<div class="panel" id="tab-matrice"><div class="home-head"><div><div class="eyebrow">ANALISI TERRITORIALE</div><h2>Matrice Comuni × Candidati</h2><p>Seleziona una provincia. A sinistra trovi i Comuni; in alto i candidati ordinati per preferenze nella provincia. Clicca un Comune per aprire la classifica.</p></div></div><div class="filter-bar" id="matrixFilters"></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap" id="matrixWrap"></div></div></div>
+
+<div class="panel" id="tab-candidati"><div class="home-head"><div><div class="eyebrow">ANAGRAFICA POLITICA</div><h2>Candidati e correnti</h2><p>Assegna qui la corrente a ciascun candidato. La classificazione resta separata dai dati originali.</p></div></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap"><table class="data-table"><thead><tr><th>Candidato</th><th>Lista</th><th>Data nascita</th><th>Luogo</th><th>Preferenze</th><th>Corrente FdI</th><th>Ticket</th></tr></thead><tbody id="candTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-collegi"><div class="home-head"><div><div class="eyebrow">GEOGRAFIA ELETTORALE</div><h2>Collegi</h2><p>Collegi plurinominali e territori che li compongono.</p></div></div><div class="filter-bar" id="collegioFilters"></div><div class="dashboard-grid" style="margin-top:14px"><section class="dash-card"><div class="card-title"><b>Camera</b></div><div id="camCards"></div></section><section class="dash-card"><div class="card-title"><b>Senato</b></div><div id="senCards"></div></section></div></div>
+
+<div class="panel" id="tab-analisi">
+<div class="home-head"><div><div class="eyebrow">ANALISI AVANZATA</div><h2>Analisi collegi · territorio · correnti</h2><p>Analisi operativa delle preferenze, con particolare attenzione ai collegi uninominali Camera/Senato e alle correnti interne di Fratelli d’Italia. Le correnti vengono applicate ai candidati delle Regionali 2023.</p></div></div>
+<div class="filter-bar" id="analisiFilters"></div>
+<div id="analisiKpi" class="dashboard-grid" style="margin-top:14px"></div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>1 · Forza delle correnti</b><small>Preferenze e peso % nel perimetro filtrato</small></div><div id="correnteBars"></div></section>
+<section class="dash-card"><div class="card-title"><b>2 · Ranking candidati</b><small>Totale e quota sul filtro</small></div><div id="analisiCandidates"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card"><div class="card-title"><b>3 · Province</b><small>Preferenze per provincia</small></div><div id="analisiProv"></div></section>
+<section class="dash-card"><div class="card-title"><b>4 · Camera</b><small>Forza per collegio</small></div><div id="analisiCam"></div></section>
+<section class="dash-card"><div class="card-title"><b>5 · Senato</b><small>Forza per collegio</small></div><div id="analisiSen"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>6 · Dettaglio collegi Camera</b><small>Clicca un collegio per filtrare l'analisi</small></div><div id="analisiCamTable" class="table-wrap"></div></section>
+<section class="dash-card wide"><div class="card-title"><b>7 · Dettaglio collegi Senato</b><small>Clicca un collegio per filtrare l'analisi</small></div><div id="analisiSenTable" class="table-wrap"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>8 · Confronto candidati</b><small>Il candidato selezionato viene confrontato con il resto del campo</small></div><div id="analisiCandidateCompare"></div></section>
+<se
+
+===== =====
+
+### collegi @ 73037
+iv><div class="eyebrow">ANALISI TERRITORIALE</div><h2>Matrice Comuni × Candidati</h2><p>Seleziona una provincia. A sinistra trovi i Comuni; in alto i candidati ordinati per preferenze nella provincia. Clicca un Comune per aprire la classifica.</p></div></div><div class="filter-bar" id="matrixFilters"></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap" id="matrixWrap"></div></div></div>
+
+<div class="panel" id="tab-candidati"><div class="home-head"><div><div class="eyebrow">ANAGRAFICA POLITICA</div><h2>Candidati e correnti</h2><p>Assegna qui la corrente a ciascun candidato. La classificazione resta separata dai dati originali.</p></div></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap"><table class="data-table"><thead><tr><th>Candidato</th><th>Lista</th><th>Data nascita</th><th>Luogo</th><th>Preferenze</th><th>Corrente FdI</th><th>Ticket</th></tr></thead><tbody id="candTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-collegi"><div class="home-head"><div><div class="eyebrow">GEOGRAFIA ELETTORALE</div><h2>Collegi</h2><p>Collegi plurinominali e territori che li compongono.</p></div></div><div class="filter-bar" id="collegioFilters"></div><div class="dashboard-grid" style="margin-top:14px"><section class="dash-card"><div class="card-title"><b>Camera</b></div><div id="camCards"></div></section><section class="dash-card"><div class="card-title"><b>Senato</b></div><div id="senCards"></div></section></div></div>
+
+<div class="panel" id="tab-analisi">
+<div class="home-head"><div><div class="eyebrow">ANALISI AVANZATA</div><h2>Analisi collegi · territorio · correnti</h2><p>Analisi operativa delle preferenze, con particolare attenzione ai collegi uninominali Camera/Senato e alle correnti interne di Fratelli d’Italia. Le correnti vengono applicate ai candidati delle Regionali 2023.</p></div></div>
+<div class="filter-bar" id="analisiFilters"></div>
+<div id="analisiKpi" class="dashboard-grid" style="margin-top:14px"></div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>1 · Forza delle correnti</b><small>Preferenze e peso % nel perimetro filtrato</small></div><div id="correnteBars"></div></section>
+<section class="dash-card"><div class="card-title"><b>2 · Ranking candidati</b><small>Totale e quota sul filtro</small></div><div id="analisiCandidates"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card"><div class="card-title"><b>3 · Province</b><small>Preferenze per provincia</small></div><div id="analisiProv"></div></section>
+<section class="dash-card"><div class="card-title"><b>4 · Camera</b><small>Forza per collegio</small></div><div id="analisiCam"></div></section>
+<section class="dash-card"><div class="card-title"><b>5 · Senato</b><small>Forza per collegio</small></div><div id="analisiSen"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>6 · Dettaglio collegi Camera</b><small>Clicca un collegio per filtrare l'analisi</small></div><div id="analisiCamTable" class="table-wrap"></div></section>
+<section class="dash-card wide"><div class="card-title"><b>7 · Dettaglio collegi Senato</b><small>Clicca un collegio per filtrare l'analisi</small></div><div id="analisiSenTable" class="table-wrap"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>8 · Confronto candidati</b><small>Il candidato selezionato viene confrontato con il resto del campo</small></div><div id="analisiCandidateCompare"></div></section>
+<section class="dash-card"><div class="card-title"><b>9 · Camera vs Senato</b><small>Preferenze del
+
+===== =====
+
+### collegi @ 73456
+ class="panel" id="tab-candidati"><div class="home-head"><div><div class="eyebrow">ANAGRAFICA POLITICA</div><h2>Candidati e correnti</h2><p>Assegna qui la corrente a ciascun candidato. La classificazione resta separata dai dati originali.</p></div></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap"><table class="data-table"><thead><tr><th>Candidato</th><th>Lista</th><th>Data nascita</th><th>Luogo</th><th>Preferenze</th><th>Corrente FdI</th><th>Ticket</th></tr></thead><tbody id="candTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-collegi"><div class="home-head"><div><div class="eyebrow">GEOGRAFIA ELETTORALE</div><h2>Collegi</h2><p>Collegi plurinominali e territori che li compongono.</p></div></div><div class="filter-bar" id="collegioFilters"></div><div class="dashboard-grid" style="margin-top:14px"><section class="dash-card"><div class="card-title"><b>Camera</b></div><div id="camCards"></div></section><section class="dash-card"><div class="card-title"><b>Senato</b></div><div id="senCards"></div></section></div></div>
+
+<div class="panel" id="tab-analisi">
+<div class="home-head"><div><div class="eyebrow">ANALISI AVANZATA</div><h2>Analisi collegi · territorio · correnti</h2><p>Analisi operativa delle preferenze, con particolare attenzione ai collegi uninominali Camera/Senato e alle correnti interne di Fratelli d’Italia. Le correnti vengono applicate ai candidati delle Regionali 2023.</p></div></div>
+<div class="filter-bar" id="analisiFilters"></div>
+<div id="analisiKpi" class="dashboard-grid" style="margin-top:14px"></div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>1 · Forza delle correnti</b><small>Preferenze e peso % nel perimetro filtrato</small></div><div id="correnteBars"></div></section>
+<section class="dash-card"><div class="card-title"><b>2 · Ranking candidati</b><small>Totale e quota sul filtro</small></div><div id="analisiCandidates"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section cla

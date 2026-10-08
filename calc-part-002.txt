@@ -1,0 +1,925 @@
+39;'}[m]));
+
+  window.dashboardSetMacro=function(v){
+    if(v!=='europee'&&v!=='regionali') return;
+    try { if(typeof setMacro==='function') setMacro(v); else { election=v; if(typeof setElectionData==='function') setElectionData(); } }
+    catch(e){ election=v; if(typeof setElectionData==='function') setElectionData(); }
+    current='home';
+    document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+v));
+    document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+    document.querySelect
+
+===== =====
+
+### collegio @ 5991021
+:left}.link-btn:hover{color:#6aa9ff;text-decoration:underline}.modal-backdrop{position:fixed;inset:0;background:rgba(4,9,20,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}.modal-card{width:min(1200px,96vw);max-height:90vh;overflow:auto;background:#101827;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.45)}.modal-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:16px}.modal-head h2{margin:4px 0}.modal-head p{margin:0;color:#94a3b8}.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.matrix-table{min-width:1100px}.matrix-table th,.matrix-table td{white-space:nowrap}.sticky-col{position:sticky;left:0;background:#101827;z-index:2}.matrix-table thead .sticky-col{z-index:3}@media(max-width:900px){.modal-grid{grid-template-columns:1fr}.matrix-table{min-width:900px}}
+</style>\n
+
+<style>
+/* Correzioni definitive: collegi, comuni, database home */
+.dashboard-grid .wide{grid-column:1 / -1!important}
+#homeQuick{grid-template-columns:repeat(4,minmax(0,1fr))}
+.collegio-click{cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.collegio-click:hover{transform:translateY(-2px);border-color:rgba(106,169,255,.65)!important}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.manual-row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) minmax(150px,.8fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.manual-row select{width:100%}
+.collegio-list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.collegio-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.collegio-summary>div{padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#0b1726}
+.collegio-summary b{display:block;font-size:18px}.collegio-summary span{font-size:10px;color:#8198ad}
+@media(max-width:900px){#homeQuick{grid-template-columns:repeat(2,minmax(0,1fr))}.manual-grid,.collegio-list-grid{grid-template-columns:1fr}.manual-row{grid-template-columns:1fr}}
+@media(max-width:600px){#homeQuick{grid-template-columns:1fr}}
+</style>
+
+
+<script>
+/* CONTROLLER UNICO — elezione, collegi e schede comune */
+(function(){
+  const N=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  const FULL={BG:'BERGAMO',BS:'BRESCIA',CO:'COMO',CR:'CREMONA',LC:'LECCO',LO:'LODI',MN:'MANTOVA',MI:'MILANO',MB:'MONZA E DELLA BRIANZA',PV:'PAVIA',SO:'SONDRIO',VA:'VARESE'};
+  const PC=Object.fromEntries(Object.entries(FULL).map(([k,v])=>[N(v),k]));
+  const prov=v=>PC[N(v)]||String(v||'').trim().toUpperCase();
+  const same=(a,b)=>prov(a)===prov(b);
+  const rowsFor=(ds,c,p)=>ds.filter(r=>N(r.comune)===N(c)&&same(r.prov,p));
+  const val=(ds,c,p,cand)=>rowsFor(ds,c,p).filter(r=>r.candidato===cand).reduce((a,r)=>a+(+r.preferenze||0),0);
+  const esc0=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  window.dashboardSetMacro=function(v){
+    if(v!=='europee'&&v!=='regionali') return;
+    try { if(typeof setMacro==='function') setMacro(v); else { election=v; if(typeof setElectionData==='function') setElectionData(); } }
+    catch(e){ election=v; if(typeof setElectionData==='function') setElectionData(); }
+    current='home';
+    document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+v));
+    document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.side-home')?.classList.add('active');
+    const mt=document.getElementById('macro
+
+===== =====
+
+### collegio @ 5991411
+ba(0,0,0,.45)}.modal-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:16px}.modal-head h2{margin:4px 0}.modal-head p{margin:0;color:#94a3b8}.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.matrix-table{min-width:1100px}.matrix-table th,.matrix-table td{white-space:nowrap}.sticky-col{position:sticky;left:0;background:#101827;z-index:2}.matrix-table thead .sticky-col{z-index:3}@media(max-width:900px){.modal-grid{grid-template-columns:1fr}.matrix-table{min-width:900px}}
+</style>\n
+
+<style>
+/* Correzioni definitive: collegi, comuni, database home */
+.dashboard-grid .wide{grid-column:1 / -1!important}
+#homeQuick{grid-template-columns:repeat(4,minmax(0,1fr))}
+.collegio-click{cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.collegio-click:hover{transform:translateY(-2px);border-color:rgba(106,169,255,.65)!important}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.manual-row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) minmax(150px,.8fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.manual-row select{width:100%}
+.collegio-list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.collegio-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.collegio-summary>div{padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#0b1726}
+.collegio-summary b{display:block;font-size:18px}.collegio-summary span{font-size:10px;color:#8198ad}
+@media(max-width:900px){#homeQuick{grid-template-columns:repeat(2,minmax(0,1fr))}.manual-grid,.collegio-list-grid{grid-template-columns:1fr}.manual-row{grid-template-columns:1fr}}
+@media(max-width:600px){#homeQuick{grid-template-columns:1fr}}
+</style>
+
+
+<script>
+/* CONTROLLER UNICO — elezione, collegi e schede comune */
+(function(){
+  const N=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  const FULL={BG:'BERGAMO',BS:'BRESCIA',CO:'COMO',CR:'CREMONA',LC:'LECCO',LO:'LODI',MN:'MANTOVA',MI:'MILANO',MB:'MONZA E DELLA BRIANZA',PV:'PAVIA',SO:'SONDRIO',VA:'VARESE'};
+  const PC=Object.fromEntries(Object.entries(FULL).map(([k,v])=>[N(v),k]));
+  const prov=v=>PC[N(v)]||String(v||'').trim().toUpperCase();
+  const same=(a,b)=>prov(a)===prov(b);
+  const rowsFor=(ds,c,p)=>ds.filter(r=>N(r.comune)===N(c)&&same(r.prov,p));
+  const val=(ds,c,p,cand)=>rowsFor(ds,c,p).filter(r=>r.candidato===cand).reduce((a,r)=>a+(+r.preferenze||0),0);
+  const esc0=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  window.dashboardSetMacro=function(v){
+    if(v!=='europee'&&v!=='regionali') return;
+    try { if(typeof setMacro==='function') setMacro(v); else { election=v; if(typeof setElectionData==='function') setElectionData(); } }
+    catch(e){ election=v; if(typeof setElectionData==='function') setElectionData(); }
+    current='home';
+    document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+v));
+    document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.side-home')?.classList.add('active');
+    const mt=document.getElementById('macroTitle'); if(mt) mt.textContent=v==='europee'?'DATI EUROPEE · 2024':'DATI REGIONALI · 2023';
+    if(typeof render==='function') render();
+  };
+  window.switchElection=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)
+
+===== =====
+
+### collegio @ 5991500
+:flex-start;margin-bottom:16px}.modal-head h2{margin:4px 0}.modal-head p{margin:0;color:#94a3b8}.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.matrix-table{min-width:1100px}.matrix-table th,.matrix-table td{white-space:nowrap}.sticky-col{position:sticky;left:0;background:#101827;z-index:2}.matrix-table thead .sticky-col{z-index:3}@media(max-width:900px){.modal-grid{grid-template-columns:1fr}.matrix-table{min-width:900px}}
+</style>\n
+
+<style>
+/* Correzioni definitive: collegi, comuni, database home */
+.dashboard-grid .wide{grid-column:1 / -1!important}
+#homeQuick{grid-template-columns:repeat(4,minmax(0,1fr))}
+.collegio-click{cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.collegio-click:hover{transform:translateY(-2px);border-color:rgba(106,169,255,.65)!important}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.manual-row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) minmax(150px,.8fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.manual-row select{width:100%}
+.collegio-list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.collegio-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.collegio-summary>div{padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#0b1726}
+.collegio-summary b{display:block;font-size:18px}.collegio-summary span{font-size:10px;color:#8198ad}
+@media(max-width:900px){#homeQuick{grid-template-columns:repeat(2,minmax(0,1fr))}.manual-grid,.collegio-list-grid{grid-template-columns:1fr}.manual-row{grid-template-columns:1fr}}
+@media(max-width:600px){#homeQuick{grid-template-columns:1fr}}
+</style>
+
+
+<script>
+/* CONTROLLER UNICO — elezione, collegi e schede comune */
+(function(){
+  const N=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  const FULL={BG:'BERGAMO',BS:'BRESCIA',CO:'COMO',CR:'CREMONA',LC:'LECCO',LO:'LODI',MN:'MANTOVA',MI:'MILANO',MB:'MONZA E DELLA BRIANZA',PV:'PAVIA',SO:'SONDRIO',VA:'VARESE'};
+  const PC=Object.fromEntries(Object.entries(FULL).map(([k,v])=>[N(v),k]));
+  const prov=v=>PC[N(v)]||String(v||'').trim().toUpperCase();
+  const same=(a,b)=>prov(a)===prov(b);
+  const rowsFor=(ds,c,p)=>ds.filter(r=>N(r.comune)===N(c)&&same(r.prov,p));
+  const val=(ds,c,p,cand)=>rowsFor(ds,c,p).filter(r=>r.candidato===cand).reduce((a,r)=>a+(+r.preferenze||0),0);
+  const esc0=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  window.dashboardSetMacro=function(v){
+    if(v!=='europee'&&v!=='regionali') return;
+    try { if(typeof setMacro==='function') setMacro(v); else { election=v; if(typeof setElectionData==='function') setElectionData(); } }
+    catch(e){ election=v; if(typeof setElectionData==='function') setElectionData(); }
+    current='home';
+    document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+v));
+    document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.side-home')?.classList.add('active');
+    const mt=document.getElementById('macroTitle'); if(mt) mt.textContent=v==='europee'?'DATI EUROPEE · 2024':'DATI REGIONALI · 2023';
+    if(typeof render==='function') render();
+  };
+  window.switchElection=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const 
+
+===== =====
+
+### collegio @ 5991595
+}.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.matrix-table{min-width:1100px}.matrix-table th,.matrix-table td{white-space:nowrap}.sticky-col{position:sticky;left:0;background:#101827;z-index:2}.matrix-table thead .sticky-col{z-index:3}@media(max-width:900px){.modal-grid{grid-template-columns:1fr}.matrix-table{min-width:900px}}
+</style>\n
+
+<style>
+/* Correzioni definitive: collegi, comuni, database home */
+.dashboard-grid .wide{grid-column:1 / -1!important}
+#homeQuick{grid-template-columns:repeat(4,minmax(0,1fr))}
+.collegio-click{cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.collegio-click:hover{transform:translateY(-2px);border-color:rgba(106,169,255,.65)!important}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.manual-row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) minmax(150px,.8fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.manual-row select{width:100%}
+.collegio-list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.collegio-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.collegio-summary>div{padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#0b1726}
+.collegio-summary b{display:block;font-size:18px}.collegio-summary span{font-size:10px;color:#8198ad}
+@media(max-width:900px){#homeQuick{grid-template-columns:repeat(2,minmax(0,1fr))}.manual-grid,.collegio-list-grid{grid-template-columns:1fr}.manual-row{grid-template-columns:1fr}}
+@media(max-width:600px){#homeQuick{grid-template-columns:1fr}}
+</style>
+
+
+<script>
+/* CONTROLLER UNICO — elezione, collegi e schede comune */
+(function(){
+  const N=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  const FULL={BG:'BERGAMO',BS:'BRESCIA',CO:'COMO',CR:'CREMONA',LC:'LECCO',LO:'LODI',MN:'MANTOVA',MI:'MILANO',MB:'MONZA E DELLA BRIANZA',PV:'PAVIA',SO:'SONDRIO',VA:'VARESE'};
+  const PC=Object.fromEntries(Object.entries(FULL).map(([k,v])=>[N(v),k]));
+  const prov=v=>PC[N(v)]||String(v||'').trim().toUpperCase();
+  const same=(a,b)=>prov(a)===prov(b);
+  const rowsFor=(ds,c,p)=>ds.filter(r=>N(r.comune)===N(c)&&same(r.prov,p));
+  const val=(ds,c,p,cand)=>rowsFor(ds,c,p).filter(r=>r.candidato===cand).reduce((a,r)=>a+(+r.preferenze||0),0);
+  const esc0=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  window.dashboardSetMacro=function(v){
+    if(v!=='europee'&&v!=='regionali') return;
+    try { if(typeof setMacro==='function') setMacro(v); else { election=v; if(typeof setElectionData==='function') setElectionData(); } }
+    catch(e){ election=v; if(typeof setElectionData==='function') setElectionData(); }
+    current='home';
+    document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+v));
+    document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.side-home')?.classList.add('active');
+    const mt=document.getElementById('macroTitle'); if(mt) mt.textContent=v==='europee'?'DATI EUROPEE · 2024':'DATI REGIONALI · 2023';
+    if(typeof render==='function') render();
+  };
+  window.switchElection=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerH
+
+===== =====
+
+### collegio @ 5991708
+.matrix-table td{white-space:nowrap}.sticky-col{position:sticky;left:0;background:#101827;z-index:2}.matrix-table thead .sticky-col{z-index:3}@media(max-width:900px){.modal-grid{grid-template-columns:1fr}.matrix-table{min-width:900px}}
+</style>\n
+
+<style>
+/* Correzioni definitive: collegi, comuni, database home */
+.dashboard-grid .wide{grid-column:1 / -1!important}
+#homeQuick{grid-template-columns:repeat(4,minmax(0,1fr))}
+.collegio-click{cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.collegio-click:hover{transform:translateY(-2px);border-color:rgba(106,169,255,.65)!important}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.manual-row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) minmax(150px,.8fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.manual-row select{width:100%}
+.collegio-list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.collegio-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.collegio-summary>div{padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#0b1726}
+.collegio-summary b{display:block;font-size:18px}.collegio-summary span{font-size:10px;color:#8198ad}
+@media(max-width:900px){#homeQuick{grid-template-columns:repeat(2,minmax(0,1fr))}.manual-grid,.collegio-list-grid{grid-template-columns:1fr}.manual-row{grid-template-columns:1fr}}
+@media(max-width:600px){#homeQuick{grid-template-columns:1fr}}
+</style>
+
+
+<script>
+/* CONTROLLER UNICO — elezione, collegi e schede comune */
+(function(){
+  const N=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  const FULL={BG:'BERGAMO',BS:'BRESCIA',CO:'COMO',CR:'CREMONA',LC:'LECCO',LO:'LODI',MN:'MANTOVA',MI:'MILANO',MB:'MONZA E DELLA BRIANZA',PV:'PAVIA',SO:'SONDRIO',VA:'VARESE'};
+  const PC=Object.fromEntries(Object.entries(FULL).map(([k,v])=>[N(v),k]));
+  const prov=v=>PC[N(v)]||String(v||'').trim().toUpperCase();
+  const same=(a,b)=>prov(a)===prov(b);
+  const rowsFor=(ds,c,p)=>ds.filter(r=>N(r.comune)===N(c)&&same(r.prov,p));
+  const val=(ds,c,p,cand)=>rowsFor(ds,c,p).filter(r=>r.candidato===cand).reduce((a,r)=>a+(+r.preferenze||0),0);
+  const esc0=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  window.dashboardSetMacro=function(v){
+    if(v!=='europee'&&v!=='regionali') return;
+    try { if(typeof setMacro==='function') setMacro(v); else { election=v; if(typeof setElectionData==='function') setElectionData(); } }
+    catch(e){ election=v; if(typeof setElectionData==='function') setElectionData(); }
+    current='home';
+    document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+v));
+    document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.side-home')?.classList.add('active');
+    const mt=document.getElementById('macroTitle'); if(mt) mt.textContent=v==='europee'?'DATI EUROPEE · 2024':'DATI REGIONALI · 2023';
+    if(typeof render==='function') render();
+  };
+  window.switchElection=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+ 
+
+===== =====
+
+### collegio @ 5991757
+osition:sticky;left:0;background:#101827;z-index:2}.matrix-table thead .sticky-col{z-index:3}@media(max-width:900px){.modal-grid{grid-template-columns:1fr}.matrix-table{min-width:900px}}
+</style>\n
+
+<style>
+/* Correzioni definitive: collegi, comuni, database home */
+.dashboard-grid .wide{grid-column:1 / -1!important}
+#homeQuick{grid-template-columns:repeat(4,minmax(0,1fr))}
+.collegio-click{cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.collegio-click:hover{transform:translateY(-2px);border-color:rgba(106,169,255,.65)!important}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.manual-row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) minmax(150px,.8fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.manual-row select{width:100%}
+.collegio-list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.collegio-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.collegio-summary>div{padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#0b1726}
+.collegio-summary b{display:block;font-size:18px}.collegio-summary span{font-size:10px;color:#8198ad}
+@media(max-width:900px){#homeQuick{grid-template-columns:repeat(2,minmax(0,1fr))}.manual-grid,.collegio-list-grid{grid-template-columns:1fr}.manual-row{grid-template-columns:1fr}}
+@media(max-width:600px){#homeQuick{grid-template-columns:1fr}}
+</style>
+
+
+<script>
+/* CONTROLLER UNICO — elezione, collegi e schede comune */
+(function(){
+  const N=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  const FULL={BG:'BERGAMO',BS:'BRESCIA',CO:'COMO',CR:'CREMONA',LC:'LECCO',LO:'LODI',MN:'MANTOVA',MI:'MILANO',MB:'MONZA E DELLA BRIANZA',PV:'PAVIA',SO:'SONDRIO',VA:'VARESE'};
+  const PC=Object.fromEntries(Object.entries(FULL).map(([k,v])=>[N(v),k]));
+  const prov=v=>PC[N(v)]||String(v||'').trim().toUpperCase();
+  const same=(a,b)=>prov(a)===prov(b);
+  const rowsFor=(ds,c,p)=>ds.filter(r=>N(r.comune)===N(c)&&same(r.prov,p));
+  const val=(ds,c,p,cand)=>rowsFor(ds,c,p).filter(r=>r.candidato===cand).reduce((a,r)=>a+(+r.preferenze||0),0);
+  const esc0=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  window.dashboardSetMacro=function(v){
+    if(v!=='europee'&&v!=='regionali') return;
+    try { if(typeof setMacro==='function') setMacro(v); else { election=v; if(typeof setElectionData==='function') setElectionData(); } }
+    catch(e){ election=v; if(typeof setElectionData==='function') setElectionData(); }
+    current='home';
+    document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+v));
+    document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.side-home')?.classList.add('active');
+    const mt=document.getElementById('macroTitle'); if(mt) mt.textContent=v==='europee'?'DATI EUROPEE · 2024':'DATI REGIONALI · 2023';
+    if(typeof render==='function') render();
+  };
+  window.switchElection=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const g
+
+===== =====
+
+### collegio @ 5991904
+mns:1fr}.matrix-table{min-width:900px}}
+</style>\n
+
+<style>
+/* Correzioni definitive: collegi, comuni, database home */
+.dashboard-grid .wide{grid-column:1 / -1!important}
+#homeQuick{grid-template-columns:repeat(4,minmax(0,1fr))}
+.collegio-click{cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.collegio-click:hover{transform:translateY(-2px);border-color:rgba(106,169,255,.65)!important}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.manual-row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) minmax(150px,.8fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.manual-row select{width:100%}
+.collegio-list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.collegio-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.collegio-summary>div{padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#0b1726}
+.collegio-summary b{display:block;font-size:18px}.collegio-summary span{font-size:10px;color:#8198ad}
+@media(max-width:900px){#homeQuick{grid-template-columns:repeat(2,minmax(0,1fr))}.manual-grid,.collegio-list-grid{grid-template-columns:1fr}.manual-row{grid-template-columns:1fr}}
+@media(max-width:600px){#homeQuick{grid-template-columns:1fr}}
+</style>
+
+
+<script>
+/* CONTROLLER UNICO — elezione, collegi e schede comune */
+(function(){
+  const N=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  const FULL={BG:'BERGAMO',BS:'BRESCIA',CO:'COMO',CR:'CREMONA',LC:'LECCO',LO:'LODI',MN:'MANTOVA',MI:'MILANO',MB:'MONZA E DELLA BRIANZA',PV:'PAVIA',SO:'SONDRIO',VA:'VARESE'};
+  const PC=Object.fromEntries(Object.entries(FULL).map(([k,v])=>[N(v),k]));
+  const prov=v=>PC[N(v)]||String(v||'').trim().toUpperCase();
+  const same=(a,b)=>prov(a)===prov(b);
+  const rowsFor=(ds,c,p)=>ds.filter(r=>N(r.comune)===N(c)&&same(r.prov,p));
+  const val=(ds,c,p,cand)=>rowsFor(ds,c,p).filter(r=>r.candidato===cand).reduce((a,r)=>a+(+r.preferenze||0),0);
+  const esc0=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  window.dashboardSetMacro=function(v){
+    if(v!=='europee'&&v!=='regionali') return;
+    try { if(typeof setMacro==='function') setMacro(v); else { election=v; if(typeof setElectionData==='function') setElectionData(); } }
+    catch(e){ election=v; if(typeof setElectionData==='function') setElectionData(); }
+    current='home';
+    document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+v));
+    document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.side-home')?.classList.add('active');
+    const mt=document.getElementById('macroTitle'); if(mt) mt.textContent=v==='europee'?'DATI EUROPEE · 2024':'DATI REGIONALI · 2023';
+    if(typeof render==='function') render();
+  };
+  window.switchElection=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const gs=territories(key,name); const prefs=filtered().filter(r=>r.geo&&r.geo[key]===name).reduce((a,r)=>a+(+r.preferenze||0),0); return `<button type="bu
+
+===== =====
+
+### collegio @ 5994128
+'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  window.dashboardSetMacro=function(v){
+    if(v!=='europee'&&v!=='regionali') return;
+    try { if(typeof setMacro==='function') setMacro(v); else { election=v; if(typeof setElectionData==='function') setElectionData(); } }
+    catch(e){ election=v; if(typeof setElectionData==='function') setElectionData(); }
+    current='home';
+    document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+v));
+    document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.side-home')?.classList.add('active');
+    const mt=document.getElementById('macroTitle'); if(mt) mt.textContent=v==='europee'?'DATI EUROPEE · 2024':'DATI REGIONALI · 2023';
+    if(typeof render==='function') render();
+  };
+  window.switchElection=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const gs=territories(key,name); const prefs=filtered().filter(r=>r.geo&&r.geo[key]===name).reduce((a,r)=>a+(+r.preferenze||0),0); return `<button type="button" class="mini-card collegio-card" data-collegio-key="${esc0(key)}" data-collegio-name="${esc0(name).replace(/"/g,'&quot;')}"><b>${esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('b
+
+===== =====
+
+### collegio @ 5994527
+rySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+v));
+    document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.side-home')?.classList.add('active');
+    const mt=document.getElementById('macroTitle'); if(mt) mt.textContent=v==='europee'?'DATI EUROPEE · 2024':'DATI REGIONALI · 2023';
+    if(typeof render==='function') render();
+  };
+  window.switchElection=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const gs=territories(key,name); const prefs=filtered().filter(r=>r.geo&&r.geo[key]===name).reduce((a,r)=>a+(+r.preferenze||0),0); return `<button type="button" class="mini-card collegio-card" data-collegio-key="${esc0(key)}" data-collegio-name="${esc0(name).replace(/"/g,'&quot;')}"><b>${esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComu
+
+===== =====
+
+### collegio @ 5994547
+o-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-'+v));
+    document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.side-home')?.classList.add('active');
+    const mt=document.getElementById('macroTitle'); if(mt) mt.textContent=v==='europee'?'DATI EUROPEE · 2024':'DATI REGIONALI · 2023';
+    if(typeof render==='function') render();
+  };
+  window.switchElection=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const gs=territories(key,name); const prefs=filtered().filter(r=>r.geo&&r.geo[key]===name).reduce((a,r)=>a+(+r.preferenze||0),0); return `<button type="button" class="mini-card collegio-card" data-collegio-key="${esc0(key)}" data-collegio-name="${esc0(name).replace(/"/g,'&quot;')}"><b>${esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(c
+
+===== =====
+
+### collegio @ 5994580
+ggle('active',x.id==='macro-'+v));
+    document.querySelectorAll('.side-tab,.side-home').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.side-home')?.classList.add('active');
+    const mt=document.getElementById('macroTitle'); if(mt) mt.textContent=v==='europee'?'DATI EUROPEE · 2024':'DATI REGIONALI · 2023';
+    if(typeof render==='function') render();
+  };
+  window.switchElection=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const gs=territories(key,name); const prefs=filtered().filter(r=>r.geo&&r.geo[key]===name).reduce((a,r)=>a+(+r.preferenze||0),0); return `<button type="button" class="mini-card collegio-card" data-collegio-key="${esc0(key)}" data-collegio-name="${esc0(name).replace(/"/g,'&quot;')}"><b>${esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=ro
+
+===== =====
+
+### collegio @ 5994905
+ 2023';
+    if(typeof render==='function') render();
+  };
+  window.switchElection=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const gs=territories(key,name); const prefs=filtered().filter(r=>r.geo&&r.geo[key]===name).reduce((a,r)=>a+(+r.preferenze||0),0); return `<button type="button" class="mini-card collegio-card" data-collegio-key="${esc0(key)}" data-collegio-name="${esc0(name).replace(/"/g,'&quot;')}"><b>${esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0]
+
+===== =====
+
+### collegio @ 5994986
+=window.dashboardSetMacro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const gs=territories(key,name); const prefs=filtered().filter(r=>r.geo&&r.geo[key]===name).reduce((a,r)=>a+(+r.preferenze||0),0); return `<button type="button" class="mini-card collegio-card" data-collegio-key="${esc0(key)}" data-collegio-name="${esc0(name).replace(/"/g,'&quot;')}"><b>${esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()]
+
+===== =====
+
+### collegio @ 5995007
+acro;
+
+  function groups(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const gs=territories(key,name); const prefs=filtered().filter(r=>r.geo&&r.geo[key]===name).reduce((a,r)=>a+(+r.preferenze||0),0); return `<button type="button" class="mini-card collegio-card" data-collegio-key="${esc0(key)}" data-collegio-name="${esc0(name).replace(/"/g,'&quot;')}"><b>${esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1
+
+===== =====
+
+### collegio @ 5995031
+(key){return [...new Set(GEO.map(g=>g[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const gs=territories(key,name); const prefs=filtered().filter(r=>r.geo&&r.geo[key]===name).reduce((a,r)=>a+(+r.preferenze||0),0); return `<button type="button" class="mini-card collegio-card" data-collegio-key="${esc0(key)}" data-collegio-name="${esc0(name).replace(/"/g,'&quot;')}"><b>${esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[.
+
+===== =====
+
+### collegio @ 5995074
+.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));}
+  function territories(key,name){return GEO.filter(g=>g[key]===name).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));}
+
+  window.renderCollegi=function(){
+    const cf=document.getElementById('collegioFilters'); if(cf&&typeof filterHTML==='function') cf.innerHTML=filterHTML();
+    const make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const gs=territories(key,name); const prefs=filtered().filter(r=>r.geo&&r.geo[key]===name).reduce((a,r)=>a+(+r.preferenze||0),0); return `<button type="button" class="mini-card collegio-card" data-collegio-key="${esc0(key)}" data-collegio-name="${esc0(name).replace(/"/g,'&quot;')}"><b>${esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1])
+
+===== =====
+
+### collegio @ 5995423
+make=(id,key,label)=>{
+      const box=document.getElementById(id); if(!box)return;
+      box.innerHTML=groups(key).map(name=>{const gs=territories(key,name); const prefs=filtered().filter(r=>r.geo&&r.geo[key]===name).reduce((a,r)=>a+(+r.preferenze||0),0); return `<button type="button" class="mini-card collegio-card" data-collegio-key="${esc0(key)}" data-collegio-name="${esc0(name).replace(/"/g,'&quot;')}"><b>${esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza dis
+
+===== =====
+
+### collegio @ 5995837
+{esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick=
+
+===== =====
+
+### collegio @ 5995989
+'');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE
+
+===== =====
+
+### collegio @ 5996056
+senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+
+
+===== =====
+
+### collegio @ 5996337
+t gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.co

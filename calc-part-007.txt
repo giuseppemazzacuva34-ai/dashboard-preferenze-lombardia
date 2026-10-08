@@ -1,0 +1,703 @@
+="${esc0(name).replace(/"/g,'&quot;')}"><b>${esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza dis
+
+===== =====
+
+### collegi @ 5995837
+{esc0(name)}</b><span>${gs.length} comuni</span><strong>${prefs.toLocaleString('it-IT')}</strong><small>preferenze · ${label}</small></button>`;}).join('');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick=
+
+===== =====
+
+### collegi @ 5995989
+'');
+    };
+    make('camCards','camP','Camera'); make('senCards','senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE
+
+===== =====
+
+### collegi @ 5996056
+senP','Senato');
+    document.querySelectorAll('.collegio-card').forEach(btn=>{
+      btn.addEventListener('click',()=>window.openCollegio(btn.dataset.collegioKey,btn.dataset.collegioName));
+    });
+  };
+
+  window.openCollegio=function(key,name){
+    const wanted=N(name);
+    const gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+
+
+===== =====
+
+### collegi @ 5996337
+t gs=GEO.filter(g=>N(g[key])===wanted).sort((a,b)=>a.comune.localeCompare(b.comune,'it'));
+    const label=key==='camP'?'Camera':'Senato';
+    const title=gs.length?name:(name+' · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHt
+
+===== =====
+
+### collegi @ 5996514
+ · nessun comune associato');
+    const rows=gs.map(g=>`<tr><td><button type="button" class="link-btn comune-collegio-btn" data-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  }
+
+===== =====
+
+### collegi @ 5996641
+-comune="${esc0(g.comune).replace(/"/g,"&quot;")}" data-prov="${esc0(g.prov).replace(/"/g,"&quot;")}"><b>${esc0(g.comune)}</b></button></td><td>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManu
+
+===== =====
+
+### collegi @ 5996784
+>${esc0(FULL[prov(g.prov)]||g.prov)}</td><td>${esc0(g.istat||'')}</td><td>${esc0(key==='camP'?(g.camU||'—'):(g.senU||'—'))}</td></tr>`).join('');
+    const body=rows||`<tr><td colspan="4"><div class="empty-state"><b>Nessun comune associato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>
+
+===== =====
+
+### collegi @ 5997020
+ato.</b><span>Il collegio esiste nella struttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,comune:r.comune,prov:r.prov});});
+    const html=`<div class="modal-backdrop manual-collegi-modal" onclick="if(event.target===this)closeM
+
+===== =====
+
+### collegi @ 5997061
+ruttura ma non è stato trovato un abbinamento territoriale.</span></div></td></tr>`;
+    const html=`<div class="modal-backdrop collegio-detail-modal" onclick="if(event.target===this)window.closeCollegio()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">${label}</div><h2>${esc0(title)}</h2><p><b>${gs.length}</b> comuni associati · clicca un comune per vedere Europee e Regionali</p></div><button type="button" class="btn bg2" onclick="window.closeCollegio()">Chiudi ✕</button></div><div class="dash-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Codice ISTAT</th><th>Collegio uninominale</th></tr></thead><tbody>${body}</tbody></table></div></div></div></div>`;
+    document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+    document.querySelectorAll('.comune-collegio-btn').forEach(btn=>{ btn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); window.openComuneCompare(this.getAttribute('data-comune'), this.getAttribute('data-prov')); }); });
+  };
+  window.closeCollegio=()=>document.querySelectorAll('.collegio-detail-modal').forEach(x=>x.remove());
+
+  window.openComuneCompare=function(comune,provincia){
+    const rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,comune:r.comune,prov:r.prov});});
+    const html=`<div class="modal-backdrop manual-collegi-modal" onclick="if(event.target===this)closeManualCollegi()"><div class="modal-card"><
+
+===== =====
+
+### collegi @ 5998370
+onst rr=rowsFor(RAW,comune,provincia), ee=rowsFor(EURO_RAW,comune,provincia);
+    const regionali=rr.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const europee=ee.map(r=>[r.candidato,Number(r.preferenze)||0]).filter(x=>x[0]).reduce((m,x)=>(m.set(x[0],(m.get(x[0])||0)+x[1]),m),new Map());
+    const regRank=[...regionali.entries()].sort((a,b)=>b[1]-a[1]);
+    const eurRank=[...europee.entries()].sort((a,b)=>b[1]-a[1]);
+    const g=GEO.find(x=>N(x.comune)===N(comune)&&same(x.prov,provincia)) || GEO.find(x=>N(x.comune)===N(comune));
+    const rankHtml=(rows)=>rows.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc0(x[0])}</strong></div><span>${x[1].toLocaleString('it-IT')}</span></div>`).join('') || '<div class="empty-state">Nessuna preferenza disponibile</div>';
+    const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,comune:r.comune,prov:r.prov});});
+    const html=`<div class="modal-backdrop manual-collegi-modal" onclick="if(event.target===this)closeManualCollegi()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">GESTIONE TERRITORIALE</div><h2>Comuni da classificare</h2><p>${issues.length} comuni dei dati elettorali non agganciati automaticamente alla struttura territoriale.</p></div><button class="btn bg2" onclick="closeManualCollegi()">Chiudi ✕</button></div><div class="dash-card">${issues.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.clo
+
+===== =====
+
+### collegi @ 5999243
+ const html=`<div class="modal-backdrop comune-compare-modal" onclick="if(event.target===this)closeComuneCompare()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">SCHEDA COMUNE</div><h2>${esc0(comune)}</h2><p>${esc0(FULL[prov(provincia)]||provincia)} · ISTAT ${esc0(g?.istat||'')} · ${esc0(g?.camP||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,comune:r.comune,prov:r.prov});});
+    const html=`<div class="modal-backdrop manual-collegi-modal" onclick="if(event.target===this)closeManualCollegi()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">GESTIONE TERRITORIALE</div><h2>Comuni da classificare</h2><p>${issues.length} comuni dei dati elettorali non agganciati automaticamente alla struttura territoriale.</p></div><button class="btn bg2" onclick="closeManualCollegi()">Chiudi ✕</button></div><div class="dash-card">${issues.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={camP:v}; localStorage.setItem('lombardia_collegi_manual_2026',JSON.stringify(store)); closeManualCollegi(); if(typeof render==='function')render(); };
+
+  const oldRH=window.renderHome;
+  window.renderHome=function(){ if(typeof oldRH==='function')oldRH(); const q=document.getElementById('homeQuick'); if(q) q.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; const panel=document.getElementById('tab-analisi'); if(panel&&!document.getElementById('manualCollegiBtn')){const h=panel.querySelector('.home-head'); if(h)h.insertAdjacentHTML('beforeend','<button id="manualCollegiBtn" class="btn bg2" style="margin-top:12px" onc
+
+===== =====
+
+### collegi @ 5999567
+||'Collegio non assegnato')}</p></div><button class="btn bg2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,comune:r.comune,prov:r.prov});});
+    const html=`<div class="modal-backdrop manual-collegi-modal" onclick="if(event.target===this)closeManualCollegi()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">GESTIONE TERRITORIALE</div><h2>Comuni da classificare</h2><p>${issues.length} comuni dei dati elettorali non agganciati automaticamente alla struttura territoriale.</p></div><button class="btn bg2" onclick="closeManualCollegi()">Chiudi ✕</button></div><div class="dash-card">${issues.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={camP:v}; localStorage.setItem('lombardia_collegi_manual_2026',JSON.stringify(store)); closeManualCollegi(); if(typeof render==='function')render(); };
+
+  const oldRH=window.renderHome;
+  window.renderHome=function(){ if(typeof oldRH==='function')oldRH(); const q=document.getElementById('homeQuick'); if(q) q.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; const panel=document.getElementById('tab-analisi'); if(panel&&!document.getElementById('manualCollegiBtn')){const h=panel.querySelector('.home-head'); if(h)h.insertAdjacentHTML('beforeend','<button id="manualCollegiBtn" class="btn bg2" style="margin-top:12px" onclick="openManualCollegi()">Comuni da classificare</button>');}}
+  /* API pubblica unica: evita che gli handler inline chiamino una versione locale/sovrascritta. */
+  window.tab=tab;
+  window.setMacro=setMacro;
+  window.render=render;
+  window.renderComuni=renderComuni;
+  window.renderMatrice=renderMatrice;
+  window.openCom
+
+===== =====
+
+### collegi @ 5999625
+g2" onclick="closeComuneCompare()">Chiudi ✕</button></div><div class="comune-two-col"><div class="dash-card election-column"><div class="card-title"><div><b>EUROPEE 2024</b><small>Preferenze per candidato · ${ee.length ? ee.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(eurRank)}</div><div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,comune:r.comune,prov:r.prov});});
+    const html=`<div class="modal-backdrop manual-collegi-modal" onclick="if(event.target===this)closeManualCollegi()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">GESTIONE TERRITORIALE</div><h2>Comuni da classificare</h2><p>${issues.length} comuni dei dati elettorali non agganciati automaticamente alla struttura territoriale.</p></div><button class="btn bg2" onclick="closeManualCollegi()">Chiudi ✕</button></div><div class="dash-card">${issues.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={camP:v}; localStorage.setItem('lombardia_collegi_manual_2026',JSON.stringify(store)); closeManualCollegi(); if(typeof render==='function')render(); };
+
+  const oldRH=window.renderHome;
+  window.renderHome=function(){ if(typeof oldRH==='function')oldRH(); const q=document.getElementById('homeQuick'); if(q) q.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; const panel=document.getElementById('tab-analisi'); if(panel&&!document.getElementById('manualCollegiBtn')){const h=panel.querySelector('.home-head'); if(h)h.insertAdjacentHTML('beforeend','<button id="manualCollegiBtn" class="btn bg2" style="margin-top:12px" onclick="openManualCollegi()">Comuni da classificare</button>');}}
+  /* API pubblica unica: evita che gli handler inline chiamino una versione locale/sovrascritta. */
+  window.tab=tab;
+  window.setMacro=setMacro;
+  window.render=render;
+  window.renderComuni=renderComuni;
+  window.renderMatrice=renderMatrice;
+  window.openComune=window.openComuneCompare;
+  window.closeComune=closeCo
+
+===== =====
+
+### collegi @ 5999928
+div class="dash-card election-column"><div class="card-title"><div><b>REGIONALI LOMBARDIA 2023</b><small>Preferenze per candidato · ${rr.length ? rr.length+' righe' : 'nessun dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,comune:r.comune,prov:r.prov});});
+    const html=`<div class="modal-backdrop manual-collegi-modal" onclick="if(event.target===this)closeManualCollegi()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">GESTIONE TERRITORIALE</div><h2>Comuni da classificare</h2><p>${issues.length} comuni dei dati elettorali non agganciati automaticamente alla struttura territoriale.</p></div><button class="btn bg2" onclick="closeManualCollegi()">Chiudi ✕</button></div><div class="dash-card">${issues.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={camP:v}; localStorage.setItem('lombardia_collegi_manual_2026',JSON.stringify(store)); closeManualCollegi(); if(typeof render==='function')render(); };
+
+  const oldRH=window.renderHome;
+  window.renderHome=function(){ if(typeof oldRH==='function')oldRH(); const q=document.getElementById('homeQuick'); if(q) q.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; const panel=document.getElementById('tab-analisi'); if(panel&&!document.getElementById('manualCollegiBtn')){const h=panel.querySelector('.home-head'); if(h)h.insertAdjacentHTML('beforeend','<button id="manualCollegiBtn" class="btn bg2" style="margin-top:12px" onclick="openManualCollegi()">Comuni da classificare</button>');}}
+  /* API pubblica unica: evita che gli handler inline chiamino una versione locale/sovrascritta. */
+  window.tab=tab;
+  window.setMacro=setMacro;
+  window.render=render;
+  window.renderComuni=renderComuni;
+  window.renderMatrice=renderMatrice;
+  window.openComune=window.openComuneCompare;
+  window.closeComune=closeComune;
+  window.renderCollegi=window.renderCollegi||renderCollegi;
+  window.render();
+})();
+</script>
+
+
+<style id="collegi-dark-theme">
+/* Collegi: card scure coerenti con la dashboard */
+#camCards, #senCards{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;align-content:sta
+
+===== =====
+
+### collegi @ 6000100
+un dato'}</small></div></div>${rankHtml(regRank)}</div></div></div></div>`;
+    document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+    document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeComuneCompare=()=>document.querySelectorAll('.comune-compare-modal').forEach(x=>x.remove());
+
+  window.openManualCollegi=function(){
+    const issues=[]; const geoSet=new Set(GEO.map(g=>prov(g.prov)+'|'+N(g.comune)));
+    [...RAW,...EURO_RAW].forEach(r=>{const k=prov(r.prov)+'|'+N(r.comune); if(!geoSet.has(k)&&!issues.some(x=>x.k===k)) issues.push({k,comune:r.comune,prov:r.prov});});
+    const html=`<div class="modal-backdrop manual-collegi-modal" onclick="if(event.target===this)closeManualCollegi()"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">GESTIONE TERRITORIALE</div><h2>Comuni da classificare</h2><p>${issues.length} comuni dei dati elettorali non agganciati automaticamente alla struttura territoriale.</p></div><button class="btn bg2" onclick="closeManualCollegi()">Chiudi ✕</button></div><div class="dash-card">${issues.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={camP:v}; localStorage.setItem('lombardia_collegi_manual_2026',JSON.stringify(store)); closeManualCollegi(); if(typeof render==='function')render(); };
+
+  const oldRH=window.renderHome;
+  window.renderHome=function(){ if(typeof oldRH==='function')oldRH(); const q=document.getElementById('homeQuick'); if(q) q.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; const panel=document.getElementById('tab-analisi'); if(panel&&!document.getElementById('manualCollegiBtn')){const h=panel.querySelector('.home-head'); if(h)h.insertAdjacentHTML('beforeend','<button id="manualCollegiBtn" class="btn bg2" style="margin-top:12px" onclick="openManualCollegi()">Comuni da classificare</button>');}}
+  /* API pubblica unica: evita che gli handler inline chiamino una versione locale/sovrascritta. */
+  window.tab=tab;
+  window.setMacro=setMacro;
+  window.render=render;
+  window.renderComuni=renderComuni;
+  window.renderMatrice=renderMatrice;
+  window.openComune=window.openComuneCompare;
+  window.closeComune=closeComune;
+  window.renderCollegi=window.renderCollegi||renderCollegi;
+  window.render();
+})();
+</script>
+
+
+<style id="collegi-dark-theme">
+/* Collegi: card scure coerenti con la dashboard */
+#camCards, #senCards{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;align-content:start!important}
+#camCards .mini-card, #senCards .mini-card{
+  position:relative; box-sizing:border-box; width:100%; min-height:78px; margin:0!important;
+  padding:14px 16px!i
+
+===== =====
+
+### collegi @ 6000861
+div class="modal-head"><div><div class="eyebrow">GESTIONE TERRITORIALE</div><h2>Comuni da classificare</h2><p>${issues.length} comuni dei dati elettorali non agganciati automaticamente alla struttura territoriale.</p></div><button class="btn bg2" onclick="closeManualCollegi()">Chiudi ✕</button></div><div class="dash-card">${issues.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={camP:v}; localStorage.setItem('lombardia_collegi_manual_2026',JSON.stringify(store)); closeManualCollegi(); if(typeof render==='function')render(); };
+
+  const oldRH=window.renderHome;
+  window.renderHome=function(){ if(typeof oldRH==='function')oldRH(); const q=document.getElementById('homeQuick'); if(q) q.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; const panel=document.getElementById('tab-analisi'); if(panel&&!document.getElementById('manualCollegiBtn')){const h=panel.querySelector('.home-head'); if(h)h.insertAdjacentHTML('beforeend','<button id="manualCollegiBtn" class="btn bg2" style="margin-top:12px" onclick="openManualCollegi()">Comuni da classificare</button>');}}
+  /* API pubblica unica: evita che gli handler inline chiamino una versione locale/sovrascritta. */
+  window.tab=tab;
+  window.setMacro=setMacro;
+  window.render=render;
+  window.renderComuni=renderComuni;
+  window.renderMatrice=renderMatrice;
+  window.openComune=window.openComuneCompare;
+  window.closeComune=closeComune;
+  window.renderCollegi=window.renderCollegi||renderCollegi;
+  window.render();
+})();
+</script>
+
+
+<style id="collegi-dark-theme">
+/* Collegi: card scure coerenti con la dashboard */
+#camCards, #senCards{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;align-content:start!important}
+#camCards .mini-card, #senCards .mini-card{
+  position:relative; box-sizing:border-box; width:100%; min-height:78px; margin:0!important;
+  padding:14px 16px!important; border:1px solid #24445f!important; border-radius:12px!important;
+  background:linear-gradient(145deg,#102a43 0%,#0a1d30 100%)!important;
+  color:#eaf3fb!important; box-shadow:0 6px 18px rgba(0,0,0,.16)!important;
+  cursor:pointer!important; transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease,background .14s ease!important;
+}
+#camCards .mini-card:hover, #senCards .mini-card:hover{
+  transform:translateY(-2px)!important; border-color:#3d8de0!important;
+  background:linear-gradient(145deg,#143754 0%,#0c243b 100%)!important;
+  box-shadow:0 9px 24px rgba(0,0,0,.24)!important;
+}
+#camCards .mini-card b, #senCards .mini-card b{font-size:12px!important;color:#f2f7fc!important;align-self:center}
+#camCards .mini-card span, #senC
+
+===== =====
+
+### collegi @ 6000978
+s.length} comuni dei dati elettorali non agganciati automaticamente alla struttura territoriale.</p></div><button class="btn bg2" onclick="closeManualCollegi()">Chiudi ✕</button></div><div class="dash-card">${issues.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={camP:v}; localStorage.setItem('lombardia_collegi_manual_2026',JSON.stringify(store)); closeManualCollegi(); if(typeof render==='function')render(); };
+
+  const oldRH=window.renderHome;
+  window.renderHome=function(){ if(typeof oldRH==='function')oldRH(); const q=document.getElementById('homeQuick'); if(q) q.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; const panel=document.getElementById('tab-analisi'); if(panel&&!document.getElementById('manualCollegiBtn')){const h=panel.querySelector('.home-head'); if(h)h.insertAdjacentHTML('beforeend','<button id="manualCollegiBtn" class="btn bg2" style="margin-top:12px" onclick="openManualCollegi()">Comuni da classificare</button>');}}
+  /* API pubblica unica: evita che gli handler inline chiamino una versione locale/sovrascritta. */
+  window.tab=tab;
+  window.setMacro=setMacro;
+  window.render=render;
+  window.renderComuni=renderComuni;
+  window.renderMatrice=renderMatrice;
+  window.openComune=window.openComuneCompare;
+  window.closeComune=closeComune;
+  window.renderCollegi=window.renderCollegi||renderCollegi;
+  window.render();
+})();
+</script>
+
+
+<style id="collegi-dark-theme">
+/* Collegi: card scure coerenti con la dashboard */
+#camCards, #senCards{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;align-content:start!important}
+#camCards .mini-card, #senCards .mini-card{
+  position:relative; box-sizing:border-box; width:100%; min-height:78px; margin:0!important;
+  padding:14px 16px!important; border:1px solid #24445f!important; border-radius:12px!important;
+  background:linear-gradient(145deg,#102a43 0%,#0a1d30 100%)!important;
+  color:#eaf3fb!important; box-shadow:0 6px 18px rgba(0,0,0,.16)!important;
+  cursor:pointer!important; transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease,background .14s ease!important;
+}
+#camCards .mini-card:hover, #senCards .mini-card:hover{
+  transform:translateY(-2px)!important; border-color:#3d8de0!important;
+  background:linear-gradient(145deg,#143754 0%,#0c243b 100%)!important;
+  box-shadow:0 9px 24px rgba(0,0,0,.24)!important;
+}
+#camCards .mini-card b, #senCards .mini-card b{font-size:12px!important;color:#f2f7fc!important;align-self:center}
+#camCards .mini-card span, #senCards .mini-card span{font-size:9px!important;color:#82a5c4!important;text-align:right;align-self:center}
+#camCards .m
+
+===== =====
+
+### collegi @ 6001025
+iati automaticamente alla struttura territoriale.</p></div><button class="btn bg2" onclick="closeManualCollegi()">Chiudi ✕</button></div><div class="dash-card">${issues.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={camP:v}; localStorage.setItem('lombardia_collegi_manual_2026',JSON.stringify(store)); closeManualCollegi(); if(typeof render==='function')render(); };
+
+  const oldRH=window.renderHome;
+  window.renderHome=function(){ if(typeof oldRH==='function')oldRH(); const q=document.getElementById('homeQuick'); if(q) q.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; const panel=document.getElementById('tab-analisi'); if(panel&&!document.getElementById('manualCollegiBtn')){const h=panel.querySelector('.home-head'); if(h)h.insertAdjacentHTML('beforeend','<button id="manualCollegiBtn" class="btn bg2" style="margin-top:12px" onclick="openManualCollegi()">Comuni da classificare</button>');}}
+  /* API pubblica unica: evita che gli handler inline chiamino una versione locale/sovrascritta. */
+  window.tab=tab;
+  window.setMacro=setMacro;
+  window.render=render;
+  window.renderComuni=renderComuni;
+  window.renderMatrice=renderMatrice;
+  window.openComune=window.openComuneCompare;
+  window.closeComune=closeComune;
+  window.renderCollegi=window.renderCollegi||renderCollegi;
+  window.render();
+})();
+</script>
+
+
+<style id="collegi-dark-theme">
+/* Collegi: card scure coerenti con la dashboard */
+#camCards, #senCards{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;align-content:start!important}
+#camCards .mini-card, #senCards .mini-card{
+  position:relative; box-sizing:border-box; width:100%; min-height:78px; margin:0!important;
+  padding:14px 16px!important; border:1px solid #24445f!important; border-radius:12px!important;
+  background:linear-gradient(145deg,#102a43 0%,#0a1d30 100%)!important;
+  color:#eaf3fb!important; box-shadow:0 6px 18px rgba(0,0,0,.16)!important;
+  cursor:pointer!important; transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease,background .14s ease!important;
+}
+#camCards .mini-card:hover, #senCards .mini-card:hover{
+  transform:translateY(-2px)!important; border-color:#3d8de0!important;
+  background:linear-gradient(145deg,#143754 0%,#0c243b 100%)!important;
+  box-shadow:0 9px 24px rgba(0,0,0,.24)!important;
+}
+#camCards .mini-card b, #senCards .mini-card b{font-size:12px!important;color:#f2f7fc!important;align-self:center}
+#camCards .mini-card span, #senCards .mini-card span{font-size:9px!important;color:#82a5c4!important;text-align:right;align-self:center}
+#camCards .mini-card strong, #senCards .mini-card strong{fo
+
+===== =====
+
+### collegi @ 6001178
+-card">${issues.length?`<div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={camP:v}; localStorage.setItem('lombardia_collegi_manual_2026',JSON.stringify(store)); closeManualCollegi(); if(typeof render==='function')render(); };
+
+  const oldRH=window.renderHome;
+  window.renderHome=function(){ if(typeof oldRH==='function')oldRH(); const q=document.getElementById('homeQuick'); if(q) q.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; const panel=document.getElementById('tab-analisi'); if(panel&&!document.getElementById('manualCollegiBtn')){const h=panel.querySelector('.home-head'); if(h)h.insertAdjacentHTML('beforeend','<button id="manualCollegiBtn" class="btn bg2" style="margin-top:12px" onclick="openManualCollegi()">Comuni da classificare</button>');}}
+  /* API pubblica unica: evita che gli handler inline chiamino una versione locale/sovrascritta. */
+  window.tab=tab;
+  window.setMacro=setMacro;
+  window.render=render;
+  window.renderComuni=renderComuni;
+  window.renderMatrice=renderMatrice;
+  window.openComune=window.openComuneCompare;
+  window.closeComune=closeComune;
+  window.renderCollegi=window.renderCollegi||renderCollegi;
+  window.render();
+})();
+</script>
+
+
+<style id="collegi-dark-theme">
+/* Collegi: card scure coerenti con la dashboard */
+#camCards, #senCards{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;align-content:start!important}
+#camCards .mini-card, #senCards .mini-card{
+  position:relative; box-sizing:border-box; width:100%; min-height:78px; margin:0!important;
+  padding:14px 16px!important; border:1px solid #24445f!important; border-radius:12px!important;
+  background:linear-gradient(145deg,#102a43 0%,#0a1d30 100%)!important;
+  color:#eaf3fb!important; box-shadow:0 6px 18px rgba(0,0,0,.16)!important;
+  cursor:pointer!important; transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease,background .14s ease!important;
+}
+#camCards .mini-card:hover, #senCards .mini-card:hover{
+  transform:translateY(-2px)!important; border-color:#3d8de0!important;
+  background:linear-gradient(145deg,#143754 0%,#0c243b 100%)!important;
+  box-shadow:0 9px 24px rgba(0,0,0,.24)!important;
+}
+#camCards .mini-card b, #senCards .mini-card b{font-size:12px!important;color:#f2f7fc!important;align-self:center}
+#camCards .mini-card span, #senCards .mini-card span{font-size:9px!important;color:#82a5c4!important;text-align:right;align-self:center}
+#camCards .mini-card strong, #senCards .mini-card strong{font-size:18px!important;color:#6fb5ff!important;text-align:right!important;align-self:center}
+#camCards .mini-card small, #senCards .mini-card small{font-
+
+===== =====
+
+### collegi @ 6001259
+<tr><th>Comune</th><th>Provincia</th><th>Collegio Camera</th><th></th></tr></thead><tbody>${issues.map(x=>`<tr><td><b>${esc0(x.comune)}</b></td><td>${esc0(FULL[prov(x.prov)]||x.prov)}</td><td><select id="mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}"><option value="">Seleziona...</option>${groups('camP').map(p=>`<option>${esc0(p)}</option>`).join('')}</select></td><td><button class="btn" onclick="saveManualTerritory(${JSON.stringify(x.k)},document.getElementById('mc-${esc0(x.k).replace(/[^A-Z0-9]/g,'_')}').value)">Salva</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty-state"><b>Nessun comune da classificare.</b><span>Tutti i comuni dei dati elettorali sono già collegati alla struttura territoriale.</span></div>'}</div></div></div>`;
+    document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove()); document.body.insertAdjacentHTML('beforeend',html);
+  };
+  window.closeManualCollegi=()=>document.querySelectorAll('.manual-collegi-modal').forEach(x=>x.remove());
+  window.saveManualTerritory=function(k,v){ if(!v)return; const store=JSON.parse(localStorage.getItem('lombardia_collegi_manual_2026')||'{}'); store[k]={camP:v}; localStorage.setItem('lombardia_collegi_manual_2026',JSON.stringify(store)); closeManualCollegi(); if(typeof render==='function')render(); };
+
+  const oldRH=window.renderHome;
+  window.renderHome=function(){ if(typeof oldRH==='function')oldRH(); const q=document.getElementById('homeQuick'); if(q) q.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; const panel=document.getElementById('tab-analisi'); if(panel&&!document.getElementById('manualCollegiBtn')){const h=panel.querySelector('.home-head'); if(h)h.insertAdjacentHTML('beforeend','<button id="manualCollegiBtn" class="btn bg2" style="margin-top:12px" onclick="openManualCollegi()">Comuni da classificare</button>');}}
+  /* API pubblica unica: evita che gli handler inline chiamino una versione locale/sovrascritta. */
+  window.tab=tab;
+  window.setMacro=setMacro;
+  window.render=render;
+  window.renderComuni=renderComuni;
+  window.renderMatrice=renderMatrice;
+  window.openComune=window.openComuneCompare;
+  window.closeComune=closeComune;
+  window.renderCollegi=window.renderCollegi||renderCollegi;
+  window.render();
+})();
+</script>
+
+
+<style id="collegi-dark-theme">
+/* Collegi: card scure coerenti con la dashboard */
+#camCards, #senCards{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;align-content:start!important}
+#camCards .mini-card, #senCards .mini-card{
+  position:relative; box-sizing:border-box; width:100%; min-height:78px; margin:0!important;
+  padding:14px 16px!important; border:1px solid #24445f!important; border-radius:12px!important;
+  background:linear-gradient(145deg,#102a43 0%,#0a1d30 100%)!important;
+  color:#eaf3fb!important; box-shadow:0 6px 18px rgba(0,0,0,.16)!important;
+  cursor:pointer!important; transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease,background .14s ease!important;
+}
+#camCards .mini-card:hover, #senCards .mini-card:hover{
+  transform:translateY(-2px)!important; border-color:#3d8de0!important;
+  background:linear-gradient(145deg,#143754 0%,#0c243b 100%)!important;
+  box-shadow:0 9px 24px rgba(0,0,0,.24)!important;
+}
+#camCards .mini-card b, #senCards .mini-card b{font-size:12px!important;color:#f2f7fc!important;align-self:center}
+#camCards .mini-card span, #senCards .mini-card span{font-size:9px!important;color:#82a5c4!important;text-align:right;align-self:center}
+#camCards .mini-card strong, #senCards .mini-card strong{font-size:18px!important;color:#6fb5ff!important;text-align:right!

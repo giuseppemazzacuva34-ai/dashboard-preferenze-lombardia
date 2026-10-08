@@ -1,0 +1,428 @@
+dash-card"><div class="card-title"><b>${k[0]}</b></div><div style="font-size:28px;font-weight:800">${k[1]}</div><small>${k[2]}</small></section>`).join('');
+ document.getElementById('correnteBars').innerHTML=election==='regionali' ? (corr.map(x=>`<div class="metric-row"><div><b>${esc(x[0])}</b><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],corrTotal)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessuna corrente assegnata.</div>') : '<div class="empty-state"><b>Le correnti sono una classificazione delle Regionali 2023.</b><span>Passa a DATI REGIONALI per analizzarle.</span></div>';
+ document.getElementById('analisiCandidates').innerHTML=`<div class="table-wrap"><table class="data-table"><thead><tr><th>#</th><th>Candidato</th><th>Corrente</th><th>Pref.</th><th>%</th></tr></thead><tbody>${cand.slice(0,40).map((x,i)=>{const rr=r.find(z=>z.candidato===x[0]);return `<tr><td>${i+1}</td><td><button class="link-btn" onclick="analysisRowClick('candidato',${esc(JSON.stringify(x[0]))})">${esc(x[0])}</button></td><td>${esc(rr?.corrente||'Da classificare')}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],t)}</td></tr>`}).join('')||'<tr><td colspan="5">Nessun dato</td></tr>'}</tbody></table></div>`;
+ document.getElementById('analisiProv').innerHTML=listBars(prov);
+ document.getElementById('analisiCam').innerHTML=cam.map(x=>`<div class="metric-row"><div><button class="link-btn" onclick="analysisRowClick('camP',${esc(JSON.stringify(x[0]))})"><b>${esc(x[0])}</b></button><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun collegio.</div>';
+ document.getElementById('analisiSen').innerHTML=sen.map(x=>`<div class="metric-row"><div><button class="link-btn" onclick="analysisRowClick('senP',${esc(JSON.stringify(x[0]))})"><b>${esc(x[0])}</b></button><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun collegio.</div>';
+ document.getElementById('analisiCamTable').innerHTML=`<table class="data-
+
+===== =====
+
+### collegi @ 2512103
+if(type==='candidato'){filters.candidato=value}render()}
+function analysisTable(rows,totalVal,type){return rows.slice(0,40).map((x,i)=>`<tr><td>${i+1}</td><td><button class="link-btn" onclick="analysisRowClick('${type}',${esc(JSON.stringify(x[0]))})">${esc(x[0])}</button></td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],totalVal)}</td></tr>`).join('')||'<tr><td colspan="4">Nessun dato</td></tr>'}
+function renderAnalisi(){
+ document.getElementById('analisiFilters').innerHTML=filterHTML();
+ const r=filtered(), t=sumRows(r), cand=groupRows(r,x=>x.candidato), corr=effectiveCurrentTotals(r), corrTotal=corr.reduce((s,x)=>s+x[1],0), prov=groupRows(r,x=>PROV_FULL[PROV_CODE[norm(x.prov)]]||x.prov), cam=groupRows(r,x=>x.geo?.camP), sen=groupRows(r,x=>x.geo?.senP);
+ const kpis=[['PREFERENZE',t.toLocaleString('it-IT'),'nel perimetro filtrato'],['CANDIDATI',new Set(r.map(x=>x.candidato)).size,'presenti nel filtro'],['COMUNI',new Set(r.map(x=>x.comune)).size,'coperti dai dati'],['PROVINCE',new Set(r.map(x=>x.prov)).size,'presenti nel filtro'],['CAMERA',new Set(r.map(x=>x.geo?.camP).filter(Boolean)).size,'collegi presenti'],['SENATO',new Set(r.map(x=>x.geo?.senP).filter(Boolean)).size,'collegi presenti'],['CORRENTI',new Set(r.map(x=>x.corrente).filter(Boolean)).size,election==='regionali'?'correnti assegnate':'disponibili solo sulle Regionali']];
+ document.getElementById('analisiKpi').innerHTML=kpis.map(k=>`<section class="dash-card"><div class="card-title"><b>${k[0]}</b></div><div style="font-size:28px;font-weight:800">${k[1]}</div><small>${k[2]}</small></section>`).join('');
+ document.getElementById('correnteBars').innerHTML=election==='regionali' ? (corr.map(x=>`<div class="metric-row"><div><b>${esc(x[0])}</b><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],corrTotal)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessuna corrente assegnata.</div>') : '<div class="empty-state"><b>Le correnti sono una classificazione delle Regionali 2023.</b><span>Passa a DATI REGIONALI per analizzarle.</span></div>';
+ document.getElementById('analisiCandidates').innerHTML=`<div class="table-wrap"><table class="data-table"><thead><tr><th>#</th><th>Candidato</th><th>Corrente</th><th>Pref.</th><th>%</th></tr></thead><tbody>${cand.slice(0,40).map((x,i)=>{const rr=r.find(z=>z.candidato===x[0]);return `<tr><td>${i+1}</td><td><button class="link-btn" onclick="analysisRowClick('candidato',${esc(JSON.stringify(x[0]))})">${esc(x[0])}</button></td><td>${esc(rr?.corrente||'Da classificare')}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],t)}</td></tr>`}).join('')||'<tr><td colspan="5">Nessun dato</td></tr>'}</tbody></table></div>`;
+ document.getElementById('analisiProv').innerHTML=listBars(prov);
+ document.getElementById('analisiCam').innerHTML=cam.map(x=>`<div class="metric-row"><div><button class="link-btn" onclick="analysisRowClick('camP',${esc(JSON.stringify(x[0]))})"><b>${esc(x[0])}</b></button><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun collegio.</div>';
+ document.getElementById('analisiSen').innerHTML=sen.map(x=>`<div class="metric-row"><div><button class="link-btn" onclick="analysisRowClick('senP',${esc(JSON.stringify(x[0]))})"><b>${esc(x[0])}</b></button><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun collegio.</div>';
+ document.getElementById('analisiCamTable').innerHTML=`<table class="data-table"><thead><tr><th>#</th><th>Collegio</th><th>Preferenze</th><th>%</th></tr></t
+
+===== =====
+
+### collegi @ 2514113
+no una classificazione delle Regionali 2023.</b><span>Passa a DATI REGIONALI per analizzarle.</span></div>';
+ document.getElementById('analisiCandidates').innerHTML=`<div class="table-wrap"><table class="data-table"><thead><tr><th>#</th><th>Candidato</th><th>Corrente</th><th>Pref.</th><th>%</th></tr></thead><tbody>${cand.slice(0,40).map((x,i)=>{const rr=r.find(z=>z.candidato===x[0]);return `<tr><td>${i+1}</td><td><button class="link-btn" onclick="analysisRowClick('candidato',${esc(JSON.stringify(x[0]))})">${esc(x[0])}</button></td><td>${esc(rr?.corrente||'Da classificare')}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],t)}</td></tr>`}).join('')||'<tr><td colspan="5">Nessun dato</td></tr>'}</tbody></table></div>`;
+ document.getElementById('analisiProv').innerHTML=listBars(prov);
+ document.getElementById('analisiCam').innerHTML=cam.map(x=>`<div class="metric-row"><div><button class="link-btn" onclick="analysisRowClick('camP',${esc(JSON.stringify(x[0]))})"><b>${esc(x[0])}</b></button><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun collegio.</div>';
+ document.getElementById('analisiSen').innerHTML=sen.map(x=>`<div class="metric-row"><div><button class="link-btn" onclick="analysisRowClick('senP',${esc(JSON.stringify(x[0]))})"><b>${esc(x[0])}</b></button><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun collegio.</div>';
+ document.getElementById('analisiCamTable').innerHTML=`<table class="data-table"><thead><tr><th>#</th><th>Collegio</th><th>Preferenze</th><th>%</th></tr></thead><tbody>${analysisTable(cam,t,'camP')}</tbody></table>`;
+ document.getElementById('analisiSenTable').innerHTML=`<table class="data-table"><thead><tr><th>#</th><th>Collegio</th><th>Preferenze</th><th>%</th></tr></thead><tbody>${analysisTable(sen,t,'senP')}</tbody></table>`;
+ const selectedRow=filters.candidato?cand.find(x=>x[0]===filters.candidato):cand[0];
+ if(selectedRow){
+   const cr=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.prov);
+   document.getElementById('analisiCandidateCompare').innerHTML=`<div class="analysis-callout"><b>${esc(selectedRow[0])}</b> · ${selectedRow[1].toLocaleString('it-IT')} preferenze · ${pct(selectedRow[1],t)}</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Provincia</th><th>Pref.</th><th>% candidato</th></tr></thead><tbody>${cr.map(x=>`<tr><td>${esc(PROV_FULL[PROV_CODE[norm(x[0])]]||x[0])}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],selectedRow[1])}</td></tr>`).join('')}</tbody></table></div>`;
+   const cg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.camP); const sg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.senP);
+   document.getElementById('analisiCandidateGeo').innerHTML=`<table class="data-table"><thead><tr><th>Collegio Camera</th><th>Pref.</th><th>% candidato</th><th>Collegio Senato</th><th>Pref.</th></tr></thead><tbody>${Array.from({length:Math.max(cg.length,sg.length)}).map((_,i)=>`<tr><td>${cg[i]?esc(cg[i][0]):'—'}</td><td>${cg[i]?cg[i][1].toLocaleString('it-IT'):'—'}</td><td>${cg[i]?pct(cg[i][1],selectedRow[1]):'—'}</td><td>${sg[i]?esc(sg[i][0]):'—'}</td><td>${sg[i]?sg[i][1].toLocaleString('it-IT'):'—'}</td></tr>`).join('')}</tbody></table>`;
+ }else{document.getElementById('analisiCandidateCompare').innerHTML='<div class="empty-state">Seleziona un candidato per il confronto.</div>';document.getElementById('analisiCandidateGeo').innerHTML='<div class="empty-state">Seleziona un candidato per vedere la distribuzione nei collegi.</div>'}
+ const topComun
+
+===== =====
+
+### collegi @ 2514529
+><button class="link-btn" onclick="analysisRowClick('candidato',${esc(JSON.stringify(x[0]))})">${esc(x[0])}</button></td><td>${esc(rr?.corrente||'Da classificare')}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],t)}</td></tr>`}).join('')||'<tr><td colspan="5">Nessun dato</td></tr>'}</tbody></table></div>`;
+ document.getElementById('analisiProv').innerHTML=listBars(prov);
+ document.getElementById('analisiCam').innerHTML=cam.map(x=>`<div class="metric-row"><div><button class="link-btn" onclick="analysisRowClick('camP',${esc(JSON.stringify(x[0]))})"><b>${esc(x[0])}</b></button><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun collegio.</div>';
+ document.getElementById('analisiSen').innerHTML=sen.map(x=>`<div class="metric-row"><div><button class="link-btn" onclick="analysisRowClick('senP',${esc(JSON.stringify(x[0]))})"><b>${esc(x[0])}</b></button><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun collegio.</div>';
+ document.getElementById('analisiCamTable').innerHTML=`<table class="data-table"><thead><tr><th>#</th><th>Collegio</th><th>Preferenze</th><th>%</th></tr></thead><tbody>${analysisTable(cam,t,'camP')}</tbody></table>`;
+ document.getElementById('analisiSenTable').innerHTML=`<table class="data-table"><thead><tr><th>#</th><th>Collegio</th><th>Preferenze</th><th>%</th></tr></thead><tbody>${analysisTable(sen,t,'senP')}</tbody></table>`;
+ const selectedRow=filters.candidato?cand.find(x=>x[0]===filters.candidato):cand[0];
+ if(selectedRow){
+   const cr=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.prov);
+   document.getElementById('analisiCandidateCompare').innerHTML=`<div class="analysis-callout"><b>${esc(selectedRow[0])}</b> · ${selectedRow[1].toLocaleString('it-IT')} preferenze · ${pct(selectedRow[1],t)}</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Provincia</th><th>Pref.</th><th>% candidato</th></tr></thead><tbody>${cr.map(x=>`<tr><td>${esc(PROV_FULL[PROV_CODE[norm(x[0])]]||x[0])}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],selectedRow[1])}</td></tr>`).join('')}</tbody></table></div>`;
+   const cg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.camP); const sg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.senP);
+   document.getElementById('analisiCandidateGeo').innerHTML=`<table class="data-table"><thead><tr><th>Collegio Camera</th><th>Pref.</th><th>% candidato</th><th>Collegio Senato</th><th>Pref.</th></tr></thead><tbody>${Array.from({length:Math.max(cg.length,sg.length)}).map((_,i)=>`<tr><td>${cg[i]?esc(cg[i][0]):'—'}</td><td>${cg[i]?cg[i][1].toLocaleString('it-IT'):'—'}</td><td>${cg[i]?pct(cg[i][1],selectedRow[1]):'—'}</td><td>${sg[i]?esc(sg[i][0]):'—'}</td><td>${sg[i]?sg[i][1].toLocaleString('it-IT'):'—'}</td></tr>`).join('')}</tbody></table>`;
+ }else{document.getElementById('analisiCandidateCompare').innerHTML='<div class="empty-state">Seleziona un candidato per il confronto.</div>';document.getElementById('analisiCandidateGeo').innerHTML='<div class="empty-state">Seleziona un candidato per vedere la distribuzione nei collegi.</div>'}
+ const topComuni=groupRows(r,x=>x.comune).slice(0,15); document.getElementById('analisiTopComuni').innerHTML=topComuni.map((x,i)=>`<div class="metric-row"><div><b>${i+1}. ${esc(x[0])}</b><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun comune.</div>';
+ const camTot=sumRows(r.filter(x=>x.g
+
+===== =====
+
+### collegi @ 2514653
+>${esc(rr?.corrente||'Da classificare')}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],t)}</td></tr>`}).join('')||'<tr><td colspan="5">Nessun dato</td></tr>'}</tbody></table></div>`;
+ document.getElementById('analisiProv').innerHTML=listBars(prov);
+ document.getElementById('analisiCam').innerHTML=cam.map(x=>`<div class="metric-row"><div><button class="link-btn" onclick="analysisRowClick('camP',${esc(JSON.stringify(x[0]))})"><b>${esc(x[0])}</b></button><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun collegio.</div>';
+ document.getElementById('analisiSen').innerHTML=sen.map(x=>`<div class="metric-row"><div><button class="link-btn" onclick="analysisRowClick('senP',${esc(JSON.stringify(x[0]))})"><b>${esc(x[0])}</b></button><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun collegio.</div>';
+ document.getElementById('analisiCamTable').innerHTML=`<table class="data-table"><thead><tr><th>#</th><th>Collegio</th><th>Preferenze</th><th>%</th></tr></thead><tbody>${analysisTable(cam,t,'camP')}</tbody></table>`;
+ document.getElementById('analisiSenTable').innerHTML=`<table class="data-table"><thead><tr><th>#</th><th>Collegio</th><th>Preferenze</th><th>%</th></tr></thead><tbody>${analysisTable(sen,t,'senP')}</tbody></table>`;
+ const selectedRow=filters.candidato?cand.find(x=>x[0]===filters.candidato):cand[0];
+ if(selectedRow){
+   const cr=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.prov);
+   document.getElementById('analisiCandidateCompare').innerHTML=`<div class="analysis-callout"><b>${esc(selectedRow[0])}</b> · ${selectedRow[1].toLocaleString('it-IT')} preferenze · ${pct(selectedRow[1],t)}</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Provincia</th><th>Pref.</th><th>% candidato</th></tr></thead><tbody>${cr.map(x=>`<tr><td>${esc(PROV_FULL[PROV_CODE[norm(x[0])]]||x[0])}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],selectedRow[1])}</td></tr>`).join('')}</tbody></table></div>`;
+   const cg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.camP); const sg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.senP);
+   document.getElementById('analisiCandidateGeo').innerHTML=`<table class="data-table"><thead><tr><th>Collegio Camera</th><th>Pref.</th><th>% candidato</th><th>Collegio Senato</th><th>Pref.</th></tr></thead><tbody>${Array.from({length:Math.max(cg.length,sg.length)}).map((_,i)=>`<tr><td>${cg[i]?esc(cg[i][0]):'—'}</td><td>${cg[i]?cg[i][1].toLocaleString('it-IT'):'—'}</td><td>${cg[i]?pct(cg[i][1],selectedRow[1]):'—'}</td><td>${sg[i]?esc(sg[i][0]):'—'}</td><td>${sg[i]?sg[i][1].toLocaleString('it-IT'):'—'}</td></tr>`).join('')}</tbody></table>`;
+ }else{document.getElementById('analisiCandidateCompare').innerHTML='<div class="empty-state">Seleziona un candidato per il confronto.</div>';document.getElementById('analisiCandidateGeo').innerHTML='<div class="empty-state">Seleziona un candidato per vedere la distribuzione nei collegi.</div>'}
+ const topComuni=groupRows(r,x=>x.comune).slice(0,15); document.getElementById('analisiTopComuni').innerHTML=topComuni.map((x,i)=>`<div class="metric-row"><div><b>${i+1}. ${esc(x[0])}</b><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun comune.</div>';
+ const camTot=sumRows(r.filter(x=>x.geo?.camP)), senTot=sumRows(r.filter(x=>x.geo?.senP)); document.getElementById('analisiCamSen').innerHTML=`<div class="metric
+
+===== =====
+
+### collegi @ 2514870
+yId('analisiProv').innerHTML=listBars(prov);
+ document.getElementById('analisiCam').innerHTML=cam.map(x=>`<div class="metric-row"><div><button class="link-btn" onclick="analysisRowClick('camP',${esc(JSON.stringify(x[0]))})"><b>${esc(x[0])}</b></button><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun collegio.</div>';
+ document.getElementById('analisiSen').innerHTML=sen.map(x=>`<div class="metric-row"><div><button class="link-btn" onclick="analysisRowClick('senP',${esc(JSON.stringify(x[0]))})"><b>${esc(x[0])}</b></button><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun collegio.</div>';
+ document.getElementById('analisiCamTable').innerHTML=`<table class="data-table"><thead><tr><th>#</th><th>Collegio</th><th>Preferenze</th><th>%</th></tr></thead><tbody>${analysisTable(cam,t,'camP')}</tbody></table>`;
+ document.getElementById('analisiSenTable').innerHTML=`<table class="data-table"><thead><tr><th>#</th><th>Collegio</th><th>Preferenze</th><th>%</th></tr></thead><tbody>${analysisTable(sen,t,'senP')}</tbody></table>`;
+ const selectedRow=filters.candidato?cand.find(x=>x[0]===filters.candidato):cand[0];
+ if(selectedRow){
+   const cr=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.prov);
+   document.getElementById('analisiCandidateCompare').innerHTML=`<div class="analysis-callout"><b>${esc(selectedRow[0])}</b> · ${selectedRow[1].toLocaleString('it-IT')} preferenze · ${pct(selectedRow[1],t)}</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Provincia</th><th>Pref.</th><th>% candidato</th></tr></thead><tbody>${cr.map(x=>`<tr><td>${esc(PROV_FULL[PROV_CODE[norm(x[0])]]||x[0])}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],selectedRow[1])}</td></tr>`).join('')}</tbody></table></div>`;
+   const cg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.camP); const sg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.senP);
+   document.getElementById('analisiCandidateGeo').innerHTML=`<table class="data-table"><thead><tr><th>Collegio Camera</th><th>Pref.</th><th>% candidato</th><th>Collegio Senato</th><th>Pref.</th></tr></thead><tbody>${Array.from({length:Math.max(cg.length,sg.length)}).map((_,i)=>`<tr><td>${cg[i]?esc(cg[i][0]):'—'}</td><td>${cg[i]?cg[i][1].toLocaleString('it-IT'):'—'}</td><td>${cg[i]?pct(cg[i][1],selectedRow[1]):'—'}</td><td>${sg[i]?esc(sg[i][0]):'—'}</td><td>${sg[i]?sg[i][1].toLocaleString('it-IT'):'—'}</td></tr>`).join('')}</tbody></table>`;
+ }else{document.getElementById('analisiCandidateCompare').innerHTML='<div class="empty-state">Seleziona un candidato per il confronto.</div>';document.getElementById('analisiCandidateGeo').innerHTML='<div class="empty-state">Seleziona un candidato per vedere la distribuzione nei collegi.</div>'}
+ const topComuni=groupRows(r,x=>x.comune).slice(0,15); document.getElementById('analisiTopComuni').innerHTML=topComuni.map((x,i)=>`<div class="metric-row"><div><b>${i+1}. ${esc(x[0])}</b><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun comune.</div>';
+ const camTot=sumRows(r.filter(x=>x.geo?.camP)), senTot=sumRows(r.filter(x=>x.geo?.senP)); document.getElementById('analisiCamSen').innerHTML=`<div class="metric-row"><div><b>Camera</b><span>${camTot.toLocaleString('it-IT')} · ${pct(camTot,t)}</span></div><div class="metric-track"><i style="width:${t?camTot/t*100:0}%"></i></div></div><div class="metric-row"><div><b>Senato</b>
+
+===== =====
+
+### collegi @ 2515956
+able>`;
+ document.getElementById('analisiSenTable').innerHTML=`<table class="data-table"><thead><tr><th>#</th><th>Collegio</th><th>Preferenze</th><th>%</th></tr></thead><tbody>${analysisTable(sen,t,'senP')}</tbody></table>`;
+ const selectedRow=filters.candidato?cand.find(x=>x[0]===filters.candidato):cand[0];
+ if(selectedRow){
+   const cr=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.prov);
+   document.getElementById('analisiCandidateCompare').innerHTML=`<div class="analysis-callout"><b>${esc(selectedRow[0])}</b> · ${selectedRow[1].toLocaleString('it-IT')} preferenze · ${pct(selectedRow[1],t)}</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Provincia</th><th>Pref.</th><th>% candidato</th></tr></thead><tbody>${cr.map(x=>`<tr><td>${esc(PROV_FULL[PROV_CODE[norm(x[0])]]||x[0])}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],selectedRow[1])}</td></tr>`).join('')}</tbody></table></div>`;
+   const cg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.camP); const sg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.senP);
+   document.getElementById('analisiCandidateGeo').innerHTML=`<table class="data-table"><thead><tr><th>Collegio Camera</th><th>Pref.</th><th>% candidato</th><th>Collegio Senato</th><th>Pref.</th></tr></thead><tbody>${Array.from({length:Math.max(cg.length,sg.length)}).map((_,i)=>`<tr><td>${cg[i]?esc(cg[i][0]):'—'}</td><td>${cg[i]?cg[i][1].toLocaleString('it-IT'):'—'}</td><td>${cg[i]?pct(cg[i][1],selectedRow[1]):'—'}</td><td>${sg[i]?esc(sg[i][0]):'—'}</td><td>${sg[i]?sg[i][1].toLocaleString('it-IT'):'—'}</td></tr>`).join('')}</tbody></table>`;
+ }else{document.getElementById('analisiCandidateCompare').innerHTML='<div class="empty-state">Seleziona un candidato per il confronto.</div>';document.getElementById('analisiCandidateGeo').innerHTML='<div class="empty-state">Seleziona un candidato per vedere la distribuzione nei collegi.</div>'}
+ const topComuni=groupRows(r,x=>x.comune).slice(0,15); document.getElementById('analisiTopComuni').innerHTML=topComuni.map((x,i)=>`<div class="metric-row"><div><b>${i+1}. ${esc(x[0])}</b><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun comune.</div>';
+ const camTot=sumRows(r.filter(x=>x.geo?.camP)), senTot=sumRows(r.filter(x=>x.geo?.senP)); document.getElementById('analisiCamSen').innerHTML=`<div class="metric-row"><div><b>Camera</b><span>${camTot.toLocaleString('it-IT')} · ${pct(camTot,t)}</span></div><div class="metric-track"><i style="width:${t?camTot/t*100:0}%"></i></div></div><div class="metric-row"><div><b>Senato</b><span>${senTot.toLocaleString('it-IT')} · ${pct(senTot,t)}</span></div><div class="metric-track"><i style="width:${t?senTot/t*100:0}%"></i></div></div>`;
+ const eurT=sumRows(EURO_RAW), regT=sumRows(RAW), pv=[...new Set([...EURO_RAW.map(x=>x.prov),...RAW.map(x=>x.prov)])].map(p=>{const e=sumRows(EURO_RAW.filter(x=>norm(x.prov)===norm(p))),q=sumRows(RAW.filter(x=>norm(x.prov)===norm(p)));return [p,e,q]}).sort((a,b)=>b[2]-a[2]);
+ document.getElementById('analisiConfronto').innerHTML=`<div class="analysis-callout"><b>Totale Lombardia</b> · Europee ${eurT.toLocaleString('it-IT')} · Regionali ${regT.toLocaleString('it-IT')}</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Provincia</th><th>Europee</th><th>Regionali</th><th>Reg. vs Eur.</th></tr></thead><tbody>${pv.map(x=>`<tr><td>${esc(PROV_FULL[PROV_CODE[norm(x[0])]]||x[0])}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${x[2].toLocaleString('it-IT')}</td><td>${x[1]?((x[2]/x[1]-1)*100).toFixed(1)+'%':'—'}</td></tr>`).join('')}</tbody></table></div>`;
+ function correnteCollegioTable(type){if(election!==
+
+===== =====
+
+### collegi @ 2516014
+TML=`<table class="data-table"><thead><tr><th>#</th><th>Collegio</th><th>Preferenze</th><th>%</th></tr></thead><tbody>${analysisTable(sen,t,'senP')}</tbody></table>`;
+ const selectedRow=filters.candidato?cand.find(x=>x[0]===filters.candidato):cand[0];
+ if(selectedRow){
+   const cr=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.prov);
+   document.getElementById('analisiCandidateCompare').innerHTML=`<div class="analysis-callout"><b>${esc(selectedRow[0])}</b> · ${selectedRow[1].toLocaleString('it-IT')} preferenze · ${pct(selectedRow[1],t)}</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Provincia</th><th>Pref.</th><th>% candidato</th></tr></thead><tbody>${cr.map(x=>`<tr><td>${esc(PROV_FULL[PROV_CODE[norm(x[0])]]||x[0])}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],selectedRow[1])}</td></tr>`).join('')}</tbody></table></div>`;
+   const cg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.camP); const sg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.senP);
+   document.getElementById('analisiCandidateGeo').innerHTML=`<table class="data-table"><thead><tr><th>Collegio Camera</th><th>Pref.</th><th>% candidato</th><th>Collegio Senato</th><th>Pref.</th></tr></thead><tbody>${Array.from({length:Math.max(cg.length,sg.length)}).map((_,i)=>`<tr><td>${cg[i]?esc(cg[i][0]):'—'}</td><td>${cg[i]?cg[i][1].toLocaleString('it-IT'):'—'}</td><td>${cg[i]?pct(cg[i][1],selectedRow[1]):'—'}</td><td>${sg[i]?esc(sg[i][0]):'—'}</td><td>${sg[i]?sg[i][1].toLocaleString('it-IT'):'—'}</td></tr>`).join('')}</tbody></table>`;
+ }else{document.getElementById('analisiCandidateCompare').innerHTML='<div class="empty-state">Seleziona un candidato per il confronto.</div>';document.getElementById('analisiCandidateGeo').innerHTML='<div class="empty-state">Seleziona un candidato per vedere la distribuzione nei collegi.</div>'}
+ const topComuni=groupRows(r,x=>x.comune).slice(0,15); document.getElementById('analisiTopComuni').innerHTML=topComuni.map((x,i)=>`<div class="metric-row"><div><b>${i+1}. ${esc(x[0])}</b><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun comune.</div>';
+ const camTot=sumRows(r.filter(x=>x.geo?.camP)), senTot=sumRows(r.filter(x=>x.geo?.senP)); document.getElementById('analisiCamSen').innerHTML=`<div class="metric-row"><div><b>Camera</b><span>${camTot.toLocaleString('it-IT')} · ${pct(camTot,t)}</span></div><div class="metric-track"><i style="width:${t?camTot/t*100:0}%"></i></div></div><div class="metric-row"><div><b>Senato</b><span>${senTot.toLocaleString('it-IT')} · ${pct(senTot,t)}</span></div><div class="metric-track"><i style="width:${t?senTot/t*100:0}%"></i></div></div>`;
+ const eurT=sumRows(EURO_RAW), regT=sumRows(RAW), pv=[...new Set([...EURO_RAW.map(x=>x.prov),...RAW.map(x=>x.prov)])].map(p=>{const e=sumRows(EURO_RAW.filter(x=>norm(x.prov)===norm(p))),q=sumRows(RAW.filter(x=>norm(x.prov)===norm(p)));return [p,e,q]}).sort((a,b)=>b[2]-a[2]);
+ document.getElementById('analisiConfronto').innerHTML=`<div class="analysis-callout"><b>Totale Lombardia</b> · Europee ${eurT.toLocaleString('it-IT')} · Regionali ${regT.toLocaleString('it-IT')}</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Provincia</th><th>Europee</th><th>Regionali</th><th>Reg. vs Eur.</th></tr></thead><tbody>${pv.map(x=>`<tr><td>${esc(PROV_FULL[PROV_CODE[norm(x[0])]]||x[0])}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${x[2].toLocaleString('it-IT')}</td><td>${x[1]?((x[2]/x[1]-1)*100).toFixed(1)+'%':'—'}</td></tr>`).join('')}</tbody></table></div>`;
+ function correnteCollegioTable(type){if(election!=='regionali')return '<div class="empty-state">Le correnti s
+
+===== =====
+
+### collegi @ 2516681
+/th></tr></thead><tbody>${cr.map(x=>`<tr><td>${esc(PROV_FULL[PROV_CODE[norm(x[0])]]||x[0])}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${pct(x[1],selectedRow[1])}</td></tr>`).join('')}</tbody></table></div>`;
+   const cg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.camP); const sg=groupRows(r.filter(x=>x.candidato===selectedRow[0]),x=>x.geo?.senP);
+   document.getElementById('analisiCandidateGeo').innerHTML=`<table class="data-table"><thead><tr><th>Collegio Camera</th><th>Pref.</th><th>% candidato</th><th>Collegio Senato</th><th>Pref.</th></tr></thead><tbody>${Array.from({length:Math.max(cg.length,sg.length)}).map((_,i)=>`<tr><td>${cg[i]?esc(cg[i][0]):'—'}</td><td>${cg[i]?cg[i][1].toLocaleString('it-IT'):'—'}</td><td>${cg[i]?pct(cg[i][1],selectedRow[1]):'—'}</td><td>${sg[i]?esc(sg[i][0]):'—'}</td><td>${sg[i]?sg[i][1].toLocaleString('it-IT'):'—'}</td></tr>`).join('')}</tbody></table>`;
+ }else{document.getElementById('analisiCandidateCompare').innerHTML='<div class="empty-state">Seleziona un candidato per il confronto.</div>';document.getElementById('analisiCandidateGeo').innerHTML='<div class="empty-state">Seleziona un candidato per vedere la distribuzione nei collegi.</div>'}
+ const topComuni=groupRows(r,x=>x.comune).slice(0,15); document.getElementById('analisiTopComuni').innerHTML=topComuni.map((x,i)=>`<div class="metric-row"><div><b>${i+1}. ${esc(x[0])}</b><span>${x[1].toLocaleString('it-IT')} · ${pct(x[1],t)}</span></div><div class="metric-track"><i style="width:${t?x[1]/t*100:0}%"></i></div></div>`).join('')||'<div class="empty-state">Nessun comune.</div>';
+ const camTot=sumRows(r.filter(x=>x.geo?.camP)), senTot=sumRows(r.filter(x=>x.geo?.senP)); document.getElementById('analisiCamSen').innerHTML=`<div class="metric-row"><div><b>Camera</b><span>${camTot.toLocaleString('it-IT')} · ${pct(camTot,t)}</span></div><div class="metric-track"><i style="width:${t?camTot/t*100:0}%"></i></div></div><div class="metric-row"><div><b>Senato</b><span>${senTot.toLocaleString('it-IT')} · ${pct(senTot,t)}</span></div><div class="metric-track"><i style="width:${t?senTot/t*100:0}%"></i></div></div>`;
+ const eurT=sumRows(EURO_RAW), regT=sumRows(RAW), pv=[...new Set([...EURO_RAW.map(x=>x.prov),...RAW.map(x=>x.prov)])].map(p=>{const e=sumRows(EURO_RAW.filter(x=>norm(x.prov)===norm(p))),q=sumRows(RAW.filter(x=>norm(x.prov)===norm(p)));return [p,e,q]}).sort((a,b)=>b[2]-a[2]);
+ document.getElementById('analisiConfronto').innerHTML=`<div class="analysis-callout"><b>Totale Lombardia</b> · Europee ${eurT.toLocaleString('it-IT')} · Regionali ${regT.toLocaleString('it-IT')}</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Provincia</th><th>Europee</th><th>Regionali</th><th>Reg. vs Eur.</th></tr></thead><tbody>${pv.map(x=>`<tr><td>${esc(PROV_FULL[PROV_CODE[norm(x[0])]]||x[0])}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${x[2].toLocaleString('it-IT')}</td><td>${x[1]?((x[2]/x[1]-1)*100).toFixed(1)+'%':'—'}</td></tr>`).join('')}</tbody></table></div>`;
+ function correnteCollegioTable(type){if(election!=='regionali')return '<div class="empty-state">Le correnti sono disponibili solo sulle Regionali 2023.</div>';const key=type==='cam'?x=>x.geo?.camP:x=>x.geo?.senP;const by=effectiveCurrentBy(r,key);const cols=[...new Set(r.map(x=>key(x)).filter(Boolean))];const cs=[...new Set(Object.values(by).flatMap(o=>Object.keys(o)))].sort();const grand=cs.reduce((s,c)=>s+cols.reduce((a,col)=>a+(by[col]?.[c]||0),0),0);return `<table class="data-table"><thead><tr><th>Corrente</th>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}<th>Totale</th><th>%</th></tr></thead><tbody>${cs.map(c=>{const tot=cols.reduce((a,col)=>a+(by[col]?.[c]||0),0);return `<tr><td><b>${esc(c)}</b></td>${cols.map(col=>{const v=by[col]?.[c]||0;const colTot=Object.v
+
+===== =====
+
+### collegi @ 2518522
+ct(camTot,t)}</span></div><div class="metric-track"><i style="width:${t?camTot/t*100:0}%"></i></div></div><div class="metric-row"><div><b>Senato</b><span>${senTot.toLocaleString('it-IT')} · ${pct(senTot,t)}</span></div><div class="metric-track"><i style="width:${t?senTot/t*100:0}%"></i></div></div>`;
+ const eurT=sumRows(EURO_RAW), regT=sumRows(RAW), pv=[...new Set([...EURO_RAW.map(x=>x.prov),...RAW.map(x=>x.prov)])].map(p=>{const e=sumRows(EURO_RAW.filter(x=>norm(x.prov)===norm(p))),q=sumRows(RAW.filter(x=>norm(x.prov)===norm(p)));return [p,e,q]}).sort((a,b)=>b[2]-a[2]);
+ document.getElementById('analisiConfronto').innerHTML=`<div class="analysis-callout"><b>Totale Lombardia</b> · Europee ${eurT.toLocaleString('it-IT')} · Regionali ${regT.toLocaleString('it-IT')}</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Provincia</th><th>Europee</th><th>Regionali</th><th>Reg. vs Eur.</th></tr></thead><tbody>${pv.map(x=>`<tr><td>${esc(PROV_FULL[PROV_CODE[norm(x[0])]]||x[0])}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${x[2].toLocaleString('it-IT')}</td><td>${x[1]?((x[2]/x[1]-1)*100).toFixed(1)+'%':'—'}</td></tr>`).join('')}</tbody></table></div>`;
+ function correnteCollegioTable(type){if(election!=='regionali')return '<div class="empty-state">Le correnti sono disponibili solo sulle Regionali 2023.</div>';const key=type==='cam'?x=>x.geo?.camP:x=>x.geo?.senP;const by=effectiveCurrentBy(r,key);const cols=[...new Set(r.map(x=>key(x)).filter(Boolean))];const cs=[...new Set(Object.values(by).flatMap(o=>Object.keys(o)))].sort();const grand=cs.reduce((s,c)=>s+cols.reduce((a,col)=>a+(by[col]?.[c]||0),0),0);return `<table class="data-table"><thead><tr><th>Corrente</th>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}<th>Totale</th><th>%</th></tr></thead><tbody>${cs.map(c=>{const tot=cols.reduce((a,col)=>a+(by[col]?.[c]||0),0);return `<tr><td><b>${esc(c)}</b></td>${cols.map(col=>{const v=by[col]?.[c]||0;const colTot=Object.values(by[col]||{}).reduce((a,n)=>a+n,0);return `<td>${v.toLocaleString('it-IT')} <small>(${pct(v,colTot)})</small></td>`}).join('')}<td>${tot.toLocaleString('it-IT')}</td><td>${pct(tot,grand)}</td></tr>`}).join('')}</tbody></table>`}
+ document.getElementById('analisiCorrenteCam').innerHTML=correnteCollegioTable('cam'); document.getElementById('analisiCorrenteSen').innerHTML=correnteCollegioTable('sen');
+ const topProv=prov[0], topCand=cand[0], topCorr=corr[0]; document.getElementById('analisiInsight').innerHTML=`<div class="status-list"><div><b>${topProv?esc(topProv[0]):'—'}</b><span>provincia più forte</span></div><div><b>${topCand?esc(topCand[0]):'—'}</b><span>candidato n.1 · ${topCand?pct(topCand[1],t):'—'}</span></div><div><b>${election==='regionali'&&topCorr?esc(topCorr[0]):'—'}</b><span>${election==='regionali'&&topCorr?'corrente n.1 · '+pct(topCorr[1],t):'analisi correnti non disponibile'}</span></div><div><b>${cam[0]?esc(cam[0][0]):'—'}</b><span>collegio Camera più forte</span></div><div><b>${sen[0]?esc(sen[0][0]):'—'}</b><span>collegio Senato più forte</span></div><div><b>${topComuni[0]?esc(topComuni[0][0]):'—'}</b><span>comune più forte</span></div></div>`;
+}
+function exportAnalysisAdvanced(){const r=filtered(),out=['TIPO;NOME;PREFERENZE;PERCENTUALE'];groupRows(r,x=>x.corrente).forEach(x=>out.push(`CORRENTE;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.candidato).forEach(x=>out.push(`CANDIDATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.camP).forEach(x=>out.push(`CAMERA;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.senP).forEach(x=>out.push(`SENATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));download(out.join('\n'),'analisi_avanzata_l
+
+===== =====
+
+### collegi @ 2519580
+LocaleString('it-IT')}</td><td>${x[1]?((x[2]/x[1]-1)*100).toFixed(1)+'%':'—'}</td></tr>`).join('')}</tbody></table></div>`;
+ function correnteCollegioTable(type){if(election!=='regionali')return '<div class="empty-state">Le correnti sono disponibili solo sulle Regionali 2023.</div>';const key=type==='cam'?x=>x.geo?.camP:x=>x.geo?.senP;const by=effectiveCurrentBy(r,key);const cols=[...new Set(r.map(x=>key(x)).filter(Boolean))];const cs=[...new Set(Object.values(by).flatMap(o=>Object.keys(o)))].sort();const grand=cs.reduce((s,c)=>s+cols.reduce((a,col)=>a+(by[col]?.[c]||0),0),0);return `<table class="data-table"><thead><tr><th>Corrente</th>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}<th>Totale</th><th>%</th></tr></thead><tbody>${cs.map(c=>{const tot=cols.reduce((a,col)=>a+(by[col]?.[c]||0),0);return `<tr><td><b>${esc(c)}</b></td>${cols.map(col=>{const v=by[col]?.[c]||0;const colTot=Object.values(by[col]||{}).reduce((a,n)=>a+n,0);return `<td>${v.toLocaleString('it-IT')} <small>(${pct(v,colTot)})</small></td>`}).join('')}<td>${tot.toLocaleString('it-IT')}</td><td>${pct(tot,grand)}</td></tr>`}).join('')}</tbody></table>`}
+ document.getElementById('analisiCorrenteCam').innerHTML=correnteCollegioTable('cam'); document.getElementById('analisiCorrenteSen').innerHTML=correnteCollegioTable('sen');
+ const topProv=prov[0], topCand=cand[0], topCorr=corr[0]; document.getElementById('analisiInsight').innerHTML=`<div class="status-list"><div><b>${topProv?esc(topProv[0]):'—'}</b><span>provincia più forte</span></div><div><b>${topCand?esc(topCand[0]):'—'}</b><span>candidato n.1 · ${topCand?pct(topCand[1],t):'—'}</span></div><div><b>${election==='regionali'&&topCorr?esc(topCorr[0]):'—'}</b><span>${election==='regionali'&&topCorr?'corrente n.1 · '+pct(topCorr[1],t):'analisi correnti non disponibile'}</span></div><div><b>${cam[0]?esc(cam[0][0]):'—'}</b><span>collegio Camera più forte</span></div><div><b>${sen[0]?esc(sen[0][0]):'—'}</b><span>collegio Senato più forte</span></div><div><b>${topComuni[0]?esc(topComuni[0][0]):'—'}</b><span>comune più forte</span></div></div>`;
+}
+function exportAnalysisAdvanced(){const r=filtered(),out=['TIPO;NOME;PREFERENZE;PERCENTUALE'];groupRows(r,x=>x.corrente).forEach(x=>out.push(`CORRENTE;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.candidato).forEach(x=>out.push(`CANDIDATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.camP).forEach(x=>out.push(`CAMERA;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.senP).forEach(x=>out.push(`SENATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));download(out.join('\n'),'analisi_avanzata_lombardia.csv','text/csv;charset=utf-8')}
+
+function renderCorrenti(){let a=effectiveCurrentTotals(data),t=a.reduce((s,x)=>s+x[1],0);document.getElementById('correntiTable').innerHTML=a.map(x=>`<tr><td><b>${esc(x[0])}</b></td><td>${new Set(data.filter(r=>(correnti[r.candidato]||'Da classificare')===x[0]).map(r=>r.candidato)).size}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${t?((x[1]/t)*100).toFixed(2):'0.00'}%</td></tr>`).join('')} 
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')renderComuni();if(current==='candidati')renderCand();if(current==='collegi')renderCollegi();if(current==='analisi')renderAnalisi();if(current==='correnti')renderCorrenti()}
+function searchGlobal(){let q=prompt('Cerca comune, candidato o collegio:');if(!q)return;let n=norm(q),c=CANDS.find(x=>norm(x).includes(n)),g=GEO.find(x=>norm(x.comune).includes(n));if(c){filters={prov:'',comune:'',candidato:c,corrente:'',camP:'',senP:'',lista:''};tab('preferenze',document.querySelector('[onclick*=preferenze]'))}else 
+
+===== =====
+
+### collegi @ 2519666
+>`).join('')}</tbody></table></div>`;
+ function correnteCollegioTable(type){if(election!=='regionali')return '<div class="empty-state">Le correnti sono disponibili solo sulle Regionali 2023.</div>';const key=type==='cam'?x=>x.geo?.camP:x=>x.geo?.senP;const by=effectiveCurrentBy(r,key);const cols=[...new Set(r.map(x=>key(x)).filter(Boolean))];const cs=[...new Set(Object.values(by).flatMap(o=>Object.keys(o)))].sort();const grand=cs.reduce((s,c)=>s+cols.reduce((a,col)=>a+(by[col]?.[c]||0),0),0);return `<table class="data-table"><thead><tr><th>Corrente</th>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}<th>Totale</th><th>%</th></tr></thead><tbody>${cs.map(c=>{const tot=cols.reduce((a,col)=>a+(by[col]?.[c]||0),0);return `<tr><td><b>${esc(c)}</b></td>${cols.map(col=>{const v=by[col]?.[c]||0;const colTot=Object.values(by[col]||{}).reduce((a,n)=>a+n,0);return `<td>${v.toLocaleString('it-IT')} <small>(${pct(v,colTot)})</small></td>`}).join('')}<td>${tot.toLocaleString('it-IT')}</td><td>${pct(tot,grand)}</td></tr>`}).join('')}</tbody></table>`}
+ document.getElementById('analisiCorrenteCam').innerHTML=correnteCollegioTable('cam'); document.getElementById('analisiCorrenteSen').innerHTML=correnteCollegioTable('sen');
+ const topProv=prov[0], topCand=cand[0], topCorr=corr[0]; document.getElementById('analisiInsight').innerHTML=`<div class="status-list"><div><b>${topProv?esc(topProv[0]):'—'}</b><span>provincia più forte</span></div><div><b>${topCand?esc(topCand[0]):'—'}</b><span>candidato n.1 · ${topCand?pct(topCand[1],t):'—'}</span></div><div><b>${election==='regionali'&&topCorr?esc(topCorr[0]):'—'}</b><span>${election==='regionali'&&topCorr?'corrente n.1 · '+pct(topCorr[1],t):'analisi correnti non disponibile'}</span></div><div><b>${cam[0]?esc(cam[0][0]):'—'}</b><span>collegio Camera più forte</span></div><div><b>${sen[0]?esc(sen[0][0]):'—'}</b><span>collegio Senato più forte</span></div><div><b>${topComuni[0]?esc(topComuni[0][0]):'—'}</b><span>comune più forte</span></div></div>`;
+}
+function exportAnalysisAdvanced(){const r=filtered(),out=['TIPO;NOME;PREFERENZE;PERCENTUALE'];groupRows(r,x=>x.corrente).forEach(x=>out.push(`CORRENTE;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.candidato).forEach(x=>out.push(`CANDIDATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.camP).forEach(x=>out.push(`CAMERA;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.senP).forEach(x=>out.push(`SENATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));download(out.join('\n'),'analisi_avanzata_lombardia.csv','text/csv;charset=utf-8')}
+
+function renderCorrenti(){let a=effectiveCurrentTotals(data),t=a.reduce((s,x)=>s+x[1],0);document.getElementById('correntiTable').innerHTML=a.map(x=>`<tr><td><b>${esc(x[0])}</b></td><td>${new Set(data.filter(r=>(correnti[r.candidato]||'Da classificare')===x[0]).map(r=>r.candidato)).size}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${t?((x[1]/t)*100).toFixed(2):'0.00'}%</td></tr>`).join('')} 
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')renderComuni();if(current==='candidati')renderCand();if(current==='collegi')renderCollegi();if(current==='analisi')renderAnalisi();if(current==='correnti')renderCorrenti()}
+function searchGlobal(){let q=prompt('Cerca comune, candidato o collegio:');if(!q)return;let n=norm(q),c=CANDS.find(x=>norm(x).includes(n)),g=GEO.find(x=>norm(x.comune).includes(n));if(c){filters={prov:'',comune:'',candidato:c,corrente:'',camP:'',senP:'',lista:''};tab('preferenze',document.querySelector('[onclick*=preferenze]'))}else if(g){filters={...filters,prov:g.prov,comune:g.comune};tab('comuni',document.querySele
+
+===== =====
+
+### collegi @ 2520249
+(c)}</th>`).join('')}<th>Totale</th><th>%</th></tr></thead><tbody>${cs.map(c=>{const tot=cols.reduce((a,col)=>a+(by[col]?.[c]||0),0);return `<tr><td><b>${esc(c)}</b></td>${cols.map(col=>{const v=by[col]?.[c]||0;const colTot=Object.values(by[col]||{}).reduce((a,n)=>a+n,0);return `<td>${v.toLocaleString('it-IT')} <small>(${pct(v,colTot)})</small></td>`}).join('')}<td>${tot.toLocaleString('it-IT')}</td><td>${pct(tot,grand)}</td></tr>`}).join('')}</tbody></table>`}
+ document.getElementById('analisiCorrenteCam').innerHTML=correnteCollegioTable('cam'); document.getElementById('analisiCorrenteSen').innerHTML=correnteCollegioTable('sen');
+ const topProv=prov[0], topCand=cand[0], topCorr=corr[0]; document.getElementById('analisiInsight').innerHTML=`<div class="status-list"><div><b>${topProv?esc(topProv[0]):'—'}</b><span>provincia più forte</span></div><div><b>${topCand?esc(topCand[0]):'—'}</b><span>candidato n.1 · ${topCand?pct(topCand[1],t):'—'}</span></div><div><b>${election==='regionali'&&topCorr?esc(topCorr[0]):'—'}</b><span>${election==='regionali'&&topCorr?'corrente n.1 · '+pct(topCorr[1],t):'analisi correnti non disponibile'}</span></div><div><b>${cam[0]?esc(cam[0][0]):'—'}</b><span>collegio Camera più forte</span></div><div><b>${sen[0]?esc(sen[0][0]):'—'}</b><span>collegio Senato più forte</span></div><div><b>${topComuni[0]?esc(topComuni[0][0]):'—'}</b><span>comune più forte</span></div></div>`;
+}
+function exportAnalysisAdvanced(){const r=filtered(),out=['TIPO;NOME;PREFERENZE;PERCENTUALE'];groupRows(r,x=>x.corrente).forEach(x=>out.push(`CORRENTE;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.candidato).forEach(x=>out.push(`CANDIDATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.camP).forEach(x=>out.push(`CAMERA;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.senP).forEach(x=>out.push(`SENATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));download(out.join('\n'),'analisi_avanzata_lombardia.csv','text/csv;charset=utf-8')}
+
+function renderCorrenti(){let a=effectiveCurrentTotals(data),t=a.reduce((s,x)=>s+x[1],0);document.getElementById('correntiTable').innerHTML=a.map(x=>`<tr><td><b>${esc(x[0])}</b></td><td>${new Set(data.filter(r=>(correnti[r.candidato]||'Da classificare')===x[0]).map(r=>r.candidato)).size}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${t?((x[1]/t)*100).toFixed(2):'0.00'}%</td></tr>`).join('')} 
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')renderComuni();if(current==='candidati')renderCand();if(current==='collegi')renderCollegi();if(current==='analisi')renderAnalisi();if(current==='correnti')renderCorrenti()}
+function searchGlobal(){let q=prompt('Cerca comune, candidato o collegio:');if(!q)return;let n=norm(q),c=CANDS.find(x=>norm(x).includes(n)),g=GEO.find(x=>norm(x.comune).includes(n));if(c){filters={prov:'',comune:'',candidato:c,corrente:'',camP:'',senP:'',lista:''};tab('preferenze',document.querySelector('[onclick*=preferenze]'))}else if(g){filters={...filters,prov:g.prov,comune:g.comune};tab('comuni',document.querySelector('[onclick*=comuni]'))}else alert('Nessun risultato')}
+function exportCSV(){let rows=filtered(),out='PROVINCIA;COMUNE;CANDIDATO;LISTA;CORRENTE;PREFERENZE;CAMERA_P;SENATO_P\n'+rows.map(r=>[r.prov,r.comune,r.candidato,r.lista,r.corrente||'',r.preferenze,r.geo?.camP||'',r.geo?.senP||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');download(out,'preferenze_lombardia_filtrate.csv','text/csv;charset=utf-8')}
+function exportAnalysis(){let a=agg(filtered(),r=>r.corrente),out='CORRENTE;PREFERENZE\n'+a.map(x=>`"${x[0]}";${x[1]}`).join('\n');download(out,'analisi
+
+===== =====
+
+### collegi @ 2520333
+ tot=cols.reduce((a,col)=>a+(by[col]?.[c]||0),0);return `<tr><td><b>${esc(c)}</b></td>${cols.map(col=>{const v=by[col]?.[c]||0;const colTot=Object.values(by[col]||{}).reduce((a,n)=>a+n,0);return `<td>${v.toLocaleString('it-IT')} <small>(${pct(v,colTot)})</small></td>`}).join('')}<td>${tot.toLocaleString('it-IT')}</td><td>${pct(tot,grand)}</td></tr>`}).join('')}</tbody></table>`}
+ document.getElementById('analisiCorrenteCam').innerHTML=correnteCollegioTable('cam'); document.getElementById('analisiCorrenteSen').innerHTML=correnteCollegioTable('sen');
+ const topProv=prov[0], topCand=cand[0], topCorr=corr[0]; document.getElementById('analisiInsight').innerHTML=`<div class="status-list"><div><b>${topProv?esc(topProv[0]):'—'}</b><span>provincia più forte</span></div><div><b>${topCand?esc(topCand[0]):'—'}</b><span>candidato n.1 · ${topCand?pct(topCand[1],t):'—'}</span></div><div><b>${election==='regionali'&&topCorr?esc(topCorr[0]):'—'}</b><span>${election==='regionali'&&topCorr?'corrente n.1 · '+pct(topCorr[1],t):'analisi correnti non disponibile'}</span></div><div><b>${cam[0]?esc(cam[0][0]):'—'}</b><span>collegio Camera più forte</span></div><div><b>${sen[0]?esc(sen[0][0]):'—'}</b><span>collegio Senato più forte</span></div><div><b>${topComuni[0]?esc(topComuni[0][0]):'—'}</b><span>comune più forte</span></div></div>`;
+}
+function exportAnalysisAdvanced(){const r=filtered(),out=['TIPO;NOME;PREFERENZE;PERCENTUALE'];groupRows(r,x=>x.corrente).forEach(x=>out.push(`CORRENTE;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.candidato).forEach(x=>out.push(`CANDIDATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.camP).forEach(x=>out.push(`CAMERA;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.senP).forEach(x=>out.push(`SENATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));download(out.join('\n'),'analisi_avanzata_lombardia.csv','text/csv;charset=utf-8')}
+
+function renderCorrenti(){let a=effectiveCurrentTotals(data),t=a.reduce((s,x)=>s+x[1],0);document.getElementById('correntiTable').innerHTML=a.map(x=>`<tr><td><b>${esc(x[0])}</b></td><td>${new Set(data.filter(r=>(correnti[r.candidato]||'Da classificare')===x[0]).map(r=>r.candidato)).size}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${t?((x[1]/t)*100).toFixed(2):'0.00'}%</td></tr>`).join('')} 
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')renderComuni();if(current==='candidati')renderCand();if(current==='collegi')renderCollegi();if(current==='analisi')renderAnalisi();if(current==='correnti')renderCorrenti()}
+function searchGlobal(){let q=prompt('Cerca comune, candidato o collegio:');if(!q)return;let n=norm(q),c=CANDS.find(x=>norm(x).includes(n)),g=GEO.find(x=>norm(x.comune).includes(n));if(c){filters={prov:'',comune:'',candidato:c,corrente:'',camP:'',senP:'',lista:''};tab('preferenze',document.querySelector('[onclick*=preferenze]'))}else if(g){filters={...filters,prov:g.prov,comune:g.comune};tab('comuni',document.querySelector('[onclick*=comuni]'))}else alert('Nessun risultato')}
+function exportCSV(){let rows=filtered(),out='PROVINCIA;COMUNE;CANDIDATO;LISTA;CORRENTE;PREFERENZE;CAMERA_P;SENATO_P\n'+rows.map(r=>[r.prov,r.comune,r.candidato,r.lista,r.corrente||'',r.preferenze,r.geo?.camP||'',r.geo?.senP||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');download(out,'preferenze_lombardia_filtrate.csv','text/csv;charset=utf-8')}
+function exportAnalysis(){let a=agg(filtered(),r=>r.corrente),out='CORRENTE;PREFERENZE\n'+a.map(x=>`"${x[0]}";${x[1]}`).join('\n');download(out,'analisi_correnti_lombardia.csv','text/csv;charset=utf-8')}
+function download(t,n,m){let a=d
+
+===== =====
+
+### collegi @ 2521738
+PREFERENZE;PERCENTUALE'];groupRows(r,x=>x.corrente).forEach(x=>out.push(`CORRENTE;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.candidato).forEach(x=>out.push(`CANDIDATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.camP).forEach(x=>out.push(`CAMERA;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.senP).forEach(x=>out.push(`SENATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));download(out.join('\n'),'analisi_avanzata_lombardia.csv','text/csv;charset=utf-8')}
+
+function renderCorrenti(){let a=effectiveCurrentTotals(data),t=a.reduce((s,x)=>s+x[1],0);document.getElementById('correntiTable').innerHTML=a.map(x=>`<tr><td><b>${esc(x[0])}</b></td><td>${new Set(data.filter(r=>(correnti[r.candidato]||'Da classificare')===x[0]).map(r=>r.candidato)).size}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${t?((x[1]/t)*100).toFixed(2):'0.00'}%</td></tr>`).join('')} 
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')renderComuni();if(current==='candidati')renderCand();if(current==='collegi')renderCollegi();if(current==='analisi')renderAnalisi();if(current==='correnti')renderCorrenti()}
+function searchGlobal(){let q=prompt('Cerca comune, candidato o collegio:');if(!q)return;let n=norm(q),c=CANDS.find(x=>norm(x).includes(n)),g=GEO.find(x=>norm(x.comune).includes(n));if(c){filters={prov:'',comune:'',candidato:c,corrente:'',camP:'',senP:'',lista:''};tab('preferenze',document.querySelector('[onclick*=preferenze]'))}else if(g){filters={...filters,prov:g.prov,comune:g.comune};tab('comuni',document.querySelector('[onclick*=comuni]'))}else alert('Nessun risultato')}
+function exportCSV(){let rows=filtered(),out='PROVINCIA;COMUNE;CANDIDATO;LISTA;CORRENTE;PREFERENZE;CAMERA_P;SENATO_P\n'+rows.map(r=>[r.prov,r.comune,r.candidato,r.lista,r.corrente||'',r.preferenze,r.geo?.camP||'',r.geo?.senP||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');download(out,'preferenze_lombardia_filtrate.csv','text/csv;charset=utf-8')}
+function exportAnalysis(){let a=agg(filtered(),r=>r.corrente),out='CORRENTE;PREFERENZE\n'+a.map(x=>`"${x[0]}";${x[1]}`).join('\n');download(out,'analisi_correnti_lombardia.csv','text/csv;charset=utf-8')}
+function download(t,n,m){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click()}
+function toggleTheme(){document.body.classList.toggle('light-mode')}
+function resetCorrenti(){if(confirm('Cancellare tutte le correnti assegnate?')){correnti={};localStorage.removeItem('lombardia_correnti_2026');ticketGroups=[];localStorage.removeItem('lombardia_ticket_2026');render()}}
+render();
+</script><script>
+const EURO_RAW=[{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"MELONI GIORGIA DETTA GIORGIA","preferenze":96},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"MAGONI LARA","preferenze":13},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"FIDANZA CARLO","preferenze":8},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"FIOCCHI PIETRO","preferenze":2},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"MANTOVANI MARIO","preferenze":6},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"CROSETTO GIOVANNI","preferenze":3},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"INSELVINI PAOLO","preferenze":6},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"SOFO VINCENZO","pr
+
+===== =====
+
+### collegi @ 2521753
+ENTUALE'];groupRows(r,x=>x.corrente).forEach(x=>out.push(`CORRENTE;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.candidato).forEach(x=>out.push(`CANDIDATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.camP).forEach(x=>out.push(`CAMERA;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.senP).forEach(x=>out.push(`SENATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));download(out.join('\n'),'analisi_avanzata_lombardia.csv','text/csv;charset=utf-8')}
+
+function renderCorrenti(){let a=effectiveCurrentTotals(data),t=a.reduce((s,x)=>s+x[1],0);document.getElementById('correntiTable').innerHTML=a.map(x=>`<tr><td><b>${esc(x[0])}</b></td><td>${new Set(data.filter(r=>(correnti[r.candidato]||'Da classificare')===x[0]).map(r=>r.candidato)).size}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${t?((x[1]/t)*100).toFixed(2):'0.00'}%</td></tr>`).join('')} 
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')renderComuni();if(current==='candidati')renderCand();if(current==='collegi')renderCollegi();if(current==='analisi')renderAnalisi();if(current==='correnti')renderCorrenti()}
+function searchGlobal(){let q=prompt('Cerca comune, candidato o collegio:');if(!q)return;let n=norm(q),c=CANDS.find(x=>norm(x).includes(n)),g=GEO.find(x=>norm(x.comune).includes(n));if(c){filters={prov:'',comune:'',candidato:c,corrente:'',camP:'',senP:'',lista:''};tab('preferenze',document.querySelector('[onclick*=preferenze]'))}else if(g){filters={...filters,prov:g.prov,comune:g.comune};tab('comuni',document.querySelector('[onclick*=comuni]'))}else alert('Nessun risultato')}
+function exportCSV(){let rows=filtered(),out='PROVINCIA;COMUNE;CANDIDATO;LISTA;CORRENTE;PREFERENZE;CAMERA_P;SENATO_P\n'+rows.map(r=>[r.prov,r.comune,r.candidato,r.lista,r.corrente||'',r.preferenze,r.geo?.camP||'',r.geo?.senP||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');download(out,'preferenze_lombardia_filtrate.csv','text/csv;charset=utf-8')}
+function exportAnalysis(){let a=agg(filtered(),r=>r.corrente),out='CORRENTE;PREFERENZE\n'+a.map(x=>`"${x[0]}";${x[1]}`).join('\n');download(out,'analisi_correnti_lombardia.csv','text/csv;charset=utf-8')}
+function download(t,n,m){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click()}
+function toggleTheme(){document.body.classList.toggle('light-mode')}
+function resetCorrenti(){if(confirm('Cancellare tutte le correnti assegnate?')){correnti={};localStorage.removeItem('lombardia_correnti_2026');ticketGroups=[];localStorage.removeItem('lombardia_ticket_2026');render()}}
+render();
+</script><script>
+const EURO_RAW=[{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"MELONI GIORGIA DETTA GIORGIA","preferenze":96},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"MAGONI LARA","preferenze":13},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"FIDANZA CARLO","preferenze":8},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"FIOCCHI PIETRO","preferenze":2},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"MANTOVANI MARIO","preferenze":6},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"CROSETTO GIOVANNI","preferenze":3},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"INSELVINI PAOLO","preferenze":6},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"SOFO VINCENZO","preferenze":4},{"
+
+===== =====
+
+### collegi @ 2521908
+.candidato).forEach(x=>out.push(`CANDIDATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.camP).forEach(x=>out.push(`CAMERA;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));groupRows(r,x=>x.geo?.senP).forEach(x=>out.push(`SENATO;"${String(x[0]).replace(/"/g,'""')}";${x[1]};${pct(x[1],sumRows(r))}`));download(out.join('\n'),'analisi_avanzata_lombardia.csv','text/csv;charset=utf-8')}
+
+function renderCorrenti(){let a=effectiveCurrentTotals(data),t=a.reduce((s,x)=>s+x[1],0);document.getElementById('correntiTable').innerHTML=a.map(x=>`<tr><td><b>${esc(x[0])}</b></td><td>${new Set(data.filter(r=>(correnti[r.candidato]||'Da classificare')===x[0]).map(r=>r.candidato)).size}</td><td>${x[1].toLocaleString('it-IT')}</td><td>${t?((x[1]/t)*100).toFixed(2):'0.00'}%</td></tr>`).join('')} 
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')renderComuni();if(current==='candidati')renderCand();if(current==='collegi')renderCollegi();if(current==='analisi')renderAnalisi();if(current==='correnti')renderCorrenti()}
+function searchGlobal(){let q=prompt('Cerca comune, candidato o collegio:');if(!q)return;let n=norm(q),c=CANDS.find(x=>norm(x).includes(n)),g=GEO.find(x=>norm(x.comune).includes(n));if(c){filters={prov:'',comune:'',candidato:c,corrente:'',camP:'',senP:'',lista:''};tab('preferenze',document.querySelector('[onclick*=preferenze]'))}else if(g){filters={...filters,prov:g.prov,comune:g.comune};tab('comuni',document.querySelector('[onclick*=comuni]'))}else alert('Nessun risultato')}
+function exportCSV(){let rows=filtered(),out='PROVINCIA;COMUNE;CANDIDATO;LISTA;CORRENTE;PREFERENZE;CAMERA_P;SENATO_P\n'+rows.map(r=>[r.prov,r.comune,r.candidato,r.lista,r.corrente||'',r.preferenze,r.geo?.camP||'',r.geo?.senP||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');download(out,'preferenze_lombardia_filtrate.csv','text/csv;charset=utf-8')}
+function exportAnalysis(){let a=agg(filtered(),r=>r.corrente),out='CORRENTE;PREFERENZE\n'+a.map(x=>`"${x[0]}";${x[1]}`).join('\n');download(out,'analisi_correnti_lombardia.csv','text/csv;charset=utf-8')}
+function download(t,n,m){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click()}
+function toggleTheme(){document.body.classList.toggle('light-mode')}
+function resetCorrenti(){if(confirm('Cancellare tutte le correnti assegnate?')){correnti={};localStorage.removeItem('lombardia_correnti_2026');ticketGroups=[];localStorage.removeItem('lombardia_ticket_2026');render()}}
+render();
+</script><script>
+const EURO_RAW=[{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"MELONI GIORGIA DETTA GIORGIA","preferenze":96},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"MAGONI LARA","preferenze":13},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"FIDANZA CARLO","preferenze":8},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"FIOCCHI PIETRO","preferenze":2},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"MANTOVANI MARIO","preferenze":6},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"CROSETTO GIOVANNI","preferenze":3},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"INSELVINI PAOLO","preferenze":6},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"SOFO VINCENZO","preferenze":4},{"prov":"BERGAMO","comune":"ADRARA SAN MARTINO","lista":"FRATELLI D'ITALIA","candidato":"PICCHI FEDERICA","preferenze":2},{"prov":"BERGAMO","comune":"ADRARA 
+
+===== =====
+
+### collegi @ 5988504
+</th>`).join('')}</tr></thead><tbody>${communes.map(cm=>{let cmx=encodeURIComponent(cm),pvx=encodeURIComponent(prov);return `<tr><td class="sticky-col"><button type="button" class="link-btn matrix-comune-btn" data-comune="${esc(cm).replace(/"/g,'&quot;')}" data-prov="${esc(prov).replace(/"/g,'&quot;')}"><b>${esc(cm)}</b></button></td>${cand.map(c=>`<td>${(lookup.get(cm+'|'+c)||0).toLocaleString('it-IT')}</td>`).join('')}</tr>`}).join('')}<tr class="total-row"><td class="sticky-col"><b>TOTALE PREFERENZE</b></td>${totals.map(v=>`<td><b>${v.toLocaleString('it-IT')}</b></td>`).join('')}</tr></tbody></table>`; document.querySelectorAll('.matrix-comune-btn').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();window.openComuneCompare(b.dataset.comune,b.dataset.prov)}));
+}
+
+function renderHome(){
+ document.getElementById('k-pref').textContent=total().toLocaleString('it-IT');
+ document.getElementById('k-comuni').textContent=new Set(data.map(r=>r.comune)).size.toLocaleString('it-IT');
+ document.getElementById('k-candidati').textContent=CANDS.length;
+ document.getElementById('k-correnti').textContent=new Set(Object.values(correnti).filter(Boolean)).size;
+ document.getElementById('k-collegi').textContent=CAM.length+SEN.length;
+ let p=agg(data,r=>r.prov),top=agg(data,r=>r.candidato).slice(0,8);
+ document.getElementById('topCandidates').innerHTML=top.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc(x[0])}</strong><small>${x[1].toLocaleString('it-IT')} preferenze</small></div><span>${(x[1]/Math.max(total(),1)*100).toFixed(1)}%</span></div>`).join('');
+ document.querySelector('.home-toolbar-left small').textContent=electionLabel()+' · FdI';
+}
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')window.renderComuni ? window.renderComuni() : renderComuni();if(current==='matrice')window.renderMatrice ? window.renderMatrice() : renderMatrice();if(current==='candidati')renderCand();if(current==='collegi')window.renderCollegi ? window.renderCollegi() : renderCollegi();if(current==='analisi')renderAnalisi();if(current==='correnti')renderCorrenti();}
+election='regionali';
+setElectionData();
+document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-regionali'));
+</script>
+<script>window.addEventListener('DOMContentLoaded',()=>{if(typeof window.render==='function')window.render();});</script>
+<style>
+.link-btn{background:none;border:0;color:inherit;padding:0;cursor:pointer;text-align:left}.link-btn:hover{color:#6aa9ff;text-decoration:underline}.modal-backdrop{position:fixed;inset:0;background:rgba(4,9,20,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}.modal-card{width:min(1200px,96vw);max-height:90vh;overflow:auto;background:#101827;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.45)}.modal-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:16px}.modal-head h2{margin:4px 0}.modal-head p{margin:0;color:#94a3b8}.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.matrix-table{min-width:1100px}.matrix-table th,.matrix-table td{white-space:nowrap}.sticky-col{position:sticky;left:0;background:#101827;z-index:2}.matrix-table thead .sticky-col{z-index:3}@media(max-width:900px){.modal-grid{grid-template-columns:1fr}.matrix-table{min-width:900px}}
+</style>\n
+
+<style>
+/* Correzioni definitive: collegi, comuni, database home */
+.dashboard-grid .wide{grid-column:1 / -1!important}
+#homeQuick{grid-template-columns:repeat(4,minmax(0,1fr))}
+.collegio-click{cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.collegio-click:hover{transform:translateY(-2px);border-color:rgba(106,169,255,.65)!
+
+===== =====
+
+### collegi @ 5989294
+ction renderHome(){
+ document.getElementById('k-pref').textContent=total().toLocaleString('it-IT');
+ document.getElementById('k-comuni').textContent=new Set(data.map(r=>r.comune)).size.toLocaleString('it-IT');
+ document.getElementById('k-candidati').textContent=CANDS.length;
+ document.getElementById('k-correnti').textContent=new Set(Object.values(correnti).filter(Boolean)).size;
+ document.getElementById('k-collegi').textContent=CAM.length+SEN.length;
+ let p=agg(data,r=>r.prov),top=agg(data,r=>r.candidato).slice(0,8);
+ document.getElementById('topCandidates').innerHTML=top.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc(x[0])}</strong><small>${x[1].toLocaleString('it-IT')} preferenze</small></div><span>${(x[1]/Math.max(total(),1)*100).toFixed(1)}%</span></div>`).join('');
+ document.querySelector('.home-toolbar-left small').textContent=electionLabel()+' · FdI';
+}
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')window.renderComuni ? window.renderComuni() : renderComuni();if(current==='matrice')window.renderMatrice ? window.renderMatrice() : renderMatrice();if(current==='candidati')renderCand();if(current==='collegi')window.renderCollegi ? window.renderCollegi() : renderCollegi();if(current==='analisi')renderAnalisi();if(current==='correnti')renderCorrenti();}
+election='regionali';
+setElectionData();
+document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-regionali'));
+</script>
+<script>window.addEventListener('DOMContentLoaded',()=>{if(typeof window.render==='function')window.render();});</script>
+<style>
+.link-btn{background:none;border:0;color:inherit;padding:0;cursor:pointer;text-align:left}.link-btn:hover{color:#6aa9ff;text-decoration:underline}.modal-backdrop{position:fixed;inset:0;background:rgba(4,9,20,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}.modal-card{width:min(1200px,96vw);max-height:90vh;overflow:auto;background:#101827;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.45)}.modal-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:16px}.modal-head h2{margin:4px 0}.modal-head p{margin:0;color:#94a3b8}.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.matrix-table{min-width:1100px}.matrix-table th,.matrix-table td{white-space:nowrap}.sticky-col{position:sticky;left:0;background:#101827;z-index:2}.matrix-table thead .sticky-col{z-index:3}@media(max-width:900px){.modal-grid{grid-template-columns:1fr}.matrix-table{min-width:900px}}
+</style>\n
+
+<style>
+/* Correzioni definitive: collegi, comuni, database home */
+.dashboard-grid .wide{grid-column:1 / -1!important}
+#homeQuick{grid-template-columns:repeat(4,minmax(0,1fr))}
+.collegio-click{cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.collegio-click:hover{transform:translateY(-2px);border-color:rgba(106,169,255,.65)!important}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.manual-row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) minmax(150px,.8fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.manual-row select{width:100%}
+.collegio-list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.collegio-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.collegio-summary>div{padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#0b1726}
+.collegio-summary b{display:block;font-size:18px}.collegio-summary span{font-size:10px;color:#8198ad}
+@media(max-width:900px){#homeQuick{grid-template-columns:repeat(2,minmax(0,1fr))}.man
+
+===== =====
+
+### collegi @ 5989316
+ocument.getElementById('k-pref').textContent=total().toLocaleString('it-IT');
+ document.getElementById('k-comuni').textContent=new Set(data.map(r=>r.comune)).size.toLocaleString('it-IT');
+ document.getElementById('k-candidati').textContent=CANDS.length;
+ document.getElementById('k-correnti').textContent=new Set(Object.values(correnti).filter(Boolean)).size;
+ document.getElementById('k-collegi').textContent=CAM.length+SEN.length;
+ let p=agg(data,r=>r.prov),top=agg(data,r=>r.candidato).slice(0,8);
+ document.getElementById('topCandidates').innerHTML=top.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc(x[0])}</strong><small>${x[1].toLocaleString('it-IT')} preferenze</small></div><span>${(x[1]/Math.max(total(),1)*100).toFixed(1)}%</span></div>`).join('');
+ document.querySelector('.home-toolbar-left small').textContent=electionLabel()+' · FdI';
+}
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')window.renderComuni ? window.renderComuni() : renderComuni();if(current==='matrice')window.renderMatrice ? window.renderMatrice() : renderMatrice();if(current==='candidati')renderCand();if(current==='collegi')window.renderCollegi ? window.renderCollegi() : renderCollegi();if(current==='analisi')renderAnalisi();if(current==='correnti')renderCorrenti();}
+election='regionali';
+setElectionData();
+document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-regionali'));
+</script>
+<script>window.addEventListener('DOMContentLoaded',()=>{if(typeof window.render==='function')window.render();});</script>
+<style>
+.link-btn{background:none;border:0;color:inherit;padding:0;cursor:pointer;text-align:left}.link-btn:hover{color:#6aa9ff;text-decoration:underline}.modal-backdrop{position:fixed;inset:0;background:rgba(4,9,20,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}.modal-card{width:min(1200px,96vw);max-height:90vh;overflow:auto;background:#101827;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.45)}.modal-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:16px}.modal-head h2{margin:4px 0}.modal-head p{margin:0;color:#94a3b8}.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.matrix-table{min-width:1100px}.matrix-table th,.matrix-table td{white-space:nowrap}.sticky-col{position:sticky;left:0;background:#101827;z-index:2}.matrix-table thead .sticky-col{z-index:3}@media(max-width:900px){.modal-grid{grid-template-columns:1fr}.matrix-table{min-width:900px}}
+</style>\n
+
+<style>
+/* Correzioni definitive: collegi, comuni, database home */
+.dashboard-grid .wide{grid-column:1 / -1!important}
+#homeQuick{grid-template-columns:repeat(4,minmax(0,1fr))}
+.collegio-click{cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.collegio-click:hover{transform:translateY(-2px);border-color:rgba(106,169,255,.65)!important}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.manual-row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) minmax(150px,.8fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.manual-row select{width:100%}
+.collegio-list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.collegio-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.collegio-summary>div{padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#0b1726}
+.collegio-summary b{display:block;font-size:18px}.collegio-summary span{font-size:10px;color:#8198ad}
+@media(max-width:900px){#homeQuick{grid-template-columns:repeat(2,minmax(0,1fr))}.manual-grid,.collegio-lis
+
+===== =====
+
+### collegi @ 5989339
+'k-pref').textContent=total().toLocaleString('it-IT');
+ document.getElementById('k-comuni').textContent=new Set(data.map(r=>r.comune)).size.toLocaleString('it-IT');
+ document.getElementById('k-candidati').textContent=CANDS.length;
+ document.getElementById('k-correnti').textContent=new Set(Object.values(correnti).filter(Boolean)).size;
+ document.getElementById('k-collegi').textContent=CAM.length+SEN.length;
+ let p=agg(data,r=>r.prov),top=agg(data,r=>r.candidato).slice(0,8);
+ document.getElementById('topCandidates').innerHTML=top.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc(x[0])}</strong><small>${x[1].toLocaleString('it-IT')} preferenze</small></div><span>${(x[1]/Math.max(total(),1)*100).toFixed(1)}%</span></div>`).join('');
+ document.querySelector('.home-toolbar-left small').textContent=electionLabel()+' · FdI';
+}
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')window.renderComuni ? window.renderComuni() : renderComuni();if(current==='matrice')window.renderMatrice ? window.renderMatrice() : renderMatrice();if(current==='candidati')renderCand();if(current==='collegi')window.renderCollegi ? window.renderCollegi() : renderCollegi();if(current==='analisi')renderAnalisi();if(current==='correnti')renderCorrenti();}
+election='regionali';
+setElectionData();
+document.querySelectorAll('.macro-tab').forEach(x=>x.classList.toggle('active',x.id==='macro-regionali'));
+</script>
+<script>window.addEventListener('DOMContentLoaded',()=>{if(typeof window.render==='function')window.render();});</script>
+<style>
+.link-btn{background:none;border:0;color:inherit;padding:0;cursor:pointer;text-align:left}.link-btn:hover{color:#6aa9ff;text-decoration:underline}.modal-backdrop{position:fixed;inset:0;background:rgba(4,9,20,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}.modal-card{width:min(1200px,96vw);max-height:90vh;overflow:auto;background:#101827;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.45)}.modal-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:16px}.modal-head h2{margin:4px 0}.modal-head p{margin:0;color:#94a3b8}.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.matrix-table{min-width:1100px}.matrix-table th,.matrix-table td{white-space:nowrap}.sticky-col{position:sticky;left:0;background:#101827;z-index:2}.matrix-table thead .sticky-col{z-index:3}@media(max-width:900px){.modal-grid{grid-template-columns:1fr}.matrix-table{min-width:900px}}
+</style>\n
+
+<style>
+/* Correzioni definitive: collegi, comuni, database home */
+.dashboard-grid .wide{grid-column:1 / -1!important}
+#homeQuick{grid-template-columns:repeat(4,minmax(0,1fr))}
+.collegio-click{cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.collegio-click:hover{transform:translateY(-2px);border-color:rgba(106,169,255,.65)!important}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.manual-row{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) minmax(150px,.8fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.manual-row select{width:100%}
+.collegio-list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.collegio-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.collegio-summary>div{padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#0b1726}
+.collegio-summary b{display:block;font-size:18px}.collegio-summary span{font-size:10px;color:#8198ad}
+@media(max-width:900px){#homeQuick{grid-template-columns:repeat(2,minmax(0,1fr))}.manual-grid,.collegio-list-grid{grid-template-co
+
+===== =====
+
+### collegi @ 5989357
+ent=total().toLocaleString('it-IT');
+ document.getElementById('k-comuni').textContent=new Set(data.map(r=>r.comune)).size.toLocaleString('it-IT');
+ document.getElementById('k-candidati').textContent=CANDS.length;
+ document.getElementById('k-correnti').textContent=new Set(Object.values(correnti).filter(Boolean)).size;
+ document.getElementById('k-collegi').textContent=CAM.length+SEN.length;
+ let p=agg(data,r=>r.prov),top=agg(data,r=>r.candidato).slice(0,8);
+ document.getElementById('topCandidates').innerHTML=top.map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div><strong>${esc(x[0])}</strong><small>${x[1].toLocaleString('it-IT')} preferenze</small></div><span>${(x[1]/Math.max(total(),1)*100).toFixed(1)}%</span></div>`).join('');
+ document.querySelector('.home-toolbar-left small').textContent=electionLabel()+' · FdI';
+}
+function render(){applyCorrenti();renderHome();if(current==='preferenze')renderPref();if(current==='comuni')window.ren
