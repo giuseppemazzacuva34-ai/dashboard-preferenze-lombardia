@@ -1793,8 +1793,9 @@ function installSondaggiModule(){
 .sg-card{background:#0b1e31;border:1px solid #203d55;border-radius:11px;padding:12px}
 .sg-card-title{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:9px}
 .sg-card-title b{font-size:12px;color:#fff}.sg-card-title span{font-size:8px;color:#819db2}
-.sg-map{background:#091827;border:1px solid #203b53;border-radius:10px;padding:10px}
-.sg-map img{display:block;width:100%;height:410px;object-fit:contain;background:#091827}
+.sg-map{background:linear-gradient(180deg,#153754 0%,#12304c 100%);border:1px solid #315a79;border-radius:10px;padding:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.025)}
+.sg-map img{display:block;width:100%;height:410px;object-fit:contain;background:#153754;filter:brightness(1.7) contrast(1.28);opacity:.98}
+.sg-map-caption{color:#b7cbda}
 .sg-map-caption{margin-top:8px;font-size:8px;line-height:1.45;color:#839caf}
 .sg-regions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:9px;max-height:300px;overflow:auto}
 .sg-regions button{border:1px solid #23445e;background:#0b2137;color:#b9ccda;border-radius:7px;padding:7px 8px;text-align:left;font-size:8px;cursor:pointer}
