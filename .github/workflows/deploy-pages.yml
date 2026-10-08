@@ -72,9 +72,7 @@ jobs:
               for term in terms:
                   i=c.lower().find(term.lower())
                   if i>=0:
-                      hits.append(f"PART={p.name} TERM={term} IDX={i}
-{c[max(0,i-5000):i+25000]}
-")
+                      hits.append(f"PART={p.name} TERM={term} IDX={i}\\n" + c[max(0,i-5000):i+25000] + "\\n")
           Path("survey-sondaggi-snippet.txt").write_text("\n====\n".join(hits) if hits else "NESSUN MATCH",encoding="utf-8")
           print("matches",len(hits))
       - name: Commit survey module snippet
