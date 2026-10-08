@@ -1876,13 +1876,12 @@ installSondaggiModule();
 
 (function(){
   function homeDatasetComuneCount(){
-    const rows=Array.isArray(window.data)?window.data:(typeof data!=="undefined"?data:[]);
-    const normalize=(v)=>String(v??"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toUpperCase().replace(/\\s+/g," ").trim();
+    const normalize=(v)=>String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/\s+/g," ").trim();
+    const source=(typeof GEO!=="undefined"&&Array.isArray(GEO))?GEO:[];
     const seen=new Set();
-    rows.forEach(r=>seen.add(normalize(r.prov)+"|"+normalize(r.comune)));
+    source.forEach(r=>seen.add(normalize(r.prov)+"|"+normalize(r.comune)));
     return seen.size;
   }
-
   function refreshHomeForElection(){
     try{
       const label=(typeof election!=="undefined"&&election==="europee")
@@ -1953,5 +1952,12 @@ installSondaggiModule();
   }
 
   setTimeout(refreshHomeForElection,0);
+  // Allineamento iniziale: la Home usa subito la geografia corrente di 1.501 comuni.
+  try{
+    if(typeof setElectionData==="function")setElectionData();
+    if(typeof render==="function")render();
+    refreshHomeForElection();
+  }catch(err){console.error("Boot Home geography",err);}
+
 })();
 
