@@ -29,7 +29,7 @@ jobs:
 
 
       - name: Prepare survey panel source
-        if: contains(github.event.head_commit.message, 'Prepare survey panel source')
+        if: contains(github.event.head_commit.message, 'Split survey source')
         shell: python
         run: |
           import base64, gzip
@@ -40,16 +40,23 @@ jobs:
           if not m:
               raise SystemExit("b64 non trovato")
           raw=gzip.decompress(base64.b64decode(m.group(1))).decode("utf-8")
-          Path("index.decoded.js").write_text(raw,encoding="utf-8")
-          print("decoded bytes",len(raw))
+          out=Path("survey-source-parts")
+          out.mkdir(exist_ok=True)
+          for old in out.glob("part-*.txt"):
+              old.unlink()
+          for i in range(0,len(raw),100000):
+              (out/f"part-{i//100000+1:03d}.txt").write_text(raw[i:i+100000],encoding="utf-8")
+          Path("index.decoded.js").unlink(missing_ok=True)
+          print("decoded bytes",len(raw),"parts",(len(raw)+99999)//100000)
       - name: Commit survey panel source
-        if: contains(github.event.head_commit.message, 'Prepare survey panel source')
+        if: contains(github.event.head_commit.message, 'Split survey source')
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.decoded.js
-          git commit -m "Prepare survey panel source" || exit 0
+          git add survey-source-parts
+          git add -u index.decoded.js || true
+          git commit -m "Split survey source" || exit 0
           git push
 
       - name: Upload site
