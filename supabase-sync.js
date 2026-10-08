@@ -145,5 +145,41 @@ document.addEventListener("change",function(ev){
   }
 });
 
+
+function refreshElectionProvinceViews(){
+  try{
+    const raw=(typeof election!=="undefined" && election==="europee")?EURO_RAW:RAW;
+    const sums={};
+    raw.forEach(r=>{
+      const k=String(r.prov||"").trim();
+      sums[k]=(sums[k]||0)+(Number(r.preferenze)||0);
+    });
+    const rows=Object.entries(sums).sort((a,b)=>b[1]-a[1]);
+    if(typeof barChart==="function") barChart("provChart",rows);
+    if(typeof current!=="undefined" && current==="analisi" && typeof renderAnalisi==="function"){
+      renderAnalisi();
+    }
+    const sub=document.querySelector(".home-toolbar-left small");
+    if(sub && typeof electionLabel==="function") sub.textContent=electionLabel()+" · FdI";
+  }catch(err){
+    console.error("Election province refresh",err);
+  }
+}
+
+const _originalDashboardSetMacro=window.dashboardSetMacro;
+window.dashboardSetMacro=function(v){
+  if(typeof _originalDashboardSetMacro==="function"){
+    _originalDashboardSetMacro(v);
+  }else{
+    try{
+      election=v;
+      if(typeof setElectionData==="function") setElectionData();
+      if(typeof render==="function") render();
+    }catch(err){ console.error("Election switch",err); }
+  }
+  setTimeout(refreshElectionProvinceViews,0);
+};
+window.switchElection=window.dashboardSetMacro;
+
 loadShared();
 })();
