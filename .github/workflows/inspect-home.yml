@@ -79,12 +79,60 @@ jobs:
               for q in ["Ronago","Uggiate-Trevano","Uggiate con Ronago","Albaredo Arnaboldi","Campospinoso","Campospinoso Albaredo","Lirio","Montalto Pavese","Bardello","Bregano","Malgesso","Bardello con Malgesso e Bregano"]:
                   n=sum(1 for x in arr if norm(x.get("comune"))==norm(q))
                   if n: lines += [name+"|"+q+"|"+str(n)]
+          # FIX DEFINITIVO GEO: allinea la dashboard ai 1.501 comuni lombardi vigenti.
+          # Mantiene le collegiature dei territori accorpati e canonicalizza i nomi storici
+          # dei dataset elettorali verso il comune attuale.
+          current_geo=[]
+          for x in geo:
+              cc=norm(x.get("comune"))
+              if cc in {"RONAGO","UGGIATE-TREVANO","ALBAREDO ARNABOLDI","LIRIO","BARDELLO","BREGANO","MALGESSO"}:
+                  continue
+              y=dict(x)
+              if cc=="CAMPOSPinoso".upper():
+                  y["comune"]="Campospinoso Albaredo"
+              current_geo.append(y)
+          # Uggiate con Ronago
+          base=next(x for x in geo if norm(x.get("comune"))=="RONAGO")
+          y=dict(base); y["comune"]="Uggiate con Ronago"; y["istat"]="13256"
+          current_geo.append(y)
+          # Bardello con Malgesso e Bregano
+          base=next(x for x in geo if norm(x.get("comune"))=="BARDELLO")
+          y=dict(base); y["comune"]="Bardello con Malgesso e Bregano"; y["istat"]="12144"
+          current_geo.append(y)
+          assert len(current_geo)==1501, "GEO corrente atteso 1501, ottenuto "+str(len(current_geo))
+          newgeo=json.dumps(current_geo,ensure_ascii=False,separators=(",",":"))
+          src=src[:start]+newgeo+src[end+1:]
+          alias_code="const CURRENT_COMUNE_ALIASES={"+",".join([
+              '"RONAGO":"Uggiate con Ronago"',
+              '"UGGIATE-TREVANO":"Uggiate con Ronago"',
+              '"ALBAREDO ARNABOLDI":"Campospinoso Albaredo"',
+              '"LIRIO":"Montalto Pavese"',
+              '"BARDELLO":"Bardello con Malgesso e Bregano"',
+              '"BREGANO":"Bardello con Malgesso e Bregano"',
+              '"MALGESSO":"Bardello con Malgesso e Bregano"'
+          ])+"};const currentComune=s=>CURRENT_COMUNE_ALIASES[norm(s)]||s;"
+          anchor="const esc=s=>String(s??'').replace("
+          ni=src.find("const esc=")
+          if ni<0: raise SystemExit("ancora norm/esc non trovata")
+          # Inserisci l'alias subito dopo la funzione norm.
+          norm_anchor="const norm=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'');"
+          if norm_anchor in src and "CURRENT_COMUNE_ALIASES" not in src:
+              src=src.replace(norm_anchor,norm_anchor+alias_code,1)
+          oldmap="geo:geoMap.get(norm(r.prov)+'|'+norm(r.comune))||null"
+          newmap="comune:currentComune(r.comune),geo:geoMap.get(norm(r.prov)+'|'+norm(currentComune(r.comune)))||null"
+          src=src.replace(oldmap,newmap)
+          # Ricomprimi il sorgente aggiornato nell'HTML contenitore.
+          newb64=base64.b64encode(gzip.compress(src.encode("utf-8"),mtime=0)).decode("ascii")
+          s2=re.sub(r'const b64="[^"]+"','const b64="'+newb64+'"',s,count=1)
+          Path("index.html").write_text(s2,encoding="utf-8")
+          lines += ["", "CURRENT_GEO_LEN="+str(len(current_geo)), "CURRENT_GEO_UNIQUE_ISTAT="+str(len({str(x.get("istat","")) for x in current_geo if x.get("istat")}))]
+          lines += ["CURRENT_GEO_TARGETS="+repr([x for x in current_geo if norm(x.get("comune")) in {"UGGIATE CON RONAGO","CAMPOSPinosO ALBAREDO".upper(),"MONTALTO PAVESE","BARDELLO CON MALGESSO E BREGANO"}])]
           Path("geo-check.txt").write_text("\n".join(lines),encoding="utf-8")
       - name: Commit inspection
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add home-snippet.txt geo-check.txt
+          git add index.html home-snippet.txt geo-check.txt
           git commit -m "Inspect home logic" || exit 0
           git push
