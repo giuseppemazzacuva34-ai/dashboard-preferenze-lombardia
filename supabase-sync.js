@@ -1679,7 +1679,7 @@ function installSondaggiModule(){
 
     host.innerHTML=
       '<div class="sg-wrap">'+
-        '<div class="sg-head"><div><div class="sg-kicker">SONDAGGI ELETTORALI</div><h1>Simulatore nazionale e per collegio</h1><p>Inserisci le percentuali nazionali e quelle del territorio selezionato, costruisci le coalizioni e verifica l'effetto sul riparto dei seggi.</p></div><button class="sg-btn primary" id="sondaggiRefreshYT">AGGIORNA DA YOUTREND</button></div>'+
+        '<div class="sg-head"><div><div class="sg-kicker">SONDAGGI ELETTORALI</div><h1>Simulatore nazionale e per collegio</h1><p>Inserisci le percentuali nazionali e quelle del territorio selezionato, costruisci le coalizioni e verifica l&#39;effetto sul riparto dei seggi.</p></div><button class="sg-btn primary" id="sondaggiRefreshYT">AGGIORNA DA YOUTREND</button></div>'+
         '<div class="sg-law">LEGGE ELETTORALE · TESTO APPROVATO 8 OTTOBRE 2026 · sistema proporzionale su collegi plurinominali · soglie 3% liste / 10% coalizioni · premio di 70 seggi alla Camera e 35 al Senato con soglia 42% nella stessa lista/coalizione in entrambe le Camere. Testo approvato definitivamente, non ancora pubblicato.</div>'+
         '<div class="sg-layout">'+
           '<div class="sg-map-card"><div class="sg-card-title"><b>Italia</b><span>'+esc2(S.region)+'</span></div><div class="sg-map"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Italy_map_with_regions.svg" alt="Mappa d’Italia divisa in regioni"><div class="sg-map-caption">La mappa mostra la divisione regionale; usa i pulsanti per selezionare la regione e caricare i relativi collegi.</div></div><div class="sg-regions">'+REGIONS.map(x=>'<button type="button" data-region="'+esc2(x)+'" class="'+(x===S.region?"active":"")+'">'+esc2(x)+'</button>').join("")+'</div></div>'+
@@ -1742,7 +1742,7 @@ function installSondaggiModule(){
 
   const style=document.createElement("style");
   style.id="sondaggi-module-v1";
-  style.textContent="
+  style.textContent=String.raw`
 #tab-sondaggi{padding:0!important}
 .sg-wrap{color:#eaf4fb}
 .sg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:12px}
@@ -1789,8 +1789,7 @@ function installSondaggiModule(){
 .sg-results .sg-card:first-child{grid-column:1/-1}
 .sg-source{margin-top:8px;font-size:7px;color:#66859d;line-height:1.4}
 @media(max-width:1000px){.sg-layout,.sg-results{grid-template-columns:1fr}.sg-map-card{max-width:none}.sg-map img{height:360px}.sg-controls{grid-template-columns:1fr 1fr}.sg-controls>div:last-child{grid-column:1/-1}}
-@media(max-width:820px){.sg-head{display:block}.sg-head h1{font-size:22px}.sg-head .sg-btn{width:100%;margin-top:9px}.sg-map img{height:330px}.sg-regions{grid-template-columns:1fr 1fr}.sg-table{min-width:820px}.sg-table input{width:72px}.sg-members{grid-template-columns:1fr 1fr}.sg-controls{grid-template-columns:1fr}.sg-controls>div:last-child{grid-column:auto}.sg-actions{display:grid;grid-template-columns:1fr 1fr}.sg-two{grid-template-columns:1fr}.sg-results{display:block}.sg-results .sg-card{margin-bottom:10px}}
-";
+@media(max-width:820px){.sg-head{display:block}.sg-head h1{font-size:22px}.sg-head .sg-btn{width:100%;margin-top:9px}.sg-map img{height:330px}.sg-regions{grid-template-columns:1fr 1fr}.sg-table{min-width:820px}.sg-table input{width:72px}.sg-members{grid-template-columns:1fr 1fr}.sg-controls{grid-template-columns:1fr}.sg-controls>div:last-child{grid-column:auto}.sg-actions{display:grid;grid-template-columns:1fr 1fr}.sg-two{grid-template-columns:1fr}.sg-results{display:block}.sg-results .sg-card{margin-bottom:10px}}`;
   document.head.appendChild(style);
 
   document.addEventListener("click",ev=>{
