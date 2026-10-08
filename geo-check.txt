@@ -1536,3 +1536,7 @@ EURO_RAW|Campospinoso Albaredo|20
 EURO_RAW|Lirio|20
 EURO_RAW|Montalto Pavese|20
 EURO_RAW|Bardello con Malgesso e Bregano|20
+
+CURRENT_GEO_LEN=1501
+CURRENT_GEO_UNIQUE_ISTAT=1501
+CURRENT_GEO_TARGETS=[{'comune': 'Campospinoso Albaredo', 'prov': 'PV', 'istat': '18026', 'camP': 'Lombardia 4 - P01', 'camU': 'Lombardia 4 - U01', 'senP': 'Lombardia - P02', 'senU': 'Lombardia - U10'}, {'comune': 'Montalto Pavese', 'prov': 'PV', 'istat': '18094', 'camP': 'Lombardia 4 - P01', 'camU': 'Lombardia 4 - U01', 'senP': 'Lombardia - P02', 'senU': 'Lombardia - U10'}, {'comune': 'Uggiate con Ronago', 'prov': 'CO', 'istat': '13256', 'camP': 'Lombardia 2 - P02', 'camU': 'Lombardia 2 - U03', 'senP': 'Lombardia - P01', 'senU': 'Lombardia - U02'}, {'comune': 'Bardello con Malgesso e Bregano', 'prov': 'VA', 'istat': '12144', 'camP': 'Lombardia 2 - P01', 'camU': 'Lombardia 2 - U01', 'senP': 'Lombardia - P01', 'senU': 'Lombardia - U01'}]
