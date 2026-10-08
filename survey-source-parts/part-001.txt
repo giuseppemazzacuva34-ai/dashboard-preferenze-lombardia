@@ -1,0 +1,542 @@
+<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard Preferenze Lombardia 2026</title>
+<style>
+:root{--bg:#16223A;--sf:#1E2F47;--s2:#1A2840;--bd:#2E4460;--tx:#D8E6F3;--mu:#7A9DBF;--ac:#F0A500;--gn:#3FB950;--rd:#F85149;--cyn:#39D0F8;--prp:#A371F7;--org:#FB923C;--blu:#4D8FD6;--lgh:#8FADC8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;min-height:100vh}
+header{background:var(--header-bg,linear-gradient(135deg,#16223A,#1E2F47));border-bottom:1px solid var(--bd);padding:14px 22px}
+.htop{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.hbadge{background:var(--ac);color:#000;font-size:9px;font-weight:700;letter-spacing:2px;padding:2px 8px;border-radius:20px;text-transform:uppercase;margin-bottom:4px;display:inline-block}
+h1{font-family:'Playfair Display',serif;font-size:clamp(14px,2.5vw,22px);font-weight:900}
+h1 em{color:var(--ac);font-style:normal}
+.ha{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{padding:7px 13px;border-radius:7px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.bp{background:var(--ac);color:#000}.bp:hover{opacity:.85}
+.bg2{background:transparent;color:var(--tx);border:1px solid var(--bd)}.bg2:hover{border-color:var(--ac);color:var(--ac)}
+.rd{background:transparent;color:var(--rd);border:1px solid var(--rd)}.rd:hover{background:var(--rd);color:#fff}
+.sm{padding:4px 9px;font-size:10px}
+.ks{display:grid;grid-template-columns:repeat(auto-fit,minmax(95px,1fr));gap:1px;background:var(--bd);border-bottom:1px solid var(--bd)}
+.kpi{background:var(--sf);padding:11px 14px}
+.kv{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;line-height:1}
+.kl{color:var(--mu);font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.tabs{display:flex;background:var(--sf);border-bottom:1px solid var(--bd);padding:0 16px;overflow-x:auto}
+.tab{padding:10px 14px;font-size:11px;font-weight:500;color:var(--mu);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.tab:hover{color:var(--tx)}.tab.active{color:var(--ac);border-bottom-color:var(--ac)}
+main{padding:16px 20px}
+.panel{display:none}.panel.active{display:block}
+.st{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;margin-bottom:11px}
+.st small{font-family:'DM Sans',sans-serif;font-size:10px;color:var(--mu);display:block;margin-top:2px}
+.hint{background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.2);border-radius:7px;padding:8px 12px;font-size:10px;color:var(--mu);margin-bottom:11px}
+.hint b{color:var(--ac)}
+.divider{height:1px;background:var(--bd);margin:14px 0}
+.tb{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.srch{flex:1;min-width:140px;background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:7px 10px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:11px;outline:none}
+.srch:focus{border-color:var(--ac)}
+select.flt{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:7px 9px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:11px;outline:none;cursor:pointer}
+.tw{overflow-x:auto;border-radius:8px;border:1px solid var(--bd)}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead tr{background:var(--s2)}
+th{text-align:left;padding:8px 10px;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--mu);font-weight:600;border-bottom:1px solid var(--bd);white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--tx)}
+td{padding:7px 10px;border-bottom:1px solid rgba(48,54,61,.4);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(28,35,48,.5)}
+.ed{cursor:pointer;border-radius:3px;padding:2px 4px}.ed:hover{background:rgba(240,165,0,.12);outline:1px dashed rgba(240,165,0,.4)}
+.ci{background:var(--s2);border:1px solid var(--ac);border-radius:4px;padding:3px 7px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:11px;width:100%;outline:none}
+.cs{background:var(--s2);border:1px solid var(--ac);border-radius:4px;padding:3px 6px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:11px;outline:none}
+.b{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px}
+.r-s{background:rgba(240,165,0,.15);color:var(--ac)}.r-a{background:rgba(0,180,230,.15);color:#30d0f8}.r-ane{background:rgba(120,120,120,.2);color:#9ca3af}
+.r-m{background:rgba(63,185,80,.15);color:var(--gn)}.r-n{background:rgba(125,133,144,.15);color:var(--mu)}
+.p-fdi{background:rgba(15,30,80,.4);color:#5580cc}.p-leg{background:rgba(0,130,60,.25);color:#2ec970}
+.p-fi{background:rgba(0,180,230,.2);color:#30d0f8}.p-noi{background:rgba(120,120,120,.22);color:#b0b5be}
+.p-cdx{background:rgba(26,86,219,.15);color:#6090ee}.p-csx{background:rgba(220,38,38,.15);color:#f56565}
+.p-pd{background:rgba(220,38,38,.2);color:#fc8181}.p-m5s{background:rgba(255,214,0,.15);color:#ffd600}
+.p-ccd{background:rgba(230,230,230,.1);color:#dde0e8}.p-ccs{background:rgba(234,88,12,.2);color:#fb923c}
+.p-civ{background:rgba(240,165,0,.15);color:#f0a500}.p-mix{background:rgba(139,92,246,.15);color:#a78bfa}
+.s-cdx{background:rgba(26,86,219,.15);color:#6090ee}.s-csx{background:rgba(220,38,38,.15);color:#f56565}
+.s-civ{background:rgba(240,165,0,.15);color:#f0a500}.s-mix{background:rgba(139,92,246,.15);color:#a78bfa}
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px}
+.ct{background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:9px 11px;cursor:pointer;transition:transform .12s,border-color .12s;position:relative;overflow:hidden}
+.ct::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%}
+.ct.cdx::before{background:#1a56db}.ct.csx::before{background:#dc2626}
+.ct.civ::before{background:#f0a500}.ct.mix::before{background:#8b5cf6}
+.ct.fdi::before{background:#1a3569}.ct.leg::before{background:#16a34a}.ct.unc::before{background:var(--bd)}
+.ct:hover{transform:translateY(-2px);border-color:var(--ac)}
+.cn{font-size:11px;font-weight:600}.cs2{font-size:9px;color:var(--mu);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci2{display:flex;gap:5px;margin-top:3px}.ci2 span{font-size:8px;color:var(--mu)}
+.cb{display:inline-block;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;margin-top:4px}
+.leg{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.li{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--mu)}.ld{width:8px;height:8px;border-radius:50%}
+.filtri{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.fb{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:500;border:1px solid var(--bd);background:transparent;color:var(--mu);cursor:pointer;font-family:'DM Sans',sans-serif}
+.fb.active{color:#000!important}
+.fb[data-f="tutti"].active{background:var(--tx);border-color:var(--tx)}
+.fb[data-f="cdx"].active{background:#1a56db;border-color:#1a56db}
+.fb[data-f="csx"].active{background:#dc2626;border-color:#dc2626}
+.fb[data-f="civ"].active{background:#f0a500;border-color:#f0a500}
+.fb[data-f="fdi"].active{background:#1a3569;border-color:#1a3569;color:#fff!important}
+.fb[data-f="leg"].active{background:#16a34a;border-color:#16a34a}
+.fb[data-f="unc"].active{background:var(--mu);border-color:var(--mu)}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+@media(max-width:640px){.cg{grid-template-columns:1fr}}
+.cc{background:var(--sf);border:1px solid var(--bd);border-radius:9px;padding:15px}
+.cc h3{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--mu);margin-bottom:11px}
+.cw{position:relative;height:180px}
+.srow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(48,54,61,.3)}
+.srow:last-child{border-bottom:none}
+.sbw{flex:1;height:7px;background:var(--bd);border-radius:3px;overflow:hidden}.sb{height:100%;border-radius:3px}
+.pkpi{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:9px;margin-bottom:14px}
+.pcard{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:13px}
+.pcard h4{font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.pval{font-family:'Playfair Display',serif;font-size:22px;color:var(--ac);font-weight:700}
+.psub{font-size:10px;color:var(--mu);margin-top:2px}
+.el-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:7px;margin-bottom:14px}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;align-items:center;justify-content:center}
+.ov.open{display:flex}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:24px;width:min(540px,95vw);max-height:88vh;overflow-y:auto}
+.modal h2{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:3px}
+.msub{color:var(--mu);font-size:11px;margin-bottom:16px}
+.mc{float:right;background:none;border:none;color:var(--mu);font-size:20px;cursor:pointer;line-height:1;padding:0}
+.mc:hover{color:var(--tx)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+@media(max-width:480px){.fg{grid-template-columns:1fr}}
+.ff label{font-size:9px;color:var(--mu);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:3px}
+.ff input,.ff select{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:5px;padding:8px 9px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:11px;outline:none;transition:border-color .15s}
+.ff input:focus,.ff select:focus{border-color:var(--ac)}
+.fa{display:flex;gap:6px;justify-content:flex-end;margin-top:12px}
+.igrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
+.icell{background:var(--s2);border-radius:6px;padding:9px 11px}
+.icell label{font-size:9px;color:var(--mu);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:3px}
+.icell input{background:transparent;border:none;border-bottom:1px solid var(--bd);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;width:100%;outline:none;padding:2px 0}
+.icell input:focus{border-bottom-color:var(--ac)}
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(48,54,61,.3);font-size:11px}
+.mrow:last-child{border-bottom:none}
+.sh{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mu);font-weight:700;margin:10px 0 6px;padding-bottom:5px;border-bottom:1px solid var(--bd)}
+.cbox{background:var(--sf);border:1px solid var(--bd);border-radius:11px;padding:22px;width:min(330px,90vw);text-align:center}
+.cbox h3{margin-bottom:6px;font-size:14px}.cbox p{color:var(--mu);font-size:11px;margin-bottom:16px}
+.cfa{display:flex;gap:6px;justify-content:center}
+.empty{text-align:center;padding:40px;color:var(--mu)}.empty big{font-size:30px;display:block;margin-bottom:8px}
+.toast{position:fixed;bottom:16px;right:16px;background:var(--gn);color:#000;font-weight:600;font-size:11px;padding:9px 15px;border-radius:7px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:999}
+.toast.show{opacity:1}.toast.err{background:var(--rd);color:#fff}
+.drop{background:var(--sf);border:2px dashed var(--bd);border-radius:10px;padding:30px;text-align:center;margin-bottom:14px;cursor:pointer}
+.drop:hover{border-color:var(--ac)}
+.dh-card{background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:10px 12px;margin-bottom:8px}
+.cpv-card{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:12px;margin-bottom:10px}
+
+/* Light mode */
+:root.light{
+  --bg:#F5F7FA;--sf:#FFFFFF;--s2:#EDF0F7;--bd:#D0D9EA;
+  --tx:#1A2540;--mu:#5A6E90;--ac:#9A6500;--gn:#1A7F37;
+  --rd:#C0392B;--cyn:#0B7FA0;--prp:#6D4BAE;--org:#C96A0A;
+  --blu:#1A5FAD;--lgh:#6B80A0;
+  --header-bg:linear-gradient(135deg,#1E2F47,#253B55)
+}
+/* === LIGHT MODE OVERRIDES === */
+.light body{background:var(--bg)!important;color:var(--tx)!important}
+.light header{background:var(--header-bg)!important;color:#D8E6F3!important}
+.light header *{color:inherit}
+.light header .tit,.light header h1{color:#FFFFFF!important}
+.light .ha,.light .tabs{background:#1E2F47!important}
+.light .tab{color:#B8D0E8!important;background:transparent}
+.light .tab.active,.light .tab:hover{background:#2E4460!important;color:#fff!important}
+.light input:not([type=checkbox]):not([type=radio]),.light select,.light textarea{
+  background:#fff!important;color:var(--tx)!important;border-color:var(--bd)!important}
+.light input::placeholder,.light textarea::placeholder{color:var(--mu)!important}
+.light .flt{background:#fff!important;color:var(--tx)!important;border-color:var(--bd)!important}
+.light .srch{background:#fff!important;color:var(--tx)!important;border-color:var(--bd)!important}
+.light .ti{background:#fff!important;color:var(--tx)!important;border-color:var(--bd)!important}
+.light .cs{background:#fff!important;color:var(--tx)!important;border-color:var(--bd)!important}
+.light .modal{background:var(--sf)!important;border:1px solid var(--bd)!important}
+.light .hint{background:#EAF2FF!important;border-color:#B8D4F8!important;color:var(--tx)!important}
+.light .btn{background:var(--s2);color:var(--tx);border-color:var(--bd)}
+.light .btn.bp{background:#1A3A70!important;color:#fff!important}
+.light .btn.bg2{background:var(--s2);color:var(--tx);border-color:var(--bd)}
+.light .btn.rd{background:#B91C1C!important;color:#fff!important}
+.light .tb{background:#fff;border-color:var(--bd)}
+.light .tw tr:nth-child(odd) td{background:#fff!important;color:var(--tx)!important;border-color:var(--bd)!important}
+.light .tw tr:nth-child(even) td{background:var(--s2)!important;color:var(--tx)!important}
+.light .tw th{background:var(--s2)!important;color:var(--tx)!important;border-color:var(--bd)!important}
+.light .sh{color:#1A5FAD!important;font-weight:700}
+.light .st{color:var(--tx)!important}
+.light .st small{color:var(--mu)!important}
+.light .empty{color:var(--mu)!important}
+.light label{color:var(--mu)!important}
+.light .panel{background:var(--bg)!important}
+.light .kv{color:var(--ac)!important}
+.light .pkpi .kv,.light .pkpi .kl{color:var(--tx)}
+.light option,.light optgroup{background:#fff;color:var(--tx)}
+.light #sync-dot{background:var(--gn)!important}
+@media print{
+  header,nav,.tabs,.ha,.btn,#sync-dot,#sync-lbl,.ov,
+  .drop,[onclick]{display:none!important}
+  .panel{display:block!important}
+  body{background:#fff;color:#000;font-size:11px}
+  table{border-collapse:collapse;width:100%}
+  td,th{border:1px solid #ccc;padding:3px 6px;font-size:10px}
+  .tw{max-height:none!important;overflow:visible!important}
+  h1{font-size:16px;margin-bottom:4px}
+  .st{font-size:13px;font-weight:700;margin-bottom:8px}
+}
+
+/* ===== V2 INTERFACCIA — SOLO PRESENTAZIONE, LOGICA INVARIATA ===== */
+body{background:var(--bg);}
+header{position:sticky;top:0;z-index:120;box-shadow:0 2px 12px rgba(0,0,0,.14)}
+.htop{max-width:1800px;margin:0 auto}
+.hbadge{font-size:8px;letter-spacing:1.6px;padding:3px 9px}
+h1{letter-spacing:-.2px}
+.ha{justify-content:flex-end}
+.ha .btn{min-height:31px}
+.ha .btn.bp{box-shadow:0 2px 8px rgba(240,165,0,.16)}
+.ks{position:relative;z-index:1;max-width:1800px;margin:0 auto;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+.kpi{min-height:67px;display:flex;flex-direction:column;justify-content:center}
+.tabs{position:sticky;top:77px;z-index:110;padding:0 max(16px,calc((100vw - 1800px)/2));box-shadow:0 2px 10px rgba(0,0,0,.10);scrollbar-width:thin}
+.tab{position:relative;padding:11px 12px;font-size:10px;transition:color .15s,background .15s,border-color .15s}
+.tab:nth-child(1),.tab:nth-child(5),.tab:nth-child(10),.tab:nth-child(14){margin-left:6px}
+.tab:nth-child(1)::before,.tab:nth-child(5)::before,.tab:nth-child(10)::before,.tab:nth-child(14)::before{content:'';position:absolute;left:-7px;top:8px;bottom:8px;width:1px;background:var(--bd)}
+.tab:hover{background:rgba(255,255,255,.035);border-radius:5px 5px 0 0}
+.tab.active{background:rgba(240,165,0,.055)}
+main{max-width:1800px;margin:0 auto;padding:20px 22px 40px}
+.panel{animation:panelIn .14s ease-out}
+@keyframes panelIn{from{opacity:.65;transform:translateY(2px)}to{opacity:1;transform:none}}
+.st{font-size:17px;letter-spacing:-.1px}
+.st small{font-size:10px;line-height:1.45}
+.tb{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:8px;margin-bottom:12px}
+.tb .srch{background:var(--sf)}
+.tw{box-shadow:0 3px 12px rgba(0,0,0,.08)}
+th{position:sticky;top:0;z-index:4}
+.cc,.pcard,.ct,.dh-card,.cpv-card{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.hint{line-height:1.5}
+.btn:focus-visible,.tab:focus-visible,.srch:focus-visible,select:focus-visible{outline:2px solid var(--cyn);outline-offset:2px}
+@media(max-width:900px){
+  header{position:relative}
+  .tabs{position:sticky;top:0}
+  .ha{width:100%;justify-content:flex-start}
+  main{padding:16px 12px 32px}
+}
+@media(max-width:640px){
+  .htop{align-items:flex-start}
+  h1{font-size:18px}
+  .ks{grid-template-columns:repeat(3,1fr)}
+  .kpi{padding:9px 10px;min-height:60px}
+  .kv{font-size:18px}
+  .kl{font-size:8px;letter-spacing:.7px}
+  .tabs{padding:0 8px}
+  .tab{padding:10px 9px;font-size:9px}
+}
+
+
+/* ═══ V2.1 SISTEMA / MULTI-PROVINCIA ═══ */
+.sys-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:14px}
+.sys-card{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:14px}
+.sys-ok{color:var(--gn);font-weight:700}.sys-warn{color:#f0a500;font-weight:700}
+.audit-row,.agent-row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--sf);border:1px solid var(--bd);border-radius:8px;margin-bottom:6px;flex-wrap:wrap}
+.audit-main,.agent-main{flex:1;min-width:220px}.audit-meta,.agent-meta{font-size:9px;color:var(--mu);margin-top:3px}
+.agent-pending{border-left:3px solid #f0a500}.agent-approved{border-left:3px solid var(--gn)}
+@media(max-width:800px){.sys-grid{grid-template-columns:1fr}.ha{overflow-x:auto}.tabs{overflow-x:auto;white-space:nowrap}}
+
+/* ===== V2 INTERFACCIA REALE ===== */
+:root{--nav-bg:#0b1220;--nav-border:#253247}
+header{position:sticky!important;top:0!important;z-index:120!important;backdrop-filter:blur(14px);box-shadow:0 8px 30px rgba(0,0,0,.22)!important}
+.htop{max-width:1500px!important;margin:0 auto!important;padding:14px 20px!important;align-items:center!important}
+.hbadge{letter-spacing:.08em!important;font-weight:700!important;padding:5px 9px!important;border-radius:999px!important}
+header h1{font-size:21px!important;letter-spacing:-.02em!important;margin-top:5px!important}
+.hsub{font-size:11px;color:var(--mu);margin-top:4px;letter-spacing:.01em}
+.ha{gap:6px!important;flex-wrap:wrap!important;justify-content:flex-end!important}
+.ha .btn{border-radius:8px!important}
+.tabs{position:sticky!important;top:83px!important;z-index:110!important;max-width:1500px!important;margin:0 auto!important;padding:10px 16px!important;background:rgba(11,18,32,.96)!important;border:1px solid var(--nav-border)!important;border-radius:0 0 14px 14px!important;box-shadow:0 8px 25px rgba(0,0,0,.18)!important;display:flex!important;gap:6px!important;flex-wrap:wrap!important}
+.navgroup{display:flex;align-items:center;padding:0 7px;font-size:9px;font-weight:800;letter-spacing:.12em;color:#6ee7f9;border-right:1px solid var(--nav-border);margin-right:2px}.tabs:before{content:none;display:flex;align-items:center;padding:0 7px;font-size:9px;font-weight:800;letter-spacing:.12em;color:#6ee7f9;border-right:1px solid var(--nav-border);margin-right:2px}
+.tab{border-radius:8px!important;padding:8px 11px!important;font-size:11px!important;transition:.15s!important}
+.tab:hover{transform:translateY(-1px);border-color:var(--ac)!important}
+.tab.active{box-shadow:0 0 0 1px var(--ac),0 4px 14px rgba(0,0,0,.2)!important}
+main{max-width:1500px!important;margin:0 auto!important;padding-top:14px!important}
+.panel{border-radius:12px!important}
+.st{letter-spacing:-.01em}
+.kpi,.cc,.pkpi>div{border-radius:10px!important}
+.tb{position:sticky!important;top:145px!important;z-index:50!important;box-shadow:0 4px 14px rgba(0,0,0,.12)!important}
+@media(max-width:900px){header{position:relative!important}.tabs{position:sticky!important;top:0!important}.tb{position:relative!important;top:auto!important}.ha{justify-content:flex-start!important}.htop{align-items:flex-start!important;flex-direction:column!important}.tabs:before{width:100%;border-right:0;border-bottom:1px solid var(--nav-border);padding:4px 0 7px}}
+.light header,.light .tabs{background:rgba(255,255,255,.96)!important}
+.light .tabs{border-color:var(--bd)!important}
+/* ===== FINE V2 ===== */
+
+/* === V3 VISUAL UX REDESIGN === */
+header{padding:18px 24px;background:linear-gradient(135deg,#101b31 0%,#182b48 55%,#1d3655 100%);box-shadow:0 4px 20px rgba(0,0,0,.16);position:relative;z-index:20}
+.htop{min-height:48px}
+.hbadge{background:rgba(240,165,0,.14);border:1px solid rgba(240,165,0,.45);color:#f4b52d;padding:5px 10px;border-radius:6px;letter-spacing:1.4px;margin-bottom:7px}
+h1{font-size:clamp(18px,2.3vw,27px);letter-spacing:-.3px}
+.ha{gap:7px}
+.ha .btn{border-radius:8px;padding:8px 11px}
+.ks{grid-template-columns:repeat(6,minmax(120px,1fr));gap:1px;background:var(--bd);box-shadow:0 3px 12px rgba(0,0,0,.12)}
+.kpi{padding:14px 16px;min-height:76px;transition:background .15s,transform .15s}
+.kpi:hover{background:#223652;transform:translateY(-1px)}
+.kv{font-size:25px}
+.kl{font-size:9px;margin-top:5px}
+.tabs{position:fixed;left:0;top:160px;bottom:0;width:218px;z-index:30;display:flex;flex-direction:column;align-items:stretch;gap:2px;padding:18px 10px;background:#111d31;border-right:1px solid #2b405d;box-shadow:8px 0 24px rgba(0,0,0,.14);overflow-y:auto;overflow-x:hidden}
+.tabs:before{content:'NAVIGAZIONE';display:block;color:#7892b0;font-size:9px;font-weight:800;letter-spacing:1.8px;padding:4px 10px 12px}
+.navgroup{display:flex;align-items:center;color:#7189a6;font-size:9px;font-weight:800;letter-spacing:1.5px;padding:15px 10px 5px;margin-top:4px}
+.navgroup:first-of-type{padding-top:4px}
+.tab{width:100%;text-align:left;padding:10px 12px;border:1px solid transparent;border-radius:8px;border-bottom:none;font-size:11px;color:#91a7bf;transition:all .15s;position:relative}
+.tab:hover{background:#1b2c45;color:#e4edf6;border-color:#29425f}
+.tab.active{background:linear-gradient(90deg,rgba(240,165,0,.18),rgba(240,165,0,.05));color:#f0b32a;border-color:rgba(240,165,0,.22);box-shadow:inset 3px 0 0 var(--ac)}
+main{margin-left:218px;padding:24px 26px 40px;max-width:calc(100% - 218px)}
+.panel{animation:panelIn .18s ease-out}
+@keyframes panelIn{from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:none}}
+.st{font-size:20px;letter-spacing:-.2px;margin-bottom:15px}
+.st small{font-size:10px;margin-top:4px}
+.hint{padding:11px 14px;border-radius:9px;line-height:1.5}
+.tb{background:var(--sf);border:1px solid var(--bd);padding:9px;border-radius:10px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.srch{padding:9px 12px;border-radius:8px;font-size:11px}
+select.flt{padding:9px 10px;border-radius:8px}
+.tw{border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+th{padding:10px 11px}
+td{padding:9px 11px}
+.cg{gap:16px}
+.cc{border-radius:12px;padding:17px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.pkpi{gap:12px}
+.pcard{border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+@media(max-width:900px){.tabs{top:0}.ks{grid-template-columns:repeat(3,1fr)}.tabs{position:sticky;top:0;left:auto;width:100%;height:auto;bottom:auto;flex-direction:row;align-items:center;padding:8px 10px;overflow-x:auto;box-shadow:0 3px 12px rgba(0,0,0,.12)}.tabs:before{display:none}.navgroup{display:none}.tab{width:auto;text-align:center;flex:0 0 auto}.tab.active{box-shadow:inset 0 -3px 0 var(--ac)}}
+@media(max-width:640px){.ks{grid-template-columns:repeat(2,1fr)}header{padding:14px}.ha{width:100%}main{margin-left:0;max-width:none;padding:16px 12px}.st{font-size:18px}}
+
+/* === V4 INTUITIVE NAVIGATION === */
+header{padding:16px 22px 14px;background:linear-gradient(135deg,#0e1a2b 0%,#152944 55%,#1b3554 100%);box-shadow:0 4px 18px rgba(0,0,0,.16);position:relative;z-index:20}
+.htop{gap:18px;align-items:center}
+.ha{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;max-width:760px}
+.ha .btn{font-size:10px;padding:7px 9px;border-radius:7px}
+.ks{grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;background:var(--bd);box-shadow:0 2px 10px rgba(0,0,0,.10)}
+.kpi{min-width:0;padding:13px 15px}
+.tabs{position:sticky;top:0;z-index:18;width:100%;height:auto;display:flex;align-items:center;gap:4px;padding:8px 18px;background:#111d31;border-top:1px solid rgba(255,255,255,.04);border-bottom:1px solid #2b405d;box-shadow:0 3px 12px rgba(0,0,0,.13);overflow-x:auto;overflow-y:hidden;white-space:nowrap}
+.tabs:before{content:'NAVIGAZIONE';display:block;flex:0 0 auto;color:#6f87a3;font-size:8px;font-weight:800;letter-spacing:1.6px;margin-right:4px}
+.navgroup{display:flex;align-items:center;flex:0 0 auto;color:#7189a6;font-size:8px;font-weight:800;letter-spacing:1.3px;padding:6px 7px 6px 11px;margin-left:5px;border-left:1px solid #334b68}
+.navgroup:first-of-type{margin-left:0}
+.tab{width:auto;flex:0 0 auto;text-align:center;padding:8px 10px;border:1px solid transparent;border-radius:7px;border-bottom:none;font-size:10px;color:#91a7bf;line-height:1.2}
+.tab:hover{background:#1b2c45;color:#e4edf6;border-color:#29425f}
+.tab.active{background:linear-gradient(180deg,rgba(240,165,0,.20),rgba(240,165,0,.07));color:#f0b32a;border-color:rgba(240,165,0,.35);box-shadow:inset 0 -3px 0 var(--ac)}
+main{margin-left:0;max-width:none;padding:22px 24px 40px}
+.st{margin-bottom:13px}
+.tb{margin-bottom:12px}
+@media(max-width:900px){
+  .htop{align-items:flex-start;flex-direction:column}
+  .ha{width:100%;justify-content:flex-start;max-width:none}
+  .tabs{position:sticky;top:0;padding:7px 10px}
+  .tabs:before{display:none}
+  .navgroup{display:flex}
+  .ks{grid-template-columns:repeat(3,minmax(0,1fr))}
+  main{padding:18px 14px 32px}
+}
+@media(max-width:640px){
+  header{padding:13px 12px}
+  .ha .btn{padding:7px 8px}
+  .ks{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tabs{gap:3px}
+  .navgroup{padding-left:8px;margin-left:2px}
+  .tab{font-size:9px;padding:8px 9px}
+  main{padding:15px 10px 28px}
+}
+
+
+:root{
+  --nav:#071a2e;--nav2:#0b2239;--blue:#1976ff;--green:#22c88a;--purple:#8b5cf6;
+  --orange:#f5a623;--red:#ef4444;--ink:#eef5ff;--muted:#8ea4bd;--line:#203b58;
+  --card:#0c2137;--card2:#0a1c30;
+}
+body{background:#071525;color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}
+header.app-header{height:88px!important;box-sizing:border-box;display:grid!important;grid-template-columns:300px 1fr auto;align-items:center;gap:22px;padding:12px 24px!important;background:linear-gradient(135deg,#061526,#0b2741)!important;border-bottom:1px solid #21415f!important;box-shadow:0 5px 24px rgba(0,0,0,.22)!important}
+.brand-block{display:flex;align-items:center;gap:12px}.brand-mark{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(145deg,#1c8cff,#1355c7);font-weight:900;font-size:13px;box-shadow:0 5px 16px #0004}.brand-title{font-size:19px;font-weight:800;letter-spacing:-.3px}.brand-title span{color:#f5b52c}.brand-sub{font-size:10px;color:#8da7c1;margin-top:3px}
+.header-center{display:flex;align-items:center;gap:12px;min-width:0}.province-select{height:42px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:25px;border:1px solid #294967;background:#0c2239;border-radius:10px;font-size:12px;white-space:nowrap}.province-select span{color:#8da7c1}.global-search{height:42px;min-width:300px;max-width:470px;flex:1;border:1px solid #294967;background:#0a1c30;color:#8da7c1;border-radius:10px;text-align:left;padding:0 14px;font-size:12px}.global-search:first-letter{font-size:19px}.header-actions{display:flex;align-items:center;gap:7px}.header-actions .btn{height:36px;border-radius:8px!important;padding:0 11px!important}.sync-state{font-size:10px;color:#8da7c1;display:flex;align-items:center;gap:5px;margin:0 4px}.sync-state i{width:7px;height:7px;border-radius:50%;background:#22c88a;display:block}.icon-action{width:35px;height:35px;border-radius:9px;border:1px solid #294967;background:#0b2239;color:#c7d7e8;cursor:pointer}
+.app-sidebar{position:fixed;z-index:50;left:0;top:88px;bottom:0;width:220px;box-sizing:border-box;background:#081a2d;border-right:1px solid #1e3954;padding:14px 10px;overflow:auto}.side-home,.side-tab{width:100%;height:40px;display:flex;align-items:center;gap:12px;border:0!important;border-radius:8px!important;background:transparent;color:#a6bad0;font-size:12px;text-align:left;padding:0 13px!important;margin:1px 0;cursor:pointer}.side-home span,.side-tab span{width:18px;text-align:center;font-size:16px}.side-home.active{background:linear-gradient(90deg,#1678ff,#2187ff);color:#fff;box-shadow:0 4px 14px #1678ff33}.side-tab:hover{background:#102a44;color:#fff}.side-tab.active{background:#122f4c;color:#5ca7ff;box-shadow:inset 3px 0 #2187ff}.side-label{font-size:9px;letter-spacing:1.6px;font-weight:800;color:#6d87a2;padding:18px 13px 7px}.side-bottom{border-top:1px solid #1c3650;margin-top:14px;padding-top:8px}
+.top-kpis{position:fixed;z-index:40;left:220px;right:0;top:88px;height:76px;display:grid;grid-template-columns:repeat(6,1fr);background:#0a2035;border-bottom:1px solid #203b58;box-shadow:0 4px 14px #0003}.top-kpis .kpi{border-right:1px solid #203b58;padding:13px 18px;display:flex;flex-direction:column;justify-content:center;min-height:0;background:transparent}.top-kpis .kv{font-size:22px;font-weight:800;color:#f2f7ff}.top-kpis .kl{font-size:8px;letter-spacing:1px;color:#7e98b2;text-transform:uppercase;margin-top:4px}
+main{margin-left:220px!important;max-width:none!important;padding:184px 24px 40px!important;background:#071525;min-height:calc(100vh - 88px)}.panel{max-width:1280px;margin:0 auto}.st{font-size:20px}.tb{background:#0b2034!important;border:1px solid #203b58!important;border-radius:10px!important}.tw{border-radius:10px!important;border:1px solid #203b58}.cc,.pcard{border-radius:11px!important;border:1px solid #203b58!important;background:#0b2034!important}.btn{border-radius:8px!important}
+.home-head{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:20px}.eyebrow{font-size:9px;letter-spacing:1.7px;color:#4f9cff;font-weight:800;margin-bottom:7px}.home-head h2{font-size:27px;line-height:1.1;margin:0 0 5px;color:#f3f7fc}.home-head p{margin:0;color:#829bb5;font-size:12px}.home-status{display:flex;align-items:center;gap:10px;background:#0b2034;border:1px solid #203b58;border-radius:10px;padding:10px 14px;min-width:165px}.home-status>span{width:10px;height:10px;border-radius:50%;background:#22c88a;box-shadow:0 0 0 5px #22c88a18}.home-status b{display:block;font-size:11px}.home-status small{display:block;color:#7792ad;font-size:9px;margin-top:3px}
+.home-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.home-kpi{position:relative;min-height:125px;text-align:left;border:1px solid #24425f;border-radius:12px;padding:18px;color:#eef5ff;cursor:pointer;background:#0b2034;overflow:hidden;transition:.15s}.home-kpi:hover{transform:translateY(-2px);border-color:#3e6385}.home-kpi .kicon{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:21px;background:#1976ff;color:#fff;float:left;margin-right:14px}.home-kpi.green .kicon{background:#19b979}.home-kpi.purple .kicon{background:#8051e8}.home-kpi.orange .kicon{background:#f39a1e}.home-kpi strong{font-size:27px;display:block;line-height:1}.home-kpi small{font-size:9px;color:#91a7bd;letter-spacing:.8px;display:block;margin-top:6px}.home-kpi em{display:block;clear:both;padding-top:18px;font-size:10px;color:#4fa1ff;font-style:normal}.home-grid{display:grid;grid-template-columns:1.45fr .85fr;gap:14px}.dash-card{background:#0b2034;border:1px solid #203b58;border-radius:12px;padding:17px;min-height:150px}.dash-card.wide{grid-column:auto}.card-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.card-title b{font-size:14px}.card-title span,.card-title button{font-size:9px;color:#7691ab;background:none;border:0}.admin-bars{display:grid;gap:11px}.admin-row{display:grid;grid-template-columns:120px 1fr 42px;gap:10px;align-items:center;font-size:10px}.bar{height:8px;background:#17324e;border-radius:20px;overflow:hidden}.bar i{display:block;height:100%;border-radius:20px}.admin-row b{text-align:right;font-size:10px}.status-row{display:grid;grid-template-columns:85px 1fr 38px;gap:8px;align-items:center;margin:10px 0;font-size:10px}.status-row .bar i{background:#22c88a}.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.quick-grid button{border:1px solid #23425e;background:#0d263e;color:#c5d6e8;border-radius:8px;padding:12px 7px;cursor:pointer;font-size:10px}.quick-grid button:hover{border-color:#3d78b2;background:#102f4c}.activity-row{display:grid;grid-template-columns:75px 24px 1fr;gap:9px;align-items:center;border-bottom:1px solid #18324a;padding:9px 0;font-size:10px}.activity-row:last-child{border:0}.activity-dot{width:9px;height:9px;border-radius:50%;background:#2b8cff}.activity-time{color:#6e88a3}.activity-main b{font-size:10px;display:block;color:#e5eef8}.activity-main small{color:#7893ad}
+@media(max-width:1150px){header.app-header{grid-template-columns:270px 1fr}.header-actions .excel-action{display:none}.home-kpis{grid-template-columns:repeat(2,1fr)}.home-grid{grid-template-columns:1fr}.header-actions{display:none}}
+@media(max-width:800px){.app-sidebar{width:68px}.side-label,.side-home:not(.active)::after,.side-tab:not(.active)::after{display:none}.side-home,.side-tab{justify-content:center;padding:0!important}.side-home{font-size:0}.side-tab{font-size:0}.side-home span,.side-tab span{font-size:17px;margin:0}main{margin-left:68px!important;padding-left:14px!important;padding-right:14px!important}.top-kpis{left:68px;grid-template-columns:repeat(3,1fr)}.header-center{display:none}.app-header{grid-template-columns:1fr!important}.brand-block{justify-content:center}.home-head{align-items:flex-start}.home-kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.top-kpis{height:64px}.top-kpis .kpi:nth-child(n+5){display:none}.top-kpis{grid-template-columns:repeat(4,1fr)}main{padding-top:164px!important}.home-kpis{grid-template-columns:1fr}.quick-grid{grid-template-columns:1fr 1fr}}
+
+/* === V6 POLISH — dashboard visual refinement === */
+:root{--ui-bg:#061321;--ui-panel:#0b1c2e;--ui-panel2:#0e2439;--ui-line:#1c3853;--ui-text:#edf4fb;--ui-muted:#7892ac;--ui-blue:#2387ff;--ui-green:#22c88a;--ui-purple:#8b5cf6;--ui-orange:#f2a11a}
+body{background:radial-gradient(circle at 70% -10%,#12345a 0,#071728 34%,#061321 68%)!important;color:var(--ui-text)!important}
+.app-header{height:88px!important;box-sizing:border-box!important;background:rgba(5,19,33,.96)!important;border-bottom:1px solid #193650!important;backdrop-filter:blur(12px)!important;box-shadow:0 8px 28px rgba(0,0,0,.25)!important}
+.brand-block{padding-left:4px}.brand-mark{width:42px!important;height:42px!important;border-radius:12px!important;background:linear-gradient(145deg,#2187ff,#165bc7)!important;box-shadow:0 7px 20px #1475ff33!important;font-weight:900!important}.brand-title{font-size:17px!important}.brand-title span{color:#f2aa20!important}.brand-sub{color:#7590aa!important}
+.province-select{background:#0b2136!important;border:1px solid #24435f!important;border-radius:9px!important;padding:9px 12px!important}.global-search{background:#091d31!important;border:1px solid #24435f!important;border-radius:11px!important;color:#dce8f4!important;min-height:38px!important;box-shadow:inset 0 1px 0 #ffffff05!important}.global-search:hover{border-color:#3979b3!important}
+.header-actions{gap:6px!important}.header-actions .btn{min-height:36px!important;border-radius:9px!important;font-weight:700!important}.icon-action{width:36px!important;height:36px!important;border-radius:9px!important;background:#0b2136!important;border:1px solid #24435f!important;color:#b9cde0!important}
+.app-sidebar{top:88px!important;width:224px!important;background:linear-gradient(180deg,#071a2c,#061524)!important;border-right:1px solid #18344f!important;padding:14px 12px 18px!important}.side-label{font-size:9px!important;color:#5f7e9c!important;letter-spacing:1.9px!important;padding:18px 10px 7px!important}.side-home,.side-tab{height:42px!important;border-radius:9px!important;margin:2px 0!important;color:#9bb0c4!important;font-size:11px!important;transition:all .16s ease!important}.side-home span,.side-tab span{width:22px!important;font-size:17px!important}.side-home:hover,.side-tab:hover{background:#0d2943!important;color:#edf5fc!important;transform:translateX(2px)}.side-home.active{background:linear-gradient(90deg,#197cff,#1265d9)!important;box-shadow:0 8px 22px #1475ff2e!important;color:white!important}.side-tab.active{background:#0e2d4a!important;color:#61adff!important;box-shadow:inset 3px 0 #2588ff!important}.side-bottom{border-top:1px solid #18344f!important}
+.top-kpis{left:224px!important;background:rgba(7,21,37,.96)!important;border-bottom:1px solid #17324b!important;height:72px!important;box-shadow:0 5px 20px rgba(0,0,0,.2)!important}.top-kpis .kpi{background:transparent!important;border-right:1px solid #17324b!important;padding:12px 18px!important}.top-kpis .kpi:hover{background:#0b2136!important}.top-kpis .kv{font-size:22px!important}.top-kpis .kl{color:#718ba4!important}
+main{margin-left:224px!important;padding:184px 28px 44px!important;background:transparent!important}.panel{max-width:1400px!important}
+.home-head{padding:3px 2px 0!important;margin-bottom:22px!important}.home-head h2{font-size:29px!important;letter-spacing:-.7px!important}.home-head p{font-size:12px!important;color:#7892ac!important}.eyebrow{color:#4da0ff!important}
+.home-status{background:linear-gradient(180deg,#0d263d,#0a1d30)!important;border-color:#21425f!important;border-radius:11px!important;box-shadow:0 7px 22px #00000018!important}.home-status>span{background:#22c88a!important}
+.home-kpis{gap:14px!important}.home-kpi{min-height:132px!important;border-radius:14px!important;background:linear-gradient(145deg,#0d243a,#0a1b2d)!important;border-color:#20415e!important;box-shadow:0 8px 24px rgba(0,0,0,.16)!important}.home-kpi:hover{transform:translateY(-3px)!important;border-color:#3a668c!important;box-shadow:0 14px 30px rgba(0,0,0,.22)!important}.home-kpi .kicon{border-radius:12px!important;box-shadow:0 8px 18px #00000022!important}.home-kpi strong{font-size:30px!important}.home-kpi small{color:#7892aa!important}.home-kpi em{color:#4da0ff!important}
+.home-grid{grid-template-columns:1.25fr .75fr!important;gap:15px!important}.dash-card{background:linear-gradient(145deg,#0c2237,#091a2b)!important;border-color:#1d3b56!important;border-radius:14px!important;box-shadow:0 8px 24px rgba(0,0,0,.14)!important;padding:18px!important}.card-title{margin-bottom:17px!important}.card-title b{font-size:14px!important;color:#f1f6fb!important}.card-title span,.card-title button{color:#5da7f5!important}.admin-row{grid-template-columns:125px 1fr 46px!important}.bar{height:9px!important;background:#122e49!important}.activity-row{padding:11px 0!important;border-color:#17334c!important}.quick-grid button{padding:13px 8px!important;border-radius:10px!important;background:#0d253d!important;transition:.15s!important}.quick-grid button:hover{transform:translateY(-2px)!important;background:#10304e!important}
+/* Consistent cards/tables across every module */
+.cc,.pcard,.tb,.tw,.sys-card,.modal-box{background:linear-gradient(145deg,#0c2237,#091a2b)!important;border-color:#1d3b56!important;border-radius:12px!important;box-shadow:0 7px 20px rgba(0,0,0,.12)!important}.cc h3,.pcard h4{color:#edf4fb!important}.tw{overflow:hidden!important}th{background:#0c263f!important;color:#8eabc4!important}tr:hover td{background:#0d263e!important}.srch,select.flt,input,textarea{background:#081b2d!important;border-color:#24435f!important;color:#e6f0f8!important;border-radius:9px!important}.btn{border-radius:8px!important;transition:.15s!important}.btn:hover{transform:translateY(-1px)}
+/* Chart areas */
+.cw{height:270px!important;position:relative!important}.cc .cw canvas{display:block!important;width:100%!important;height:100%!important}.panel .st{margin-top:2px!important}
+@media(max-width:1150px){.app-sidebar{width:200px!important}.top-kpis{left:200px!important}main{margin-left:200px!important}.header-center{display:none}.app-header{grid-template-columns:1fr!important}.header-actions{justify-content:flex-end}}
+@media(max-width:800px){.app-sidebar{width:68px!important}.top-kpis{left:68px!important}.top-kpis .kpi:nth-child(n+5){display:none}main{margin-left:68px!important;padding:166px 14px 30px!important}.home-head{flex-direction:column!important}.home-grid{grid-template-columns:1fr!important}}
+@media(max-width:560px){.app-header{height:76px!important}.app-sidebar{top:76px!important}.top-kpis{top:76px!important;height:60px!important}.top-kpis .kpi{padding:8px 7px!important}.top-kpis .kv{font-size:17px!important}.top-kpis .kl{font-size:7px!important}.home-kpis{grid-template-columns:1fr!important}.home-head h2{font-size:23px!important}}
+
+
+/* === V7 AMBITIOUS VISUAL SYSTEM — reference-inspired dashboard === */
+:root{--v7-bg:#041321;--v7-panel:#091c2f;--v7-panel2:#0d2740;--v7-line:#1b3c5b;--v7-text:#f1f6fb;--v7-muted:#8099b3;--v7-blue:#2388ff;--v7-green:#22c98b;--v7-purple:#8b5cf6;--v7-orange:#f6a51b;--v7-red:#f04a52}
+body{background:radial-gradient(900px 500px at 75% -5%,#163a61 0%,#071b2d 45%,#041321 100%)!important}
+.app-header{height:76px!important;grid-template-columns:225px 1fr auto!important;padding:10px 16px!important;background:rgba(4,18,32,.94)!important;border-bottom:1px solid #1a3b58!important;backdrop-filter:blur(16px)!important}
+.brand-block{gap:10px}.brand-mark{width:40px!important;height:40px!important;border-radius:11px!important;background:linear-gradient(145deg,#2388ff,#174db2)!important}.brand-title{font-size:15px!important}.brand-sub{font-size:9px!important}
+.header-center{gap:10px}.province-select{display:none!important}.global-search{height:40px!important;max-width:none!important;min-width:280px!important;border-radius:11px!important;background:#081d31!important;font-size:11px!important}.header-actions .btn{height:38px!important;padding:0 12px!important}.icon-action{height:38px!important;width:38px!important}
+.app-sidebar{top:76px!important;width:226px!important;background:linear-gradient(180deg,#06182a,#041321)!important;border-right:1px solid #193854!important;padding:14px 11px!important}.side-home,.side-tab{height:39px!important;border-radius:9px!important}.side-home.active{background:linear-gradient(90deg,#1d82ff,#2174df)!important;box-shadow:0 8px 22px #1678ff2e!important}.side-tab.active{background:#0d2c49!important;color:#66adff!important;box-shadow:inset 3px 0 #2388ff!important}.side-label{padding-top:17px!important}
+.top-kpis{display:none!important}
+main{margin-left:226px!important;padding:18px 24px 36px!important;min-height:calc(100vh - 76px)!important}.panel{max-width:1440px!important}
+#tab-home{max-width:1440px!important;margin:auto}
+.hero-dashboard{height:205px;position:relative;overflow:hidden;border:1px solid #234764;border-radius:16px;background:linear-gradient(105deg,#0a2137 0%,#0a1e33 50%,#0c2944 100%);box-shadow:0 14px 40px #0004;margin-bottom:10px}
+.hero-dashboard:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,18,32,.94) 0%,rgba(4,18,32,.78) 38%,rgba(4,18,32,.32) 68%,rgba(4,18,32,.62) 100%);z-index:2}
+.hero-dashboard:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,#071728 100%);z-index:2}
+.hero-art{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 70% 30%,#28577c 0,#123651 22%,transparent 48%),linear-gradient(130deg,#0c2941,#123d5b 48%,#0b2137)}
+.hero-orb{position:absolute;border-radius:50%;filter:blur(1px);opacity:.75}.orb-a{width:260px;height:260px;right:160px;top:-100px;background:radial-gradient(circle,#d47a45aa 0,#7d405555 35%,transparent 70%)}.orb-b{width:360px;height:150px;right:-50px;bottom:-100px;background:radial-gradient(ellipse,#236fa666 0,transparent 70%)}
+.hero-gridline{position:absolute;inset:0;background:linear-gradient(115deg,transparent 45%,rgba(111,181,237,.08) 45.2%,transparent 45.4%),linear-gradient(90deg,transparent 49%,rgba(111,181,237,.06) 49.2%,transparent 49.4%);opacity:.7}
+.hero-building{position:absolute;right:260px;bottom:25px;width:300px;height:110px;opacity:.52;z-index:1}.hero-building:before{content:"";position:absolute;left:10px;right:10px;bottom:0;height:58px;background:linear-gradient(180deg,#9eb8ca55,#496c8555);clip-path:polygon(0 32%,12% 32%,12% 18%,20% 18%,20% 28%,30% 28%,30% 10%,40% 10%,40% 28%,50% 28%,50% 0,60% 0,60% 28%,72% 28%,72% 15%,82% 15%,82% 30%,100% 30%,100% 100%,0 100%)}.hero-building span,.hero-building i,.hero-building b,.hero-building em,.hero-building small{position:absolute;bottom:5px;width:12px;height:44px;background:#c8d7df55;border-radius:6px 6px 0 0}.hero-building span{left:52px}.hero-building i{left:104px}.hero-building b{left:156px}.hero-building em{left:208px}.hero-building small{left:260px}
+.hero-copy{position:absolute;z-index:3;left:26px;top:38px}.hero-kicker{font-size:9px;letter-spacing:1.5px;font-weight:800;color:#70b5ff;margin-bottom:10px}.pulse-dot,.live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c98b;box-shadow:0 0 0 5px #22c98b18;margin-right:7px}.hero-copy h2{font-size:38px!important;line-height:1!important;margin:0 0 8px!important;letter-spacing:-1.2px}.hero-copy p{font-size:15px!important;color:#c1d0de!important;margin:0!important}.hero-quote{position:absolute;right:210px;top:28px;z-index:3;padding:15px 18px 13px 24px;border-radius:13px;background:#172c43a8;border:1px solid #64809a44;backdrop-filter:blur(9px);min-width:235px;text-align:right}.hero-quote span{position:absolute;left:10px;top:5px;font-size:32px;color:#b6cce055}.hero-quote b{font-size:12px;line-height:1.45}.hero-quote small{display:block;color:#8da5bc;font-size:8px;margin-top:8px}.hero-map-mark{position:absolute;right:28px;top:24px;z-index:3;width:105px;height:105px;border:1px solid #5d87aa55;clip-path:polygon(26% 4%,58% 0,92% 20%,85% 48%,100% 62%,72% 100%,48% 82%,18% 91%,0 58%,12% 28%);background:#0e2941cc;display:grid;place-items:center;color:#6ea9dc}.hero-map-mark span{font-weight:900;font-size:24px}.hero-map-mark i{position:absolute;right:26px;top:36px;color:#f4a51b;font-style:normal;font-size:17px}
+.home-toolbar{height:50px;display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:0 4px}.home-toolbar-left{margin-right:auto;display:flex;align-items:center;gap:6px;font-size:10px}.home-toolbar-left b{font-size:11px}.home-toolbar-left small{color:#6f8ba5;margin-left:5px}.hero-action{height:34px;padding:0 12px;border-radius:8px;background:#09223a;border:1px solid #264966;color:#b9cde0;cursor:pointer;font-size:10px}.hero-action:hover{border-color:#4c80ae;background:#0d2c48}
+.premium-kpis{grid-template-columns:repeat(4,1fr)!important;gap:12px!important;margin-bottom:14px}.home-kpi.premium{min-height:116px!important;padding:16px!important;border-radius:13px!important;background:linear-gradient(145deg,#0b2238,#081a2d)!important;border:1px solid #264966!important;box-shadow:0 7px 22px #0002!important}.home-kpi.premium:before{content:"";position:absolute;inset:0;opacity:.18;background:radial-gradient(circle at 100% 0,currentColor,transparent 42%)}.home-kpi.premium .kicon{width:44px;height:44px;border-radius:12px!important;box-shadow:0 8px 18px #0003}.home-kpi.premium strong{font-size:28px!important}.home-kpi.premium small{font-size:9px!important}.home-kpi.premium em{padding-top:15px!important;color:#8aa2b9!important;display:flex;align-items:center;gap:7px}.home-kpi.premium em b{color:#29d38e}.mini-progress{display:inline-block;width:100px;height:6px;border-radius:8px;background:#19354f;overflow:hidden}.mini-progress i{display:block;height:100%;width:100%;background:#22c98a;border-radius:8px}.mini-segments{display:flex;width:105px;height:7px;border-radius:8px;overflow:hidden;background:#233a50}.mini-segments i:nth-child(1){width:56%;background:#1f83ff}.mini-segments i:nth-child(2){width:24%;background:#f04a52}.mini-segments i:nth-child(3){width:20%;background:#6f8295}
+.dashboard-grid{display:grid;grid-template-columns:1.15fr .95fr .95fr;gap:12px}.dash-card{background:linear-gradient(145deg,#0a2035,#081a2c)!important;border:1px solid #1e3d59!important;border-radius:13px!important;padding:15px!important;box-shadow:0 8px 22px #0002!important;overflow:hidden}.chart-card{min-height:225px}.map-card{grid-column:span 1;min-height:260px}.trend-card{min-height:260px}.activity-card{min-height:260px}.card-title{margin-bottom:12px!important}.card-title b{font-size:14px!important}.card-title small{display:block;color:#728ca6;font-size:8px;margin-top:3px;font-weight:500}.card-title button,.card-title select{color:#6db5ff!important;background:#0c2943!important;border:1px solid #264966!important;border-radius:7px;padding:6px 8px;font-size:8px}.political-card{min-height:225px}.donut-wrap{display:flex;align-items:center;gap:22px;height:170px}.donut{width:145px;height:145px;border-radius:50%;background:conic-gradient(#2388ff 0 48%,#f04a52 48% 80%,#f6a51b 80% 92%,#91a4ba 92% 100%);position:relative;display:grid;place-items:center;flex:none;box-shadow:0 0 30px #2388ff18}.donut:after{content:"";position:absolute;width:92px;height:92px;background:#091c2f;border-radius:50%;box-shadow:inset 0 0 18px #0005}.donut>div{position:relative;z-index:1;text-align:center}.donut strong{display:block;font-size:20px}.donut span{font-size:8px;color:#7892ac}.legend-list{display:grid;gap:10px;flex:1}.legend-item{display:grid;grid-template-columns:10px 1fr auto;gap:8px;align-items:center;font-size:10px}.legend-item i{width:9px;height:9px;border-radius:50%}.legend-item span{color:#d8e5f0}.legend-item b{font-size:10px}.role-chart{height:175px;display:flex;align-items:flex-end;gap:20px;padding:8px 15px 20px;border-bottom:1px solid #294862;background:repeating-linear-gradient(to top,transparent 0,transparent 42px,#17354e 43px)}.role-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px}.role-bar{width:min(52px,65%);border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,#2388ff,#145ac4);box-shadow:0 5px 20px #2388ff25}.role-col:nth-child(2) .role-bar{background:linear-gradient(180deg,#22c98a,#149a68)}.role-col:nth-child(3) .role-bar{background:linear-gradient(180deg,#8b5cf6,#6337c9)}.role-col strong{font-size:10px}.role-col small{font-size:8px;color:#829bb3}.rank-list{display:grid;gap:11px}.rank-row{display:grid;grid-template-columns:1fr 1.4fr 32px;gap:8px;align-items:center;font-size:9px}.rank-bar{height:7px;background:#142f49;border-radius:9px;overflow:hidden}.rank-bar i{display:block;height:100%;background:linear-gradient(90deg,#2388ff,#42a0ff);border-radius:9px}.rank-row b{text-align:right;font-size:9px}.fake-map{height:190px;position:relative;overflow:hidden;border:1px solid #1c405d;border-radius:10px;background:radial-gradient(circle at 52% 50%,#1a4566 0,#0c2b46 38%,#071a2d 72%)}.fake-map:before,.fake-map:after{content:"";position:absolute;inset:15px;background-image:linear-gradient(35deg,transparent 48%,#2e5873 49%,transparent 50%),linear-gradient(125deg,transparent 48%,#2e5873 49%,transparent 50%);opacity:.2}.map-silhouette{position:absolute;width:250px;height:145px;left:calc(50% - 125px);top:22px;background:linear-gradient(145deg,#6ca4d8aa,#315d82aa);clip-path:polygon(13% 20%,31% 8%,42% 18%,58% 5%,76% 18%,93% 36%,87% 53%,100% 72%,80% 91%,62% 82%,48% 100%,28% 84%,7% 90%,0 66%,10% 50%);border:1px solid #a9d0ee55;filter:drop-shadow(0 10px 18px #0006)}.map-point{position:absolute;padding:5px 7px;background:#0a1f34dd;border:1px solid #4e78a0;border-radius:6px;font-size:8px;color:#e5f0f8;box-shadow:0 5px 15px #0005}.map-point b{color:#5eb1ff;margin-left:4px}.p1{left:55%;top:49%}.p2{left:64%;top:30%}.p3{left:39%;top:62%}.map-legend{position:absolute;right:8px;bottom:8px;display:grid;gap:4px;padding:7px;background:#071a2dcc;border:1px solid #274963;border-radius:7px;font-size:7px;color:#89a3bb}.map-legend i{display:inline-block;width:7px;height:7px;border-radius:2px;background:#76b9ee;margin-right:4px}.map-legend span:nth-child(2) i{opacity:.75}.map-legend span:nth-child(3) i{opacity:.5}.map-legend span:nth-child(4) i{opacity:.25}.trend-chart{height:190px;position:relative;overflow:hidden;background:repeating-linear-gradient(to bottom,transparent 0,transparent 38px,#17344e 39px)}.trend-chart svg{width:100%;height:100%}.trend-legend{font-size:8px;color:#7892ac}.trend-legend i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#2388ff;margin:0 4px 0 7px}.trend-legend i:nth-of-type(2){background:#8b5cf6}.activity-row{grid-template-columns:68px 18px 1fr!important;padding:9px 0!important}.activity-dot{box-shadow:0 0 0 4px #2388ff16}.quick-access{margin-top:12px;background:linear-gradient(145deg,#0a2035,#081a2c);border:1px solid #1e3d59;border-radius:13px;padding:13px 14px;box-shadow:0 8px 22px #0002}.quick-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}.quick-heading b{font-size:13px}.quick-heading span{font-size:8px;color:#7892ac}.premium-quick{grid-template-columns:repeat(8,1fr)!important;gap:8px!important}.premium-quick button{min-height:64px!important;border-radius:10px!important;padding:10px 7px!important;background:#0c2740!important;border:1px solid #244762!important;color:#dce8f2!important;transition:.15s}.premium-quick button:hover{transform:translateY(-2px);border-color:#4a81b2;background:#10314d}.premium-quick button:nth-child(1){border-color:#1d71df}.premium-quick button:nth-child(2){border-color:#159b70}.premium-quick button:nth-child(3){border-color:#6740c9}.premium-quick button:nth-child(4){border-color:#1d71df}.premium-quick button:nth-child(5){border-color:#c27615}.premium-quick button:nth-child(6){border-color:#c6313a}.premium-quick button:nth-child(7){border-color:#159b9b}.premium-quick button:nth-child(8){border-color:#b32d9b}
+@media(max-width:1180px){.app-header{grid-template-columns:210px 1fr!important}.header-actions .excel-action{display:none}.dashboard-grid{grid-template-columns:1fr 1fr}.map-card,.trend-card,.activity-card{grid-column:span 1}.premium-quick{grid-template-columns:repeat(4,1fr)!important}.hero-quote{right:130px}.hero-map-mark{display:none}}
+@media(max-width:900px){.app-sidebar{width:72px!important}.side-label{display:none!important}.side-home,.side-tab{justify-content:center!important;padding:0!important;font-size:0!important}.side-home span,.side-tab span{font-size:17px!important;margin:0!important}.app-header{grid-template-columns:1fr auto!important}.header-center{display:none!important}.header-actions .btn{display:none}.brand-block{justify-content:center}.hero-dashboard{height:190px}.hero-copy{left:20px}.hero-copy h2{font-size:31px!important}.hero-quote{right:20px;top:auto;bottom:18px;min-width:210px}.dashboard-grid{grid-template-columns:1fr}.premium-kpis{grid-template-columns:1fr 1fr!important}.premium-quick{grid-template-columns:repeat(4,1fr)!important}main{margin-left:72px!important;padding:16px!important}}
+@media(max-width:600px){.hero-dashboard{height:170px}.hero-quote{display:none}.hero-copy h2{font-size:27px!important}.hero-copy p{font-size:11px!important}.premium-kpis{grid-template-columns:1fr!important}.premium-quick{grid-template-columns:1fr 1fr!important}.home-toolbar-left small{display:none}.home-toolbar{height:44px}.donut-wrap{gap:10px}.donut{width:120px;height:120px}.donut:after{width:78px;height:78px}}
+<style>
+.filter-bar{display:flex;flex-wrap:wrap;gap:10px;padding:14px;background:var(--card,#101c2b);border:1px solid var(--line,#24364b);border-radius:14px}.filter-control{display:flex;flex-direction:column;gap:5px;min-width:170px}.filter-control span{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#8da2b8;font-weight:800}.filter-control select{background:#0d1826;color:#eef5fb;border:1px solid #2a4058;border-radius:9px;padding:9px 10px}.data-table{width:100%;border-collapse:collapse;font-size:12px}.data-table th{position:sticky;top:0;background:#122235;color:#8fa7bf;text-transform:uppercase;font-size:10px;letter-spacing:.05em;text-align:left;padding:11px 10px}.data-table td{padding:10px;border-top:1px solid #1e3145;color:#dce7f1}.data-table tr:hover td{background:#14263a}.table-wrap{overflow:auto;max-height:650px}.inline-input{background:#0d1826;color:#fff;border:1px solid #2a4058;border-radius:7px;padding:7px 8px;width:170px}.rank-row,.settings-row,.metric-row,.list-bar{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #203347}.rank-row>b{width:24px;color:#7fa6d0}.rank-row div{flex:1}.rank-row small,.rank-row span{color:#8299ae;font-size:11px}.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.quick-item{display:flex;gap:10px;padding:13px;border:1px solid #23384e;border-radius:12px;background:#0d1928}.quick-item>span{font-size:22px;color:#7cb4ff}.quick-item div{display:flex;flex-direction:column}.quick-item b{font-size:11px;letter-spacing:.05em}.quick-item small,.quick-item em{font-size:10px;color:#8399ad;font-style:normal;margin-top:3px}.status-list{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.status-list>div{display:flex;flex-direction:column;gap:4px;border:1px solid #22374b;border-radius:10px;padding:12px}.status-list b{font-size:22px}.status-list span{font-size:10px;color:#8197aa}.mini-card{padding:14px;border:1px solid #23384e;border-radius:12px;margin-bottom:9px;display:grid;grid-template-columns:1fr auto;gap:4px}.mini-card span,.mini-card small{font-size:10px;color:#8198ad}.mini-card strong{font-size:17px;text-align:right}.metric-row{display:block}.metric-row>div:first-child{display:flex;justify-content:space-between}.metric-row span{font-size:11px;color:#8298ac}.metric-track{height:8px;background:#1b2d40;border-radius:99px;margin-top:8px;overflow:hidden}.metric-track i{display:block;height:100%;background:linear-gradient(90deg,#2b8cff,#8b5cf6);border-radius:99px}.list-bar{display:grid;grid-template-columns:150px 1fr 80px;gap:10px}.list-bar i{height:8px;background:#1b2d40;border-radius:99px;overflow:hidden}.list-bar i em{display:block;height:100%;background:#22c88a}.list-bar b{text-align:right}.empty-state{padding:35px;text-align:center;display:flex;flex-direction:column;gap:10px;color:#8da2b6}.empty-state b{color:#eaf3fb;font-size:16px}.light-mode .filter-bar,.light-mode .dash-card{background:#fff}.light-mode .data-table td{color:#25384c}.light-mode .data-table th{background:#eef4fa;color:#526a80}.light-mode .filter-control select,.light-mode .inline-input{background:#fff;color:#1f3347}@media(max-width:1100px){.quick-grid{grid-template-columns:1fr 1fr}}@media(max-width:700px){.quick-grid{grid-template-columns:1fr}.filter-control{min-width:100%}.header-center{display:none}}
+.link-btn{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer}.link-btn:hover{text-decoration:underline}.analysis-callout{padding:12px 14px;border-radius:12px;background:var(--bg2,#f3f4f6);margin-bottom:12px}.analysis-callout b{font-size:18px}
+</style>
+<style>
+.macro-tab{width:100%;display:flex;align-items:center;gap:9px;padding:11px 12px;margin:3px 0;border:1px solid transparent;border-radius:9px;background:transparent;color:#9fb2c5;cursor:pointer;font-size:10px;font-weight:900;text-align:left;letter-spacing:.04em}.macro-tab span{font-size:14px}.macro-tab small{margin-left:auto;color:#6f8ba5;font-size:8px}.macro-tab:hover{background:#102941;color:#eaf4fb}.macro-tab.active{background:linear-gradient(90deg,#12395a,#0d2943);border-color:#285477;color:#fff;box-shadow:inset 3px 0 0 #4ea4ff}.macro-tab.active small{color:#8fc5ef}.candidate-total{font-weight:900;color:#e8f3fb}.candidate-total-row:hover td{background:#142f48!important}.total-row td{background:#102b43!important;font-weight:900;border-top:2px solid #3d6d91!important}.candidate-list-modal .modal-card{width:min(900px,96vw)}.candidate-list-modal .table-wrap{max-height:62vh}.module-badge{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:999px;background:#102b44;border:1px solid #285477;color:#8fc5ef;font-size:9px;font-weight:800}
+
+<style>
+/* LAYOUT DEFINITIVO MODULO PREFERENZE: colonne leggibili, niente compressione */
+.pref-card{overflow:hidden!important}
+.pref-table-wrap{overflow-x:auto!important;overflow-y:auto!important;max-height:650px!important}
+.pref-table{min-width:1080px!important;table-layout:fixed!important}
+.pref-table th,.pref-table td{vertical-align:middle!important}
+.pref-table th:nth-child(1),.pref-table td:nth-child(1){width:58px!important;text-align:center!important}
+.pref-table th:nth-child(2),.pref-table td:nth-child(2){width:330px!important}
+.pref-table th:nth-child(3),.pref-table td:nth-child(3){width:500px!important}
+.pref-table th:nth-child(4),.pref-table td:nth-child(4){width:190px!important}
+.pref-table .candidate-total{display:block!important;width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:13px!important}
+.pref-table td:nth-child(3)>div{display:flex!important;align-items:center!important;gap:10px!important;min-width:0!important}
+.pref-table td:nth-child(3) .inline-input{width:330px!important;min-width:330px!important;height:38px!important;box-sizing:border-box!important;font-size:12px!important}
+.pref-table td:nth-child(3) .btn{height:38px!important;min-width:70px!important;white-space:nowrap!important}
+.pref-table .candidate-total-row{height:58px!important}
+.pref-table .candidate-total-row td{padding:9px 12px!important}
+.pref-table .candidate-total-row td:last-child{text-align:right!important;font-size:14px!important;white-space:nowrap!important}
+@media(max-width:900px){.pref-table{min-width:1000px!important}.pref-table th:nth-child(2),.pref-table td:nth-child(2){width:280px!important}.pref-table th:nth-child(3),.pref-table td:nth-child(3){width:440px!important}.pref-table td:nth-child(3) .inline-input{width:290px!important;min-width:290px!important}}
+</style>
+
+<style id="preferenze-grafica-definitiva">
+#tab-preferenze .pref-card{overflow:visible!important}
+#tab-preferenze .pref-table-wrap{width:100%!important;overflow-x:auto!important;overflow-y:auto!important;max-height:650px!important}
+#tab-preferenze table.pref-table{width:100%!important;min-width:1180px!important;table-layout:auto!important}
+#tab-preferenze .pref-table th,#tab-preferenze .pref-table td{vertical-align:middle!important;white-space:nowrap!important}
+#tab-preferenze .pref-table th:nth-child(1),#tab-preferenze .pref-table td:nth-child(1){width:55px!important;min-width:55px!important;text-align:center!important}
+#tab-preferenze .pref-table th:nth-child(2),#tab-preferenze .pref-table td:nth-child(2){width:360px!important;min-width:360px!important}
+#tab-preferenze .pref-table th:nth-child(3),#tab-preferenze .pref-table td:nth-child(3){width:560px!important;min-width:560px!important}
+#tab-preferenze .pref-table th:nth-child(4),#tab-preferenze .pref-table td:nth-child(4){width:190px!important;min-width:190px!important;text-align:right!important}
+#tab-preferenze .pref-table td:nth-child(2) .candidate-total{display:inline-block!important;width:auto!important;min-width:0!important;max-width:none!important;overflow:visible!important;text-overflow:clip!important;white-space:nowrap!important;font-size:14px!important}
+#tab-preferenze .pref-table td:nth-child(3)>div{display:flex!important;align-items:center!important;gap:10px!important;flex-wrap:nowrap!important;width:100%!important}
+#tab-preferenze .pref-table td:nth-child(3) .inline-input{flex:1 1 auto!important;width:auto!important;min-width:390px!important;height:40px!important;box-sizing:border-box!important;font-size:13px!important}
+#tab-preferenze .pref-table td:nth-child(3) .btn{flex:0 0 78px!important;width:78px!important;height:40px!important;white-space:nowrap!important}
+#tab-preferenze .pref-table tbody tr{height:60px!important}
+@media(max-width:900px){#tab-preferenze table.pref-table{min-width:1080px!important}#tab-preferenze .pref-table th:nth-child(2),#tab-preferenze .pref-table td:nth-child(2){width:320px!important;min-width:320px!important}#tab-preferenze .pref-table th:nth-child(3),#tab-preferenze .pref-table td:nth-child(3){width:500px!important;min-width:500px!important}#tab-preferenze .pref-table td:nth-child(3) .inline-input{min-width:330px!important}}
+</style>
+</head><body>
+<header class="app-header">
+<div class="brand-block"><div class="brand-mark">LO</div><div><div class="brand-title">Dashboard <span>Preferenze</span></div><div class="brand-sub">Lombardia · Analisi territoriale ed elettorale</div></div></div>
+<div class="header-center"><div class="province-select" style="display:flex;gap:8px;align-items:center"><strong id="macroTitle">DATI REGIONALI · 2023</strong><span>· 12 province</span></div><button class="global-search" onclick="window.searchGlobal()">⌕ <span>Cerca comune, candidato, collegio...</span></button></div>
+<div class="header-actions"><button class="btn bg2" onclick="exportCSV()">Esporta CSV</button><button class="btn bg2" onclick="exportAnalysis()">Esporta analisi</button><span class="sync-state"><i></i><span>Locale</span></span><button class="icon-action" onclick="toggleTheme()">◐</button><button class="icon-action" onclick="window.print()">⎙</button></div>
+</header>
+<aside class="app-sidebar">
+<button class="side-home active" onclick="tab('home',this)"><span>⌂</span> Home</button>
+<div class="side-label">MACRO DATI</div>
+<button class="macro-tab active" id="macro-europee" onclick="window.dashboardSetMacro('europee')"><span>🇪🇺</span> DATI EUROPEE <small>2024</small></button>
+<button class="macro-tab" id="macro-regionali" onclick="window.dashboardSetMacro('regionali')"><span>▣</span> DATI REGIONALI <small>2023</small></button>
+<div class="side-label">MODULI DATI</div>
+<button class="tab side-tab" onclick="tab('preferenze',this)"><span>☷</span> Preferenze</button>
+<button class="tab side-tab" onclick="tab('comuni',this)"><span>▦</span> Comuni</button>
+<button class="tab side-tab" onclick="tab('matrice',this)"><span>▤</span> Matrice Comuni</button>
+<button class="tab side-tab" onclick="tab('candidati',this)"><span>♟</span> Candidati</button>
+<button class="tab side-tab" onclick="tab('collegi',this)"><span>⌖</span> Collegi</button>
+<div class="side-label">ANALISI</div>
+<button class="tab side-tab" onclick="tab('analisi',this)"><span>▥</span> Analisi</button>
+<button class="tab side-tab" onclick="tab('correnti',this)"><span>◈</span> Correnti</button>
+<button class="tab side-tab" onclick="tab('confronto',this)"><span>↔</span> Confronto</button>
+<div class="side-label">GESTIONE</div>
+<button class="tab side-tab" onclick="tab('importa',this)"><span>⇅</span> Importa / Esporta</button>
+<button class="tab side-tab" onclick="tab('impostazioni',this)"><span>⚙</span> Impostazioni</button>
+</aside>
+<main>
+<div class="panel active" id="tab-home">
+<section class="hero-dashboard"><div class="hero-art"><div class="hero-orb orb-a"></div><div class="hero-orb orb-b"></div><div class="hero-gridline"></div><div class="hero-building"><span></span><i></i><b></b><em></em><small></small></div></div>
+<div class="hero-copy"><div class="hero-kicker"><span class="pulse-dot"></span> LOMBARDIA · DASHBOARD PREFERENZE</div><h2>Analisi elettorale Lombardia</h2><p>Comuni, candidati, correnti e collegi in un unico sistema</p></div>
+<div class="hero-quote"><span>“</span><b>Dati territoriali,<br>analisi delle preferenze.</b><small>Regionali · Europee · Collegi</small></div><div class="hero-map-mark"><span>LO</span><i>●</i></div></section>
+<div class="home-toolbar"><div class="home-toolbar-left"><span class="live-dot"></span><b>Database locale</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div><button class="hero-action" onclick="tab('analisi',document.querySelector('[onclick*=analisi]'))">▥ <span>Analisi</span></button><button class="hero-action" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))">♟ <span>Candidati</span></button></div>
+<div class="home-kpis premium-kpis">
+<button class="home-kpi premium blue" onclick="tab('preferenze',document.querySelector('[onclick*=preferenze]'))"><span class="kicon">☷</span><div><strong id="k-pref">0</strong><small>PREFERENZE</small></div><em><b>↗</b> dati caricati</em></button>
+<button class="home-kpi premium green" onclick="tab('comuni',document.querySelector('[onclick*=comuni]'))"><span class="kicon">▦</span><div><strong id="k-comuni">0</strong><small>COMUNI</small></div><em><b>12</b> province</em></button>
+<button class="home-kpi premium purple" onclick="tab('candidati',document.querySelector('[onclick*=candidati]'))"><span class="kicon">♟</span><div><strong id="k-candidati">0</strong><small>CANDIDATI</small></div><em><b id="k-correnti">0</b> correnti assegnate</em></button>
+<button class="home-kpi premium orange" onclick="tab('collegi',document.querySelector('[onclick*=collegi]'))"><span class="kicon">⌖</span><div><strong id="k-collegi">0</strong><small>COLLEGI P</small></div><em><b>Camera + Senato</b></em></button>
+</div>
+<div class="dashboard-grid">
+<section class="dash-card chart-card"><div class="card-title"><div><b>Preferenze per provincia</b><small id=homeElectionLabel>Regionali 2023 · FdI</small></div></div><div style="height:300px"><canvas id="provChart"></canvas></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Primi candidati</b><small>Preferenze complessive</small></div></div><div id="topCandidates"></div></section>
+<section class="dash-card wide"><div class="card-title"><div><b>Struttura del database</b><small>Pronto per Europee, Regionali e correnti</small></div></div><div class="quick-grid" id="homeQuick"></div></section>
+<section class="dash-card"><div class="card-title"><div><b>Stato correnti</b><small>Classificazione modificabile</small></div></div><div id="correnteStatus"></div></section>
+</div></div>
+
+<div class="panel" id="tab-preferenze"><div class="home-head"><div><div class="eyebrow" id="prefEyebrow">DATI REGIONALI · PREFERENZE</div><h2>Preferenze</h2><p>Elenco dei candidati con il totale delle preferenze. Clicca sul candidato per vedere tutti i Comuni e i voti ottenuti.</p></div></div><div class="filter-bar" id="prefFilters"></div><div class="dash-card pref-card" style="margin-top:14px"><div class="table-wrap pref-table-wrap"><table class="data-table pref-table"><thead><tr><th>#</th><th>Candidato</th><th>Corrente FdI</th><th>Totale preferenze</th></tr></thead><tbody id="prefTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-comuni"><div class="home-head"><div><div class="eyebrow">TERRITORIO</div><h2>Comuni</h2><p>Ogni comune è collegato alla geografia Camera/Senato.</p></div></div><div class="filter-bar" id="comuneFilters"></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap"><table class="data-table"><thead><tr><th>Comune</th><th>Prov.</th><th>ISTAT</th><th>Camera P</th><th>Camera U</th><th>Senato P</th><th>Senato U</th><th>Preferenze</th></tr></thead><tbody id="comuneTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-matrice"><div class="home-head"><div><div class="eyebrow">ANALISI TERRITORIALE</div><h2>Matrice Comuni × Candidati</h2><p>Seleziona una provincia. A sinistra trovi i Comuni; in alto i candidati ordinati per preferenze nella provincia. Clicca un Comune per aprire la classifica.</p></div></div><div class="filter-bar" id="matrixFilters"></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap" id="matrixWrap"></div></div></div>
+
+<div class="panel" id="tab-candidati"><div class="home-head"><div><div class="eyebrow">ANAGRAFICA POLITICA</div><h2>Candidati e correnti</h2><p>Assegna qui la corrente a ciascun candidato. La classificazione resta separata dai dati originali.</p></div></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap"><table class="data-table"><thead><tr><th>Candidato</th><th>Lista</th><th>Data nascita</th><th>Luogo</th><th>Preferenze</th><th>Corrente FdI</th><th>Ticket</th></tr></thead><tbody id="candTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-collegi"><div class="home-head"><div><div class="eyebrow">GEOGRAFIA ELETTORALE</div><h2>Collegi</h2><p>Collegi plurinominali e territori che li compongono.</p></div></div><div class="filter-bar" id="collegioFilters"></div><div class="dashboard-grid" style="margin-top:14px"><section class="dash-card"><div class="card-title"><b>Camera</b></div><div id="camCards"></div></section><section class="dash-card"><div class="card-title"><b>Senato</b></div><div id="senCards"></div></section></div></div>
+
+<div class="panel" id="tab-analisi">
+<div class="home-head"><div><div class="eyebrow">ANALISI AVANZATA</div><h2>Analisi collegi · territorio · correnti</h2><p>Analisi operativa delle preferenze, con particolare attenzione ai collegi uninominali Camera/Senato e alle correnti interne di Fratelli d’Italia. Le correnti vengono applicate ai candidati delle Regionali 2023.</p></div></div>
+<div class="filter-bar" id="analisiFilters"></div>
+<div id="analisiKpi" class="dashboard-grid" style="margin-top:14px"></div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>1 · Forza delle correnti</b><small>Preferenze e peso % nel perimetro filtrato</small></div><div id="correnteBars"></div></section>
+<section class="dash-card"><div class="card-title"><b>2 · Ranking candidati</b><small>Totale e quota sul filtro</small></div><div id="analisiCandidates"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card"><div class="card-title"><b>3 · Province</b><small>Preferenze per provincia</small></div><div id="analisiProv"></div></section>
+<section class="dash-card"><div class="card-title"><b>4 · Camera</b><small>Forza per collegio</small></div><div id="analisiCam"></div></section>
+<section class="dash-card"><div class="card-title"><b>5 · Senato</b><small>Forza per collegio</small></div><div id="analisiSen"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>6 · Dettaglio collegi Camera</b><small>Clicca un collegio per filtrare l'analisi</small></div><div id="analisiCamTable" class="table-wrap"></div></section>
+<section class="dash-card wide"><div class="card-title"><b>7 · Dettaglio collegi Senato</b><small>Clicca un collegio per filtrare l'analisi</small></div><div id="analisiSenTable" class="table-wrap"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>8 · Confronto candidati</b><small>Il candidato selezionato viene confrontato con il resto del campo</small></div><div id="analisiCandidateCompare"></div></section>
+<section class="dash-card"><div class="card-title"><b>9 · Camera vs Senato</b><small>Preferenze dello stesso perimetro territoriale</small></div><div id="analisiCamSen"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>10 · Europee 2024 ↔ Regionali 2023</b><small>Confronto territoriale indipendente dalle correnti</small></div><div id="analisiConfronto"></div></section>
+<section class="dash-card"><div class="card-title"><b>11 · Lettura strategica</b><small>Sintesi automatica del perimetro analizzato</small></div><div id="analisiInsight"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>12 · Correnti × Collegi Camera</b><small>Peso di ogni corrente nei singoli collegi</small></div><div id="analisiCorrenteCam" class="table-wrap"></div></section>
+<section class="dash-card wide"><div class="card-title"><b>13 · Correnti × Collegi Senato</b><small>Peso di ogni corrente nei singoli collegi</small></div><div id="analisiCorrenteSen" class="table-wrap"></div></section>
+</div>
+<div class="dashboard-grid" style="margin-top:14px">
+<section class="dash-card wide"><div class="card-title"><b>14 · Dettaglio candidato</b><small>Distribuzione territoriale del candidato selezionato</small></div><div id="analisiCandidateGeo" class="table-wrap"></div></section>
+<section class="dash-card"><div class="card-title"><b>15 · Comuni più forti</b><small>Top comuni nel perimetro filtrato</small></div><div id="analisiTopComuni"></div></section>
+</div>
+<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn bg2" onclick="exportAnalysisAdvanced()">Esporta analisi CSV</button><button class="btn bg2" onclick="clearF()">Azzera tutti i filtri</button></div>
+</div>
+
+<div class="panel" id="tab-correnti"><div class="home-head"><div><div class="eyebrow">CLASSIFICAZIONE</div><h2>Correnti</h2><p>Riepilogo delle correnti assegnate ai candidati.</p></div></div><div class="dash-card" style="margin-top:14px"><div class="table-wrap"><table class="data-table"><thead><tr><th>Corrente</th><th>Candidati</th><th>Preferenze</th><th>%</th></tr></thead><tbody id="correntiTable"></tbody></table></div></div></div>
+
+<div class="panel" id="tab-confronto"><div class="home-head"><div><div class="eyebrow">CONFRONTO</div><h2>Europee ↔ Regionali</h2><p>Qui inseriremo successivamente le preferenze delle Europee, mantenendo la stessa struttura territoriale e politica.</p></div></div><div class="dash-card" style="margin-top:14px"><div class="empty-state"><b>Europee non ancora importate</b><span>La struttura è pronta per confrontare candidato, lista, corrente, comune, provincia e collegio.</span></div></div></div>
+
+<div class="panel" id="tab-importa"><div class="home-head"><div><div class="eyebrow">GESTIONE DATI</div><h2>Importa / Esporta</h2><p>I dati originali restano separati dalle classificazioni e dalle analisi.</p></div></div><div class="dashboard-grid"><section class="dash-card"><div class="card-title"><b>Esporta dati filtrati</b></div><p>Esporta il risultato corrente dell'analisi in CSV.</p><button class="btn bg2" onclick="exportCSV()">Esporta CSV</button></section><section class="dash-card"><div class="card-title"><b>Importazione futura</b></div><p>La sezione è predisposta per aggiungere Europee e altre province.</p></section></div></div>
+
+<div class="panel" id="tab-impostazioni"><div class="home-head"><div><div class="eyebrow">SISTEMA</div><h2>Impostazioni</h2><p>Gestione locale delle correnti.</p></div></div><div class="dash-card" style="margin-top:14px"><div class="settings-row"><b>Elimina classificazioni</b><button class="btn bg2" onclick="resetCorrenti()">Ripristina</button></div></div></div>
+</main>
+<script>
+const GEO=[{"comune":"Adrara San Martino","prov":"BG","istat":"16001","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Adrara San Rocco","prov":"BG","istat":"16002","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Albano Sant'Alessandro","prov":"BG","istat":"16003","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Albino","prov":"BG","istat":"16004","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Algua","prov":"BG","istat":"16248","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Almenno San Bartolomeo","prov":"BG","istat":"16006","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Almenno San Salvatore","prov":"BG","istat":"16007","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Almè","prov":"BG","istat":"16005","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Alzano Lombardo","prov":"BG","istat":"16008","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Ambivere","prov":"BG","istat":"16009","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Antegnate","prov":"BG","istat":"16010","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Arcene","prov":"BG","istat":"16011","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Ardesio","prov":"BG","istat":"16012","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Arzago d'Adda","prov":"BG","istat":"16013","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Averara","prov":"BG","istat":"16014","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Aviatico","prov":"BG","istat":"16015","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Azzano San Paolo","prov":"BG","istat":"16016","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Azzone","prov":"BG","istat":"16017","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Bagnatica","prov":"BG","istat":"16018","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Barbata","prov":"BG","istat":"16019","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Bariano","prov":"BG","istat":"16020","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Barzana","prov":"BG","istat":"16021","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Bedulita","prov":"BG","istat":"16022","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Berbenno","prov":"BG","istat":"16023","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Bergamo","prov":"BG","istat":"16024","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Berzo San Fermo","prov":"BG","istat":"16025","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Bianzano","prov":"BG","istat":"16026","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Blello","prov":"BG","istat":"16027","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Bolgare","prov":"BG","istat":"16028","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Boltiere","prov":"BG","istat":"16029","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Bonate Sopra","prov":"BG","istat":"16030","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Bonate Sotto","prov":"BG","istat":"16031","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Borgo di Terzo","prov":"BG","istat":"16032","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Bossico","prov":"BG","istat":"16033","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Bottanuco","prov":"BG","istat":"16034","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Bracca","prov":"BG","istat":"16035","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Branzi","prov":"BG","istat":"16036","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Brembate","prov":"BG","istat":"16037","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Brembate di Sopra","prov":"BG","istat":"16038","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Brignano Gera d'Adda","prov":"BG","istat":"16040","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Brumano","prov":"BG","istat":"16041","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Brusaporto","prov":"BG","istat":"16042","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Calcinate","prov":"BG","istat":"16043","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Calcio","prov":"BG","istat":"16044","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Calusco d'Adda","prov":"BG","istat":"16046","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Calvenzano","prov":"BG","istat":"16047","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Camerata Cornello","prov":"BG","istat":"16048","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Canonica d'Adda","prov":"BG","istat":"16049","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Capizzone","prov":"BG","istat":"16050","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Capriate San Gervasio","prov":"BG","istat":"16051","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Caprino Bergamasco","prov":"BG","istat":"16052","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Caravaggio","prov":"BG","istat":"16053","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Carobbio degli Angeli","prov":"BG","istat":"16055","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Carona","prov":"BG","istat":"16056","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Carvico","prov":"BG","istat":"16057","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Casazza","prov":"BG","istat":"16058","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Casirate d'Adda","prov":"BG","istat":"16059","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Casnigo","prov":"BG","istat":"16060","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Cassiglio","prov":"BG","istat":"16061","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Castel Rozzone","prov":"BG","istat":"16063","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Castelli Calepio","prov":"BG","istat":"16062","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Castione della Presolana","prov":"BG","istat":"16064","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Castro","prov":"BG","istat":"16065","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Cavernago","prov":"BG","istat":"16066","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Cazzano Sant'Andrea","prov":"BG","istat":"16067","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Cenate Sopra","prov":"BG","istat":"16068","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Cenate Sotto","prov":"BG","istat":"16069","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Cene","prov":"BG","istat":"16070","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Cerete","prov":"BG","istat":"16071","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Chignolo d'Isola","prov":"BG","istat":"16072","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Chiuduno","prov":"BG","istat":"16073","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Cisano Bergamasco","prov":"BG","istat":"16074","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Ciserano","prov":"BG","istat":"16075","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Cividate al Piano","prov":"BG","istat":"16076","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Clusone","prov":"BG","istat":"16077","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Colere","prov":"BG","istat":"16078","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Cologno al Serio","prov":"BG","istat":"16079","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Colzate","prov":"BG","istat":"16080","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Comun Nuovo","prov":"BG","istat":"16081","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Corna Imagna","prov":"BG","istat":"16082","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Cornalba","prov":"BG","istat":"16249","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Cortenuova","prov":"BG","istat":"16083","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Costa Serina","prov":"BG","istat":"16247","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Costa Valle Imagna","prov":"BG","istat":"16085","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Costa Volpino","prov":"BG","istat":"16086","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Costa di Mezzate","prov":"BG","istat":"16084","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Covo","prov":"BG","istat":"16087","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Credaro","prov":"BG","istat":"16088","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Curno","prov":"BG","istat":"16089","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Cusio","prov":"BG","istat":"16090","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Dalmine","prov":"BG","istat":"16091","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Dossena","prov":"BG","istat":"16092","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Endine Gaiano","prov":"BG","istat":"16093","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Entratico","prov":"BG","istat":"16094","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Fara Gera d'Adda","prov":"BG","istat":"16096","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Fara Olivana con Sola","prov":"BG","istat":"16097","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Filago","prov":"BG","istat":"16098","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Fino del Monte","prov":"BG","istat":"16099","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Fiorano al Serio","prov":"BG","istat":"16100","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Fontanella","prov":"BG","istat":"16101","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Fonteno","prov":"BG","istat":"16102","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Foppolo","prov":"BG","istat":"16103","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Foresto Sparso","prov":"BG","istat":"16104","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Fornovo San Giovanni","prov":"BG","istat":"16105","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Fuipiano Valle Imagna","prov":"BG","istat":"16106","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Gandellino","prov":"BG","istat":"16107","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Gandino","prov":"BG","istat":"16108","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Gandosso","prov":"BG","istat":"16109","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Gaverina Terme","prov":"BG","istat":"16110","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Gazzaniga","prov":"BG","istat":"16111","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Ghisalba","prov":"BG","istat":"16113","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Gorlago","prov":"BG","istat":"16114","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Gorle","prov":"BG","istat":"16115","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Gorno","prov":"BG","istat":"16116","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Grassobbio","prov":"BG","istat":"16117","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Gromo","prov":"BG","istat":"16118","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Grone","prov":"BG","istat":"16119","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Grumello del Monte","prov":"BG","istat":"16120","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Isola di Fondra","prov":"BG","istat":"16121","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Isso","prov":"BG","istat":"16122","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Lallio","prov":"BG","istat":"16123","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Leffe","prov":"BG","istat":"16124","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Lenna","prov":"BG","istat":"16125","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Levate","prov":"BG","istat":"16126","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Locatello","prov":"BG","istat":"16127","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Lovere","prov":"BG","istat":"16128","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U02","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Lurano","prov":"BG","istat":"16129","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Luzzana","prov":"BG","istat":"16130","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Madone","prov":"BG","istat":"16131","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Mapello","prov":"BG","istat":"16132","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU":"Lombardia - U07"},{"comune":"Martinengo","prov":"BG","istat":"16133","camP":"Lombardia 3 - P01","camU":"Lombardia 3 - U01","senP":"Lombardia - P03","senU":"Lombardia - U09"},{"comune":"Medolago","prov":"BG","istat":"16250","camP":"Lombardia 2 - P02","camU":"Lombardia 2 - U05","senP":"Lombardia - P03","senU"
