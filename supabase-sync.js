@@ -1854,7 +1854,7 @@ installSondaggiModule();
   window.setElectionData=function(){
     try{
       const raw=(typeof election!=="undefined"&&election==="europee")?EURO_RAW:RAW;
-      data=raw.map(r=>({...r,geo:geoMap.get(norm(r.prov)+"|"+norm(r.comune))||null}));
+      data=raw.map(r=>{const cc=(typeof currentComune==="function"?currentComune(r.comune):r.comune);return {...r,comune:cc,geo:geoMap.get(norm(r.prov)+"|"+norm(cc))||null};});
       CANDS=[...new Set(data.map(r=>r.candidato).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"it"));
       PROVS=["BERGAMO","BRESCIA","COMO","CREMONA","LECCO","LODI","MANTOVA","MILANO","MONZA E DELLA BRIANZA","PAVIA","SONDRIO","VARESE"];
       filters={prov:"",comune:"",candidato:"",corrente:"",camP:"",senP:"",lista:""};
