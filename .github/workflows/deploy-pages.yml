@@ -120,6 +120,19 @@ jobs:
           git commit -m "Locate survey keywords" || exit 0
           git push
 
+      - name: Cleanup survey tooling
+        if: contains(github.event.head_commit.message, 'Cleanup survey tooling')
+        shell: bash
+        run: |
+          rm -rf survey-source-parts
+          rm -f survey-sondaggi-snippet.txt survey-keywords.txt index.decoded.js
+          rm -f .github/workflows/extract-dashboard-source.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Cleanup survey tooling" || exit 0
+          git push
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
