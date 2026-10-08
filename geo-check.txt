@@ -1520,3 +1520,19 @@ TARGET ROWS:
 {'comune': 'Bardello', 'prov': 'VA', 'istat': '12009', 'camP': 'Lombardia 2 - P01', 'camU': 'Lombardia 2 - U01', 'senP': 'Lombardia - P01', 'senU': 'Lombardia - U01'}
 {'comune': 'Bregano', 'prov': 'VA', 'istat': '12018', 'camP': 'Lombardia 2 - P01', 'camU': 'Lombardia 2 - U01', 'senP': 'Lombardia - P01', 'senU': 'Lombardia - U01'}
 {'comune': 'Malgesso', 'prov': 'VA', 'istat': '12095', 'camP': 'Lombardia 2 - P01', 'camU': 'Lombardia 2 - U01', 'senP': 'Lombardia - P01', 'senU': 'Lombardia - U01'}
+
+RAW_LEN=12361
+RAW|Ronago|6
+RAW|Uggiate-Trevano|6
+RAW|Albaredo Arnaboldi|4
+RAW|Campospinoso|4
+RAW|Lirio|4
+RAW|Montalto Pavese|4
+RAW|Bardello con Malgesso e Bregano|8
+
+EURO_RAW_LEN=30040
+EURO_RAW|Uggiate con Ronago|20
+EURO_RAW|Campospinoso Albaredo|20
+EURO_RAW|Lirio|20
+EURO_RAW|Montalto Pavese|20
+EURO_RAW|Bardello con Malgesso e Bregano|20
