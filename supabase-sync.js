@@ -1341,6 +1341,16 @@ function installSondaggiModule(){
     ["ALTRI","Altri",4.4]
   ];
 
+  const COALITION_PRESET_VERSION=2;
+  const DEFAULT_COALITIONS=[
+    {id:"C-CD",name:"Centrodestra",members:["FdI","LEGA","FI","NM"]},
+    {id:"C-CS",name:"Centrosinistra",members:["PD","M5S","AVS","PIU","IV"]}
+  ];
+
+  function defaultCoalitions(){
+    return DEFAULT_COALITIONS.map(c=>({...c,members:[...(c.members||[])]}));
+  }
+
   function freshState(){
     const s={
       chamber:"camera",
@@ -1349,7 +1359,8 @@ function installSondaggiModule(){
       parties:{},
       regionalSenate:{},
       collegeValues:{camera:{},senato:{}},
-      coalitions:[]
+      coalitions:defaultCoalitions(),
+      coalitionPresetVersion:COALITION_PRESET_VERSION
     };
     POLLS.forEach(p=>{
       s.parties[p[0]]={name:p[1],camera:p[2],senate:p[2]};
@@ -1369,7 +1380,18 @@ function installSondaggiModule(){
       base.collegeValues=saved.collegeValues&&typeof saved.collegeValues==="object"?saved.collegeValues:{camera:{},senato:{}};
       if(!base.collegeValues.camera)base.collegeValues.camera={};
       if(!base.collegeValues.senato)base.collegeValues.senato={};
-      base.coalitions=Array.isArray(saved.coalitions)?saved.coalitions:[];
+
+      const savedCoalitions=Array.isArray(saved.coalitions)?saved.coalitions:null;
+      base.coalitions=savedCoalitions?savedCoalitions:[];
+      base.coalitionPresetVersion=Number(saved.coalitionPresetVersion)||0;
+
+      // Migrazione una tantum delle vecchie configurazioni senza coalizioni.
+      // Le coalizioni preimpostate restano poi completamente modificabili.
+      if(base.coalitionPresetVersion<COALITION_PRESET_VERSION && (!savedCoalitions || savedCoalitions.length===0)){
+        base.coalitions=defaultCoalitions();
+      }
+      base.coalitionPresetVersion=COALITION_PRESET_VERSION;
+
       POLLS.forEach(p=>{
         if(base.parties[p[0]].camera==null)base.parties[p[0]].camera=p[2];
         if(base.parties[p[0]].senate==null)base.parties[p[0]].senate=p[2];
@@ -1699,7 +1721,7 @@ function installSondaggiModule(){
           '<div class="sg-main">'+
             '<div class="sg-controls"><div><label>Camera / Senato</label><select id="sgChamber"><option value="camera">Camera</option><option value="senato">Senato</option></select></div><div><label>Regione</label><select id="sgRegion">'+REGIONS.map(x=>'<option value="'+esc2(x)+'">'+esc2(x)+'</option>').join("")+'</select></div><div><label>Collegio</label><select id="sgCollege">'+collegesFor(S.chamber,S.region).map(x=>'<option value="'+esc2(x.name)+'">'+esc2(x.name)+' · '+x.seats+' seggi</option>').join("")+'</select></div></div>'+
             '<div class="sg-card"><div class="sg-card-title"><b>Percentuali di voto</b><span>nazionale · regione · collegio</span></div><div class="sg-table-wrap"><table class="sg-table"><thead><tr><th>Partito</th><th>Camera naz.</th><th>Senato naz.</th><th>Senato regione</th><th>'+ (S.chamber==="camera"?"Camera":"Senato") +' collegio</th><th>Coalizione</th></tr></thead><tbody>'+partyRows+'</tbody></table></div><div class="sg-actions"><button type="button" class="sg-btn" id="sgSaveAll">SALVA SCENARIO</button><button type="button" class="sg-btn" id="sgReset">RIPRISTINA BASE YOUTREND</button></div></div>'+
-            '<div class="sg-card"><div class="sg-card-title"><b>Coalizioni possibili</b><span><button type="button" class="sg-btn small" id="sgNewCoal">+ NUOVA COALIZIONE</button></span></div>'+coalRows+'</div>'+
+            '<div class="sg-card"><div class="sg-card-title"><b>Coalizioni preimpostate e modificabili</b><span><button type="button" class="sg-btn small" id="sgNewCoal">+ NUOVA COALIZIONE</button></span></div><div class="sg-note">Le coalizioni di base sono già caricate. Spunta un partito per aggiungerlo o togli la spunta per rimuoverlo; ogni partito può appartenere a una sola coalizione alla volta.</div>'+coalRows+'</div>'+
           '</div>'+
         '</div>'+
         '<div class="sg-results">'+
