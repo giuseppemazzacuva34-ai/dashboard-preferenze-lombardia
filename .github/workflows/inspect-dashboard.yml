@@ -38,13 +38,22 @@ jobs:
           open("calculation-inspection.txt","w",encoding="utf-8").write("\n\n===== =====\n\n".join(out))
           print("inspection chunks",len(out))
           PY
-      - name: Commit inspection
+      - name: Split inspection
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path("calculation-inspection.txt").read_text(encoding="utf-8")
+          for p in Path(".").glob("calc-part-*.txt"): p.unlink()
+          size=80000
+          for i in range(0,len(s),size):
+              Path(f"calc-part-{i//size+1:03d}.txt").write_text(s[i:i+size],encoding="utf-8")
+          print("parts", (len(s)+size-1)//size)
+          PY
+      - name: Commit inspection parts
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add calculation-inspection.txt
+          git add calc-part-*.txt
           git diff --cached --quiet && exit 0
-          git commit -m "Inspect dashboard calculation logic"
+          git commit -m "Split dashboard calculation inspection"
           git push
-
-# rerun inspection
