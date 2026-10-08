@@ -36,11 +36,15 @@ jobs:
           fs.writeFileSync('debug/tags.txt',lines.filter(x=>x.toLowerCase().includes('<script')||x.toLowerCase().includes('<button')||x.toLowerCase().includes('<input')||x.toLowerCase().includes('function')||x.toLowerCase().includes('onclick')).slice(0,250).join('\\n'));
           const funcs=[...html.matchAll(/(?:async\\s+)?function\\s+([A-Za-z0-9_$]+)/g)].map(m=>m[1]);
           fs.writeFileSync('debug/functions.txt',[...new Set(funcs)].join('\\n'));
+          for(const [name,key] of [['addticket','function addTicketInline'],['savecorr','function saveCorrente'],['decl','ticketGroups='],['decl2','correnti=']]){
+            const p=html.indexOf(key);
+            fs.writeFileSync('debug/'+name+'.txt',p>=0?html.slice(Math.max(0,p-2500),Math.min(html.length,p+9000)):'NOT FOUND: '+key);
+          }
           NODE
       - name: Commit extracted source
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add debug/key-lines.txt debug/functions.txt debug/head.txt debug/tags.txt
+          git add debug/key-lines.txt debug/functions.txt debug/head.txt debug/tags.txt debug/addticket.txt debug/savecorr.txt debug/decl.txt debug/decl2.txt
           git commit -m "debug: estrai riferimenti dashboard" || exit 0
           git push
