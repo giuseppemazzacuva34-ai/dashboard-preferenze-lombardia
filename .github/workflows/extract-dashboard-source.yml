@@ -1,0 +1,40 @@
+name: Extract dashboard source
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    if: !contains(github.event.head_commit.message, 'Extract dashboard source')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode index
+        shell: python
+        run: |
+          import base64, gzip
+          from pathlib import Path
+          import re
+          p=Path("index.html")
+          s=p.read_text(encoding="utf-8")
+          m=re.search(r'const b64="([^"]+)"',s)
+          if not m:
+              raise SystemExit("b64 non trovato")
+          raw=gzip.decompress(base64.b64decode(m.group(1))).decode("utf-8")
+          Path("index.decoded.js").write_text(raw,encoding="utf-8")
+          for term in ["SONDAGGI — Nuovo sistema elettorale","PREMIO DI GOVERNABILITA","Nuova coalizione","Ripristina base"]:
+              i=raw.lower().find(term.lower())
+              print("\nTERM",term,"IDX",i)
+              if i>=0: print(raw[max(0,i-3000):i+12000])
+      - name: Commit extracted source
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.decoded.js
+          git commit -m "Extract dashboard source" || exit 0
+          git push
