@@ -617,41 +617,40 @@ function installMobilePreferences(){
 
 function installMobileAnalysisToolsStatic(){
   const style=document.createElement("style");
-  style.id="mobile-analysis-static-v1";
-  style.textContent="@media(max-width:820px){"+
-    ".mobile-analysis-static{display:block!important;margin-top:12px}"+
-    ".mobile-static-card{background:#0b2035;border:1px solid #1e3d59;border-radius:12px;padding:12px;margin-bottom:10px}"+
-    ".mobile-static-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}"+
-    ".mobile-static-head b{font-size:13px;color:#eaf4fb}.mobile-static-head small{font-size:8px;color:#89a2ba}"+
-    ".mobile-static-currents{display:grid;gap:7px}"+
-    ".mobile-static-current{display:grid;grid-template-columns:28px minmax(0,1fr);gap:7px;align-items:center;padding:8px;background:#0e2740;border:1px solid #203e59;border-radius:9px}"+
-    ".mobile-static-rank{font-size:10px;font-weight:900;color:#84a5bf;text-align:center}"+
-    ".mobile-static-main{min-width:0}.mobile-static-candidate{font-size:11px;font-weight:900;color:#edf6fb;overflow-wrap:anywhere}"+
-    ".mobile-static-total{font-size:11px;font-weight:900;color:#d9ecf8;margin-top:2px}"+
-    ".mobile-static-edit{display:grid;grid-template-columns:minmax(0,1fr) 58px;gap:6px;margin-top:6px}"+
-    ".mobile-static-edit input{width:100%;min-width:0;box-sizing:border-box;height:34px;background:#0b1725;color:#fff;border:1px solid #2d4860;border-radius:8px;padding:7px 9px;font-size:10px;pointer-events:auto}"+
-    ".mobile-static-edit button{width:58px!important;min-width:58px!important;height:34px!important;padding:0 5px!important;font-size:9px!important}"+
-    ".mobile-static-ticket-grid{display:grid;grid-template-columns:1fr;gap:7px}"+
-    ".mobile-static-ticket-grid label{display:block;font-size:8px;color:#89a2ba;text-transform:uppercase;font-weight:800;margin-bottom:3px}"+
-    ".mobile-static-ticket-grid select{width:100%;min-width:0;box-sizing:border-box;background:#0b1725;color:#fff;border:1px solid #2d4860;border-radius:8px;padding:8px;font-size:10px}"+
-    ".mobile-static-ticket-add{width:100%!important;height:36px!important;margin-top:8px;font-size:9px!important}"+
-    ".mobile-static-ticket-list{display:grid;gap:7px;margin-top:10px}"+
-    ".mobile-static-ticket{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px;background:#0e2740;border:1px solid #203e59;border-radius:9px}"+
-    ".mobile-static-ticket-prov{font-size:8px;color:#89a2ba;text-transform:uppercase;font-weight:800;margin-bottom:3px}"+
-    ".mobile-static-ticket-cands{font-size:10px;font-weight:900;color:#edf6fb;overflow-wrap:anywhere}"+
-    ".mobile-static-ticket-del{margin-top:5px;height:29px!important;font-size:8px!important;padding:0 8px!important}"+
-    ".mobile-static-ticket-value{font-size:12px;font-weight:900;color:#f1f7fb;white-space:nowrap}"+
-    "}@media(min-width:821px){.mobile-analysis-static{display:none!important}}";
+  style.id="mobile-analysis-static-v2";
+  style.textContent=
+    "@media(max-width:820px){" +
+    ".mobile-analysis-static{display:block!important;margin-top:12px}" +
+    ".mobile-static-card{background:#0b2035;border:1px solid #1e3d59;border-radius:12px;padding:12px;margin-bottom:10px}" +
+    ".mobile-static-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}" +
+    ".mobile-static-head b{font-size:13px;color:#eaf4fb}.mobile-static-head small{font-size:8px;color:#89a2ba}" +
+    ".mobile-static-currents{display:grid;gap:7px}" +
+    ".mobile-static-current{display:grid;grid-template-columns:28px minmax(0,1fr);gap:7px;align-items:center;padding:8px;background:#0e2740;border:1px solid #203e59;border-radius:9px}" +
+    ".mobile-static-rank{font-size:10px;font-weight:900;color:#84a5bf;text-align:center}" +
+    ".mobile-static-main{min-width:0}.mobile-static-candidate{font-size:11px;font-weight:900;color:#edf6fb;overflow-wrap:anywhere}" +
+    ".mobile-static-total{font-size:11px;font-weight:900;color:#d9ecf8;margin-top:2px}" +
+    ".mobile-static-edit{display:grid;grid-template-columns:minmax(0,1fr) 58px;gap:6px;margin-top:6px}" +
+    ".mobile-static-edit input{width:100%;min-width:0;box-sizing:border-box;height:34px;background:#0b1725;color:#fff;border:1px solid #2d4860;border-radius:8px;padding:7px 9px;font-size:10px;pointer-events:auto}" +
+    ".mobile-static-edit button{width:58px!important;min-width:58px!important;height:34px!important;padding:0 5px!important;font-size:9px!important}" +
+    ".mobile-static-ticket-grid{display:grid;grid-template-columns:1fr;gap:7px}" +
+    ".mobile-static-ticket-grid label{display:block;font-size:8px;color:#89a2ba;text-transform:uppercase;font-weight:800;margin-bottom:3px}" +
+    ".mobile-static-ticket-grid select{width:100%;min-width:0;box-sizing:border-box;background:#0b1725;color:#fff;border:1px solid #2d4860;border-radius:8px;padding:8px;font-size:10px}" +
+    ".mobile-static-ticket-add{width:100%!important;height:36px!important;margin-top:8px;font-size:9px!important}" +
+    ".mobile-static-ticket-list{display:grid;gap:7px;margin-top:10px}" +
+    ".mobile-static-ticket{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px;background:#0e2740;border:1px solid #203e59;border-radius:9px}" +
+    ".mobile-static-ticket-prov{font-size:8px;color:#89a2ba;text-transform:uppercase;font-weight:800;margin-bottom:3px}" +
+    ".mobile-static-ticket-cands{font-size:10px;font-weight:900;color:#edf6fb;overflow-wrap:anywhere}" +
+    ".mobile-static-ticket-del{margin-top:5px;height:29px!important;font-size:8px!important;padding:0 8px!important}" +
+    ".mobile-static-ticket-value{font-size:12px;font-weight:900;color:#f1f7fb;white-space:nowrap}" +
+    "}" +
+    "@media(min-width:821px){.mobile-analysis-static{display:none!important}}";
   document.head.appendChild(style);
-
-  function findTab(){
-    return document.getElementById("tab-analisi");
-  }
 
   function build(){
     if(!window.matchMedia("(max-width:820px)").matches) return;
-    const tab=findTab();
+    const tab=document.getElementById("tab-analisi");
     if(!tab) return;
+
     let mount=tab.querySelector(".mobile-analysis-static");
     if(!mount){
       mount=document.createElement("div");
@@ -667,51 +666,57 @@ function installMobileAnalysisToolsStatic(){
 
     const currentRows=candidates.map((x,i)=>{
       const val=String(correnti[x.name]||"");
-      return "<div class="mobile-static-current">"+
-        "<div class="mobile-static-rank">"+(i+1)+"</div>"+
-        "<div class="mobile-static-main">"+
-        "<div class="mobile-static-candidate">"+esc(x.name)+"</div>"+
-        "<div class="mobile-static-total">"+x.total.toLocaleString("it-IT")+" preferenze</div>"+
-        "<div class="mobile-static-edit">"+
-        "<input type="text" value=""+esc(val)+"" placeholder="Nome della corrente" data-mobile-current=""+esc(x.name)+"">"+
-        "<button type="button" class="btn bg2" data-save-mobile-current=""+esc(x.name)+"">Salva</button>"+
-        "</div></div></div>";
-    }).join("") || "<div class="muted">Nessun candidato disponibile.</div>";
+      return '<div class="mobile-static-current">'+
+        '<div class="mobile-static-rank">'+(i+1)+'</div>'+
+        '<div class="mobile-static-main">'+
+        '<div class="mobile-static-candidate">'+esc(x.name)+'</div>'+
+        '<div class="mobile-static-total">'+x.total.toLocaleString("it-IT")+' preferenze</div>'+
+        '<div class="mobile-static-edit">'+
+        '<input type="text" value="'+esc(val)+'" placeholder="Nome della corrente" data-mobile-current="'+esc(x.name)+'">'+
+        '<button type="button" class="btn bg2" data-save-mobile-current="'+esc(x.name)+'">Salva</button>'+
+        '</div></div></div>';
+    }).join("") || '<div class="muted">Nessun candidato disponibile.</div>';
 
-    const provOptions=Object.keys(PROV_FULL||{}).map(code =>
-      "<option value=""+esc(code)+"">"+esc(PROV_FULL[code])+"</option>").join("");
-    const candOptions=(Array.isArray(CANDS)?CANDS:[]).map(name =>
-      "<option value=""+esc(name)+"">"+esc(name)+"</option>").join("");
+    const provOptions=Object.keys(PROV_FULL||{}).map(code=>
+      '<option value="'+esc(code)+'">'+esc(PROV_FULL[code])+'</option>'
+    ).join("");
+
+    const candOptions=(Array.isArray(CANDS)?CANDS:[]).map(name=>
+      '<option value="'+esc(name)+'">'+esc(name)+'</option>'
+    ).join("");
 
     const ticketRows=(Array.isArray(ticketGroups)?ticketGroups:[]).map(t=>{
       const prov=PROV_FULL[PROV_CODE[norm(t.prov)]]||t.prov;
       const value=typeof ticketValue==="function"?ticketValue(t):0;
-      return "<div class="mobile-static-ticket">"+
-        "<div><div class="mobile-static-ticket-prov">"+esc(prov)+"</div>"+
-        "<div class="mobile-static-ticket-cands">"+t.candidates.map(esc).join(" + ")+"</div>"+
-        "<button type="button" class="btn bg2 mobile-static-ticket-del" data-mobile-ticket-del=""+esc(t.id)+"">Elimina</button></div>"+
-        "<div class="mobile-static-ticket-value">"+value.toLocaleString("it-IT")+"</div></div>";
-    }).join("") || "<div class="muted">Nessun ticket inserito.</div>";
+      return '<div class="mobile-static-ticket">'+
+        '<div><div class="mobile-static-ticket-prov">'+esc(prov)+'</div>'+
+        '<div class="mobile-static-ticket-cands">'+t.candidates.map(esc).join(" + ")+'</div>'+
+        '<button type="button" class="btn bg2 mobile-static-ticket-del" data-mobile-ticket-del="'+esc(t.id)+'">Elimina</button></div>'+
+        '<div class="mobile-static-ticket-value">'+value.toLocaleString("it-IT")+'</div></div>';
+    }).join("") || '<div class="muted">Nessun ticket inserito.</div>';
 
     mount.innerHTML=
-      "<div class="mobile-static-card">"+
-      "<div class="mobile-static-head"><b>Analisi delle correnti</b><small>Registra la corrente FdI</small></div>"+
-      "<div class="mobile-static-currents">"+currentRows+"</div></div>"+
-      "<div class="mobile-static-card">"+
-      "<div class="mobile-static-head"><b>Ticket</b><small>Provincia e due candidati</small></div>"+
-      "<div class="mobile-static-ticket-grid">"+
-      "<div><label>Provincia</label><select id="mobileStaticTkProv"><option value="">Seleziona provincia</option>"+provOptions+"</select></div>"+
-      "<div><label>Candidato 1</label><select id="mobileStaticTkA"><option value="">Seleziona candidato</option>"+candOptions+"</select></div>"+
-      "<div><label>Candidato 2</label><select id="mobileStaticTkB"><option value="">Seleziona candidato</option>"+candOptions+"</select></div>"+
-      "</div>"+
-      "<button type="button" class="btn bg2 mobile-static-ticket-add" id="mobileStaticAddTicket">AGGIUNGI TICKET</button>"+
-      "<div class="mobile-static-ticket-list" id="mobileStaticTicketList">"+ticketRows+"</div></div>";
+      '<div class="mobile-static-card">'+
+      '<div class="mobile-static-head"><b>Analisi delle correnti</b><small>Registra la corrente FdI</small></div>'+
+      '<div class="mobile-static-currents">'+currentRows+'</div></div>'+
+      '<div class="mobile-static-card">'+
+      '<div class="mobile-static-head"><b>Ticket</b><small>Provincia e due candidati</small></div>'+
+      '<div class="mobile-static-ticket-grid">'+
+      '<div><label>Provincia</label><select id="mobileStaticTkProv"><option value="">Seleziona provincia</option>'+provOptions+'</select></div>'+
+      '<div><label>Candidato 1</label><select id="mobileStaticTkA"><option value="">Seleziona candidato</option>'+candOptions+'</select></div>'+
+      '<div><label>Candidato 2</label><select id="mobileStaticTkB"><option value="">Seleziona candidato</option>'+candOptions+'</select></div>'+
+      '</div>'+
+      '<button type="button" class="btn bg2 mobile-static-ticket-add" id="mobileStaticAddTicket">AGGIUNGI TICKET</button>'+
+      '<div class="mobile-static-ticket-list">'+ticketRows+'</div></div>';
 
     mount.querySelectorAll("[data-save-mobile-current]").forEach(btn=>{
       btn.addEventListener("click",()=>{
         const name=btn.getAttribute("data-save-mobile-current")||"";
-        const input=mount.querySelector("[data-mobile-current=""+CSS.escape(name)+""]");
-        if(typeof saveCorrente==="function") saveCorrente(name,input?.value||"");
+        let input=null;
+        mount.querySelectorAll("[data-mobile-current]").forEach(el=>{
+          if((el.getAttribute("data-mobile-current")||"")===name) input=el;
+        });
+        if(input&&typeof saveCorrente==="function") saveCorrente(name,input.value||"");
       });
     });
 
@@ -720,7 +725,7 @@ function installMobileAnalysisToolsStatic(){
         if(e.key!=="Enter") return;
         e.preventDefault();
         const name=input.getAttribute("data-mobile-current")||"";
-        if(typeof saveCorrente==="function") saveCorrente(name,input.value);
+        if(typeof saveCorrente==="function") saveCorrente(name,input.value||"");
       });
     });
 
@@ -734,7 +739,8 @@ function installMobileAnalysisToolsStatic(){
       const cb=(Array.isArray(CANDS)?CANDS:[]).find(c=>norm(c)===norm(b));
       if(!ca||!cb){alert("I due candidati devono essere selezionati dall’elenco.");return;}
       if(ca===cb){alert("Seleziona due candidati diversi.");return;}
-      const exists=(Array.isArray(ticketGroups)?ticketGroups:[]).some(t=>t.prov===prov&&t.candidates.includes(ca)&&t.candidates.includes(cb));
+      const exists=(Array.isArray(ticketGroups)?ticketGroups:[]).some(t=>
+        t.prov===prov&&t.candidates.includes(ca)&&t.candidates.includes(cb));
       if(exists){alert("Questo ticket esiste già.");return;}
       const item={id:"T"+Date.now(),prov,candidates:[ca,cb]};
       ticketGroups.push(item);
@@ -759,7 +765,7 @@ function installMobileAnalysisToolsStatic(){
   setTimeout(build,700);
 
   document.addEventListener("click",ev=>{
-    if(ev.target?.closest?.(".side-tab")) {
+    if(ev.target?.closest?.(".side-tab")){
       setTimeout(build,120);
       setTimeout(build,600);
     }
