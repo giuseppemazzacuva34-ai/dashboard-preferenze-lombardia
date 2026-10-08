@@ -1270,4 +1270,544 @@ function installComuniPreferencesFix(){
 installComuniPreferencesFix();
 
 
+function installSondaggiModule(){
+  const KEY="lombardia_sondaggi_2026";
+
+  const REGIONS=[
+    "Piemonte","Valle d'Aosta","Lombardia","Trentino-Alto Adige/Südtirol","Veneto",
+    "Friuli-Venezia Giulia","Liguria","Emilia-Romagna","Toscana","Umbria","Marche",
+    "Lazio","Abruzzo","Molise","Campania","Puglia","Basilicata","Calabria","Sicilia","Sardegna"
+  ];
+
+  const CAM_COLLEGI={
+    "Piemonte":["Piemonte 1 - P01|8","Piemonte 1 - P02|7","Piemonte 2 - P01|6","Piemonte 2 - P02|8"],
+    "Valle d'Aosta":["Valle d'Aosta - U01|1"],
+    "Lombardia":["Lombardia 1 - P01|13","Lombardia 1 - P02|12","Lombardia 2 - P01|6","Lombardia 2 - P02|8","Lombardia 3 - P01|6","Lombardia 3 - P02|8","Lombardia 4 - P01|11"],
+    "Trentino-Alto Adige/Südtirol":["Trentino-Alto Adige - P01|7"],
+    "Veneto":["Veneto 1 - P01|13","Veneto 2 - P01|7","Veneto 2 - P02|6","Veneto 2 - P03|6"],
+    "Friuli-Venezia Giulia":["Friuli-Venezia Giulia - P01|8"],
+    "Liguria":["Liguria - P01|10"],
+    "Emilia-Romagna":["Emilia-Romagna - P01|8","Emilia-Romagna - P02|11","Emilia-Romagna - P03|10"],
+    "Toscana":["Toscana - P01|8","Toscana - P02|8","Toscana - P03|8"],
+    "Umbria":["Umbria - P01|6"],
+    "Marche":["Marche - P01|10"],
+    "Lazio":["Lazio 1 - P01|8","Lazio 1 - P02|8","Lazio 1 - P03|8","Lazio 2 - P01|5","Lazio 2 - P02|7"],
+    "Abruzzo":["Abruzzo - P01|9"],
+    "Molise":["Molise - P01|2"],
+    "Campania":["Campania 1 - P01|9","Campania 1 - P02|11","Campania 2 - P01|8","Campania 2 - P02|10"],
+    "Puglia":["Puglia - P01|7","Puglia - P02|6","Puglia - P03|6","Puglia - P04|8"],
+    "Basilicata":["Basilicata - P01|4"],
+    "Calabria":["Calabria - P01|13"],
+    "Sicilia":["Sicilia 1 - P01|8","Sicilia 1 - P02|7","Sicilia 2 - P01|5","Sicilia 2 - P02|6","Sicilia 2 - P03|6"],
+    "Sardegna":["Sardegna - P01|11"]
+  };
+
+  const SEN_COLLEGI={
+    "Piemonte":["Piemonte - P01|6","Piemonte - P02|8"],
+    "Valle d'Aosta":["Valle d'Aosta - U01|1"],
+    "Lombardia":["Lombardia - P01|9","Lombardia - P02|12","Lombardia - P03|10"],
+    "Trentino-Alto Adige/Südtirol":["Trentino-Alto Adige - U01|1","Trentino-Alto Adige - U02|1","Trentino-Alto Adige - U03|1","Trentino-Alto Adige - U04|1","Trentino-Alto Adige - U05|1","Trentino-Alto Adige - U06|1"],
+    "Veneto":["Veneto - P01|7","Veneto - P02|9"],
+    "Friuli-Venezia Giulia":["Friuli-Venezia Giulia - P01|4"],
+    "Liguria":["Liguria - P01|5","Liguria - P02|5"],
+    "Emilia-Romagna":["Emilia-Romagna - P01|6","Emilia-Romagna - P02|8"],
+    "Toscana":["Toscana - P01|12"],
+    "Umbria":["Umbria - P01|3"],
+    "Marche":["Marche - P01|5"],
+    "Lazio":["Lazio - P01|9","Lazio - P02|9"],
+    "Abruzzo":["Abruzzo - P01|4"],
+    "Molise":["Molise - P01|2"],
+    "Campania":["Campania - P01|10","Campania - P02|8"],
+    "Puglia":["Puglia - P01|13"],
+    "Basilicata":["Basilicata - P01|3"],
+    "Calabria":["Calabria - P01|6"],
+    "Sicilia":["Sicilia - P01|8","Sicilia - P02|8"],
+    "Sardegna":["Sardegna - P01|5"]
+  };
+
+  const POLLS=[
+    ["FdI","Fratelli d'Italia",26.8],
+    ["PD","Partito Democratico",20.4],
+    ["M5S","Movimento 5 Stelle",12.8],
+    ["FN","Futuro Nazionale",7.7],
+    ["FI","Forza Italia",7.4],
+    ["AVS","Alleanza Verdi e Sinistra",6.3],
+    ["LEGA","Lega",5.7],
+    ["AZ","Azione",3.2],
+    ["IV","Italia Viva",2.2],
+    ["PIU","+Europa",1.7],
+    ["PLD","Partito Liberaldemocratico",1.3],
+    ["NM","Noi Moderati",1.1],
+    ["ALTRI","Altri",4.4]
+  ];
+
+  function freshState(){
+    const s={
+      chamber:"camera",
+      region:"Lombardia",
+      college:"Lombardia 1 - P01",
+      parties:{},
+      regionalSenate:{},
+      collegeValues:{camera:{},senato:{}},
+      coalitions:[]
+    };
+    POLLS.forEach(p=>{
+      s.parties[p[0]]={name:p[1],camera:p[2],senate:p[2]};
+    });
+    s.regionalSenate.Lombardia=Object.fromEntries(POLLS.map(p=>[p[0],p[2]]));
+    return s;
+  }
+
+  function loadState(){
+    let base=freshState();
+    try{
+      const saved=JSON.parse(localStorage.getItem(KEY)||"null");
+      if(!saved||typeof saved!=="object")return base;
+      base={...base,...saved};
+      base.parties={...freshState().parties,...(saved.parties||{})};
+      base.regionalSenate=saved.regionalSenate&&typeof saved.regionalSenate==="object"?saved.regionalSenate:{};
+      base.collegeValues=saved.collegeValues&&typeof saved.collegeValues==="object"?saved.collegeValues:{camera:{},senato:{}};
+      if(!base.collegeValues.camera)base.collegeValues.camera={};
+      if(!base.collegeValues.senato)base.collegeValues.senato={};
+      base.coalitions=Array.isArray(saved.coalitions)?saved.coalitions:[];
+      POLLS.forEach(p=>{
+        if(base.parties[p[0]].camera==null)base.parties[p[0]].camera=p[2];
+        if(base.parties[p[0]].senate==null)base.parties[p[0]].senate=p[2];
+      });
+      return base;
+    }catch(_){return base;}
+  }
+
+  let S=loadState();
+
+  function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+
+  function esc2(v){
+    try{return typeof esc==="function"?esc(String(v??"")):String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+    catch(_){return String(v??"");}
+  }
+
+  const fmt=n=>Number(n||0).toFixed(1).replace(".",",");
+  const fmt0=n=>Math.round(Number(n||0)).toLocaleString("it-IT");
+  const num=v=>{
+    const n=parseFloat(String(v??"").replace(",","."));
+    return Number.isFinite(n)?Math.min(100,Math.max(0,n)):0;
+  };
+
+  function ensureNav(){
+    const side=document.querySelector(".app-sidebar");
+    if(!side)return;
+    let btn=side.querySelector("#sideSondaggi");
+    if(!btn){
+      btn=document.createElement("button");
+      btn.type="button";
+      btn.id="sideSondaggi";
+      btn.className="side-tab";
+      btn.innerHTML="<span>📊</span><b> Sondaggi</b>";
+      side.appendChild(btn);
+    }
+  }
+
+  function ensurePanel(){
+    let host=document.getElementById("tab-sondaggi");
+    if(!host){
+      host=document.createElement("section");
+      host.id="tab-sondaggi";
+      host.className="panel";
+      host.style.display="none";
+      const main=document.querySelector("main");
+      if(main)main.appendChild(host);
+    }
+    return host;
+  }
+
+  function openPanel(){
+    const host=ensurePanel();
+    document.querySelectorAll("main .panel").forEach(p=>{if(p!==host)p.style.display="none";});
+    host.style.display="block";
+    document.querySelectorAll(".side-tab").forEach(x=>x.classList.remove("active"));
+    document.getElementById("sideSondaggi")?.classList.add("active");
+    render();
+  }
+
+  function closePanel(){
+    const host=document.getElementById("tab-sondaggi");
+    if(host)host.style.display="none";
+  }
+
+  function collegesFor(chamber,region){
+    const src=chamber==="camera"?CAM_COLLEGI:SEN_COLLEGI;
+    return (src[region]||[]).map(x=>{
+      const [name,seats]=x.split("|");
+      return {name,seats:Number(seats)||0,special:name.includes(" - U")};
+    });
+  }
+
+  function selectedCollege(){
+    const list=collegesFor(S.chamber,S.region);
+    if(!list.length){S.college="";return null;}
+    if(!list.some(x=>x.name===S.college))S.college=list[0].name;
+    return list.find(x=>x.name===S.college)||list[0];
+  }
+
+  function regionValues(){
+    S.regionalSenate[S.region]??={};
+    Object.keys(S.parties).forEach(k=>{
+      if(S.regionalSenate[S.region][k]==null)S.regionalSenate[S.region][k]=num(S.parties[k].senate);
+    });
+    return Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.regionalSenate[S.region][k])]));
+  }
+
+  function collegeValues(){
+    const c=selectedCollege();
+    const bucket=(S.collegeValues[S.chamber]??={})[c?.name]??{};
+    const base={};
+    const region=regionValues();
+    Object.keys(S.parties).forEach(k=>{
+      const fallback=S.chamber==="camera"?S.parties[k].camera:region[k];
+      base[k]=num(bucket[k]??fallback);
+    });
+    return base;
+  }
+
+  function coalitionFor(id){return S.coalitions.find(c=>c.id===id);}
+
+  function coalitionMap(){
+    const m={};
+    S.coalitions.forEach(c=>(c.members||[]).forEach(k=>m[k]=c.id));
+    return m;
+  }
+
+  function makeCoalition(){
+    const name=prompt("Nome della coalizione:");
+    if(!name||!name.trim())return;
+    S.coalitions.push({id:"C"+Date.now(),name:name.trim(),members:[]});
+    save();render();
+  }
+
+  function toggleMember(id,slug){
+    const c=coalitionFor(id);if(!c)return;
+    S.coalitions.forEach(x=>{if(x.id!==id)x.members=(x.members||[]).filter(k=>k!==slug);});
+    c.members=(c.members||[]).includes(slug)?c.members.filter(k=>k!==slug):[...(c.members||[]),slug];
+    save();render();
+  }
+
+  function removeCoalition(id){
+    S.coalitions=S.coalitions.filter(c=>c.id!==id);
+    save();render();
+  }
+
+  function eligibility(values,chamber){
+    const cmap=coalitionMap();
+    const coalTotals={};
+    S.coalitions.forEach(c=>{
+      coalTotals[c.id]=(c.members||[]).reduce((s,k)=>s+(values[k]||0),0);
+    });
+    const ok=new Set();
+    Object.keys(values).forEach(k=>{
+      const v=values[k]||0,cid=cmap[k];
+      if(!cid){
+        if(v>=3||chamber==="senato"&&v>=20)ok.add(k);
+      }else{
+        if((coalTotals[cid]||0)>=10&&v>=3)ok.add(k);
+      }
+    });
+    S.coalitions.forEach(c=>{
+      if((coalTotals[c.id]||0)>=10){
+        const m=(c.members||[]).filter(k=>values[k]!=null).sort((a,b)=>(values[b]||0)-(values[a]||0));
+        if(m.length&&!m.some(k=>(values[k]||0)>=3))ok.add(m[0]);
+      }
+    });
+    return {ok:[...ok],coalTotals};
+  }
+
+  function allocate(values,seats,chamber){
+    const el=eligibility(values,chamber),list=el.ok;
+    const total=list.reduce((s,k)=>s+(values[k]||0),0);
+    const out={};
+    if(!list.length||!total)return {seats:out,eligible:[],coalTotals:el.coalTotals};
+    list.forEach(k=>out[k]=Math.floor(seats*(values[k]||0)/total));
+    let used=Object.values(out).reduce((s,v)=>s+v,0);
+    list.map(k=>({k,rest:seats*(values[k]||0)/total-Math.floor(seats*(values[k]||0)/total)}))
+      .sort((a,b)=>b.rest-a.rest)
+      .slice(0,Math.max(0,seats-used))
+      .forEach(x=>out[x.k]++);
+    return {seats:out,eligible:list,coalTotals:el.coalTotals};
+  }
+
+  function bonusTarget(){
+    const cam=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].camera)]));
+    const sen=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
+    const cmap=coalitionMap();
+    const blocks=[];
+    S.coalitions.forEach(c=>blocks.push({id:c.id,members:[...(c.members||[])]}));
+    Object.keys(S.parties).forEach(k=>{if(!cmap[k])blocks.push({id:"P:"+k,members:[k]});});
+    const candidates=blocks.map(b=>{
+      const cv=b.members.reduce((s,k)=>s+(cam[k]||0),0);
+      const sv=b.members.reduce((s,k)=>s+(sen[k]||0),0);
+      return {...b,cam:cv,sen:sv};
+    }).filter(b=>b.cam>=42&&b.sen>=42);
+    if(!candidates.length)return null;
+    candidates.sort((a,b)=>Math.min(b.cam,b.sen)-Math.min(a.cam,a.sen));
+    const best=candidates[0];
+    const topCam=Math.max(...blocks.map(b=>b.cam),0);
+    const topSen=Math.max(...blocks.map(b=>b.sen),0);
+    if(best.cam<topCam||best.sen<topSen)return null;
+    return best;
+  }
+
+  function nationalResults(){
+    const camVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].camera)]));
+    const senVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
+    const bonus=bonusTarget();
+    const cam=allocate(camVals,bonus?330:400,"camera");
+    const sen=allocate(senVals,bonus?165:200,"senato");
+
+    function applyBonus(res,amount,cap,chamber,winner){
+      if(!bonus||!amount)return;
+      const members=winner.members;
+      const total=members.reduce((s,k)=>s+(chamber==="camera"?camVals[k]:senVals[k]),0);
+      const current=members.reduce((s,k)=>s+(res.seats[k]||0),0);
+      const add=Math.min(amount,Math.max(0,cap-current));
+      if(!add)return;
+      let used=0;
+      members.forEach(k=>{
+        const v=chamber==="camera"?camVals[k]:senVals[k];
+        const q=Math.floor(add*(v/Math.max(total,0.0001)));
+        res.seats[k]=(res.seats[k]||0)+q;used+=q;
+      });
+      const best=members.slice().sort((a,b)=>(chamber==="camera"?camVals[b]:senVals[b])-(chamber==="camera"?camVals[a]:senVals[a]))[0];
+      if(best)res.seats[best]=(res.seats[best]||0)+(add-used);
+      res.bonusSeats=add;
+    }
+
+    if(bonus){
+      applyBonus(cam,70,220,"camera",bonus);
+      applyBonus(sen,35,113,"senato",bonus);
+    }
+    return {cam,sen,bonus};
+  }
+
+  function saveValue(slug,kind,value){
+    if(!S.parties[slug])return;
+    if(kind==="camera")S.parties[slug].camera=num(value);
+    if(kind==="senate")S.parties[slug].senate=num(value);
+    if(kind==="region"){
+      S.regionalSenate[S.region]??={};
+      S.regionalSenate[S.region][slug]=num(value);
+    }
+    if(kind==="college"){
+      S.collegeValues[S.chamber]??={};
+      S.collegeValues[S.chamber][S.college]??={};
+      S.collegeValues[S.chamber][S.college][slug]=num(value);
+    }
+    save();
+  }
+
+  async function refreshYouTrend(){
+    const btn=document.getElementById("sondaggiRefreshYT");
+    if(btn){btn.disabled=true;btn.textContent="AGGIORNO…";}
+    try{
+      const res=await fetch("https://supermedia.youtrend.it/api/supermedia/");
+      if(!res.ok)throw new Error("HTTP "+res.status);
+      const j=await res.json();
+      const parts=Array.isArray(j.partiti)?j.partiti:[];
+      let matched=0;
+      parts.forEach(p=>{
+        const slug=String(p.slug??"").trim().toUpperCase();
+        const name=String(p.nome??p.name??slug).trim();
+        const value=num(p.valore??p.value);
+        if(!slug)return;
+        if(!S.parties[slug])S.parties[slug]={name,camera:value,senate:value};
+        else{
+          S.parties[slug].name=name||S.parties[slug].name;
+          S.parties[slug].camera=value;
+          S.parties[slug].senate=value;
+        }
+        matched++;
+      });
+      save();render();
+      alert(matched?"YouTrend aggiornato: "+matched+" liste.":"YouTrend non ha restituito partiti nel formato atteso.");
+    }catch(err){
+      console.error("YouTrend",err);
+      alert("Aggiornamento YouTrend non disponibile. I valori già presenti sono rimasti invariati.");
+    }finally{
+      const b=document.getElementById("sondaggiRefreshYT");
+      if(b){b.disabled=false;b.textContent="AGGIORNA DA YOUTREND";}
+    }
+  }
+
+  function render(){
+    const host=ensurePanel();
+    if(!host)return;
+    const c=selectedCollege();
+    const cVals=collegeValues();
+    const rVals=regionValues();
+    const national=nationalResults();
+    const partyKeys=Object.keys(S.parties);
+
+    const partyRows=partyKeys.map(k=>{
+      const p=S.parties[k],cid=coalitionMap()[k];
+      return '<tr><td><b>'+esc2(p.name)+'</b><small>'+esc2(k)+'</small></td>'+
+        '<td><input data-sv="'+esc2(k)+'" data-kind="camera" type="number" step="0.1" min="0" max="100" value="'+num(p.camera).toFixed(1)+'"></td>'+
+        '<td><input data-sv="'+esc2(k)+'" data-kind="senate" type="number" step="0.1" min="0" max="100" value="'+num(p.senate).toFixed(1)+'"></td>'+
+        '<td><input data-sv="'+esc2(k)+'" data-kind="region" type="number" step="0.1" min="0" max="100" value="'+num(rVals[k]).toFixed(1)+'"></td>'+
+        '<td><input data-sv="'+esc2(k)+'" data-kind="college" type="number" step="0.1" min="0" max="100" value="'+num(cVals[k]).toFixed(1)+'"></td>'+
+        '<td>'+(cid?esc2(coalitionFor(cid)?.name||""):"—")+'</td></tr>';
+    }).join("");
+
+    const coalRows=S.coalitions.map(co=>{
+      const vals=S.chamber==="camera"?cVals:rVals;
+      const total=(co.members||[]).reduce((s,k)=>s+(vals[k]||0),0);
+      const members=partyKeys.map(k=>
+        '<label><input type="checkbox" data-member="'+esc2(co.id)+'" data-party="'+esc2(k)+'" '+((co.members||[]).includes(k)?"checked":"")+'>'+esc2(S.parties[k].name)+'</label>'
+      ).join("");
+      return '<div class="sg-coal"><div class="sg-coal-head"><b>'+esc2(co.name)+'</b><strong>'+fmt(total)+'%</strong><button type="button" data-coal-del="'+esc2(co.id)+'">Elimina</button></div><div class="sg-members">'+members+'</div></div>';
+    }).join("")||'<div class="sg-empty">Nessuna coalizione definita. Crea una coalizione e assegna le liste.</div>';
+
+    function resultRows(res,type){
+      const vals=type==="camera"?Object.fromEntries(partyKeys.map(k=>[k,S.parties[k].camera])):Object.fromEntries(partyKeys.map(k=>[k,S.parties[k].senate]));
+      return Object.entries(res.seats).sort((a,b)=>b[1]-a[1]).map(([k,seats])=>
+        '<tr><td>'+esc2(S.parties[k]?.name||k)+'</td><td>'+num(vals[k]).toFixed(1)+'%</td><td><b>'+fmt0(seats)+'</b></td></tr>'
+      ).join("")||'<tr><td colspan="3">Nessun partito supera le soglie con i valori inseriti.</td></tr>';
+    }
+
+    const collegeAlloc=allocate(cVals,c?.seats||0,S.chamber==="camera"?"camera":"senato");
+    const collegeRows=Object.entries(collegeAlloc.seats).sort((a,b)=>b[1]-a[1]).map(([k,seats])=>
+      '<tr><td>'+esc2(S.parties[k]?.name||k)+'</td><td>'+num(cVals[k]).toFixed(1)+'%</td><td><b>'+fmt0(seats)+'</b></td></tr>'
+    ).join("")||'<tr><td colspan="3">Nessun seggio assegnabile con le percentuali inserite.</td></tr>';
+
+    host.innerHTML=
+      '<div class="sg-wrap">'+
+        '<div class="sg-head"><div><div class="sg-kicker">SONDAGGI ELETTORALI</div><h1>Simulatore nazionale e per collegio</h1><p>Inserisci le percentuali nazionali e quelle del territorio selezionato, costruisci le coalizioni e verifica l'effetto sul riparto dei seggi.</p></div><button class="sg-btn primary" id="sondaggiRefreshYT">AGGIORNA DA YOUTREND</button></div>'+
+        '<div class="sg-law">LEGGE ELETTORALE · TESTO APPROVATO 8 OTTOBRE 2026 · sistema proporzionale su collegi plurinominali · soglie 3% liste / 10% coalizioni · premio di 70 seggi alla Camera e 35 al Senato con soglia 42% nella stessa lista/coalizione in entrambe le Camere. Testo approvato definitivamente, non ancora pubblicato.</div>'+
+        '<div class="sg-layout">'+
+          '<div class="sg-map-card"><div class="sg-card-title"><b>Italia</b><span>'+esc2(S.region)+'</span></div><div class="sg-map"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Italy_map_with_regions.svg" alt="Mappa d’Italia divisa in regioni"><div class="sg-map-caption">La mappa mostra la divisione regionale; usa i pulsanti per selezionare la regione e caricare i relativi collegi.</div></div><div class="sg-regions">'+REGIONS.map(x=>'<button type="button" data-region="'+esc2(x)+'" class="'+(x===S.region?"active":"")+'">'+esc2(x)+'</button>').join("")+'</div></div>'+
+          '<div class="sg-main">'+
+            '<div class="sg-controls"><div><label>Camera / Senato</label><select id="sgChamber"><option value="camera">Camera</option><option value="senato">Senato</option></select></div><div><label>Regione</label><select id="sgRegion">'+REGIONS.map(x=>'<option value="'+esc2(x)+'">'+esc2(x)+'</option>').join("")+'</select></div><div><label>Collegio</label><select id="sgCollege">'+collegesFor(S.chamber,S.region).map(x=>'<option value="'+esc2(x.name)+'">'+esc2(x.name)+' · '+x.seats+' seggi</option>').join("")+'</select></div></div>'+
+            '<div class="sg-card"><div class="sg-card-title"><b>Percentuali di voto</b><span>nazionale · regione · collegio</span></div><div class="sg-table-wrap"><table class="sg-table"><thead><tr><th>Partito</th><th>Camera naz.</th><th>Senato naz.</th><th>Senato regione</th><th>'+ (S.chamber==="camera"?"Camera":"Senato") +' collegio</th><th>Coalizione</th></tr></thead><tbody>'+partyRows+'</tbody></table></div><div class="sg-actions"><button type="button" class="sg-btn" id="sgSaveAll">SALVA SCENARIO</button><button type="button" class="sg-btn" id="sgReset">RIPRISTINA BASE YOUTREND</button></div></div>'+
+            '<div class="sg-card"><div class="sg-card-title"><b>Coalizioni possibili</b><span><button type="button" class="sg-btn small" id="sgNewCoal">+ NUOVA COALIZIONE</button></span></div>'+coalRows+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="sg-results">'+
+          '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione seggi nazionale</b><span>scenario legge 8/10/2026</span></div><div class="sg-two"><div><h3>Camera · 400</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.cam,"camera")+'</tbody></table></div><div><h3>Senato · 200</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.sen,"senato")+'</tbody></table></div></div>'+(national.bonus?'<div class="sg-bonus">PREMIO ATTIVO · '+esc2(coalitionFor(national.bonus.id)?.name||national.bonus.members.map(k=>S.parties[k]?.name||k).join(" + "))+' · 70 Camera / 35 Senato</div>':'<div class="sg-note">Il premio non scatta: la stessa lista o coalizione deve essere prima e raggiungere almeno il 42% in entrambe le Camere.</div>')+'</div>'+
+          '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione nel collegio</b><span>'+esc2(c?.name||"")+' · '+fmt0(c?.seats||0)+' seggi</span></div><table class="sg-table"><thead><tr><th>Partito</th><th>% collegio</th><th>Seggi</th></tr></thead><tbody>'+collegeRows+'</tbody></table><div class="sg-note">Il collegio usa le percentuali locali che inserisci. Le assegnazioni nazionali della riforma restano nella simulazione sopra.</div></div>'+
+        '</div>'+
+        '<div class="sg-source">Partiti e valori iniziali: Supermedia YouTrend/Agi, rilevazione 1 ottobre 2026. Collegamento dei collegi alla geografia plurinominale vigente utilizzata dalla riforma. La simulazione è uno scenario operativo e va riallineata al testo ufficiale pubblicato.</div>'+
+      '</div>';
+
+    document.getElementById("sgChamber").value=S.chamber;
+    document.getElementById("sgRegion").value=S.region;
+    document.getElementById("sgCollege").value=S.college;
+
+    host.querySelectorAll("[data-sv]").forEach(inp=>{
+      inp.addEventListener("change",()=>{
+        saveValue(inp.getAttribute("data-sv"),inp.getAttribute("data-kind"),inp.value);
+        render();
+      });
+    });
+    host.querySelectorAll("[data-region]").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        S.region=btn.getAttribute("data-region")||"Lombardia";
+        regionValues();
+        S.college=collegesFor(S.chamber,S.region)[0]?.name||"";
+        save();render();
+      });
+    });
+    document.getElementById("sgChamber").addEventListener("change",e=>{
+      S.chamber=e.target.value;
+      S.college=collegesFor(S.chamber,S.region)[0]?.name||"";
+      save();render();
+    });
+    document.getElementById("sgRegion").addEventListener("change",e=>{
+      S.region=e.target.value;
+      regionValues();
+      S.college=collegesFor(S.chamber,S.region)[0]?.name||"";
+      save();render();
+    });
+    document.getElementById("sgCollege").addEventListener("change",e=>{S.college=e.target.value;save();render();});
+    document.getElementById("sgNewCoal").addEventListener("click",makeCoalition);
+    document.getElementById("sgSaveAll").addEventListener("click",()=>{save();alert("Scenario Sondaggi salvato.");});
+    document.getElementById("sgReset").addEventListener("click",()=>{
+      const keep={chamber:S.chamber,region:S.region,college:S.college};
+      S=freshState();
+      S.chamber=keep.chamber;S.region=keep.region;
+      S.college=collegesFor(S.chamber,S.region)[0]?.name||"";
+      save();render();
+    });
+    document.getElementById("sondaggiRefreshYT").addEventListener("click",refreshYouTrend);
+    host.querySelectorAll("[data-member]").forEach(ch=>ch.addEventListener("change",()=>toggleMember(ch.getAttribute("data-member"),ch.getAttribute("data-party"))));
+    host.querySelectorAll("[data-coal-del]").forEach(btn=>btn.addEventListener("click",()=>removeCoalition(btn.getAttribute("data-coal-del"))));
+  }
+
+  const style=document.createElement("style");
+  style.id="sondaggi-module-v1";
+  style.textContent="
+#tab-sondaggi{padding:0!important}
+.sg-wrap{color:#eaf4fb}
+.sg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:12px}
+.sg-kicker{font-size:9px;letter-spacing:.16em;color:#3ca8ff;font-weight:900}
+.sg-head h1{margin:4px 0 5px;font-size:26px;line-height:1.05;color:#fff}
+.sg-head p{margin:0;color:#9db3c3;font-size:10px;line-height:1.5;max-width:780px}
+.sg-btn{border:1px solid #2b4c65;background:#0b2034;color:#eaf4fb;border-radius:8px;padding:9px 11px;font-size:9px;font-weight:900;cursor:pointer}
+.sg-btn.primary{background:#1c7ed0;border-color:#2b91e6;color:#fff}
+.sg-btn.small{padding:6px 8px;font-size:8px}
+.sg-law{padding:9px 11px;margin-bottom:12px;border-radius:9px;background:#132c42;border:1px solid #2b4d67;color:#aac0d0;font-size:8px;line-height:1.45}
+.sg-layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:12px}
+.sg-map-card,.sg-main .sg-card,.sg-results .sg-card{background:#0b1e31;border:1px solid #203d55;border-radius:11px;padding:12px;box-sizing:border-box}
+.sg-card{background:#0b1e31;border:1px solid #203d55;border-radius:11px;padding:12px}
+.sg-card-title{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:9px}
+.sg-card-title b{font-size:12px;color:#fff}.sg-card-title span{font-size:8px;color:#819db2}
+.sg-map{background:#091827;border:1px solid #203b53;border-radius:10px;padding:10px}
+.sg-map img{display:block;width:100%;height:410px;object-fit:contain;background:#091827}
+.sg-map-caption{margin-top:8px;font-size:8px;line-height:1.45;color:#839caf}
+.sg-regions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:9px;max-height:300px;overflow:auto}
+.sg-regions button{border:1px solid #23445e;background:#0b2137;color:#b9ccda;border-radius:7px;padding:7px 8px;text-align:left;font-size:8px;cursor:pointer}
+.sg-regions button.active{border-color:#2187ff;background:#113a5f;color:#fff}
+.sg-controls{display:grid;grid-template-columns:170px 1fr 1.5fr;gap:8px;margin-bottom:10px}
+.sg-controls label{display:block;font-size:7px;color:#819db2;text-transform:uppercase;font-weight:900;margin-bottom:4px}
+.sg-controls select{width:100%;box-sizing:border-box;background:#091827;color:#eff7fb;border:1px solid #2a4861;border-radius:8px;padding:9px;font-size:10px}
+.sg-table-wrap{width:100%;overflow:auto}
+.sg-table{width:100%;border-collapse:collapse;font-size:8px}
+.sg-table th{text-align:left;padding:7px 6px;border-bottom:1px solid #29465b;color:#7f9bb0;font-size:7px;text-transform:uppercase}
+.sg-table td{padding:6px;border-bottom:1px solid #18364c;color:#dcecf6;vertical-align:middle}
+.sg-table td small{display:block;font-size:6px;color:#7391a7;margin-top:2px}
+.sg-table input{width:78px;box-sizing:border-box;background:#091827;color:#fff;border:1px solid #2b4960;border-radius:6px;padding:6px 7px;font-size:9px}
+.sg-actions{display:flex;gap:7px;margin-top:9px}
+.sg-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sg-two h3{font-size:10px;margin:0 0 6px;color:#fff}
+.sg-coal{padding:9px;border:1px solid #23465f;background:#0d2740;border-radius:9px;margin-bottom:7px}
+.sg-coal-head{display:flex;align-items:center;gap:7px}
+.sg-coal-head b{flex:1;font-size:10px;color:#fff}.sg-coal-head strong{font-size:11px;color:#fff}.sg-coal-head button{border:0;background:none;color:#9eb4c4;font-size:8px;cursor:pointer}
+.sg-members{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px}
+.sg-members label{font-size:7px;color:#b6c9d7;padding:5px;border:1px solid #23465f;border-radius:6px;background:#0a1d30}
+.sg-members input{margin-right:4px}
+.sg-empty,.sg-note,.sg-bonus{margin-top:8px;padding:8px;border-radius:8px;font-size:8px;line-height:1.45}
+.sg-empty,.sg-note{background:#102a41;border:1px solid #24475f;color:#94abbc}
+.sg-bonus{background:#174b35;border:1px solid #2a7651;color:#dff7e8;font-weight:800}
+.sg-results{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.sg-results .sg-card:first-child{grid-column:1/-1}
+.sg-source{margin-top:8px;font-size:7px;color:#66859d;line-height:1.4}
+@media(max-width:1000px){.sg-layout,.sg-results{grid-template-columns:1fr}.sg-map-card{max-width:none}.sg-map img{height:360px}.sg-controls{grid-template-columns:1fr 1fr}.sg-controls>div:last-child{grid-column:1/-1}}
+@media(max-width:820px){.sg-head{display:block}.sg-head h1{font-size:22px}.sg-head .sg-btn{width:100%;margin-top:9px}.sg-map img{height:330px}.sg-regions{grid-template-columns:1fr 1fr}.sg-table{min-width:820px}.sg-table input{width:72px}.sg-members{grid-template-columns:1fr 1fr}.sg-controls{grid-template-columns:1fr}.sg-controls>div:last-child{grid-column:auto}.sg-actions{display:grid;grid-template-columns:1fr 1fr}.sg-two{grid-template-columns:1fr}.sg-results{display:block}.sg-results .sg-card{margin-bottom:10px}}
+";
+  document.head.appendChild(style);
+
+  document.addEventListener("click",ev=>{
+    if(ev.target?.closest?.("#sideSondaggi")){
+      ev.preventDefault();
+      ev.stopPropagation();
+      openPanel();
+    }else if(ev.target?.closest?.(".side-tab")&&!ev.target.closest("#sideSondaggi")){
+      closePanel();
+    }
+  });
+
+  setTimeout(ensureNav,100);
+  setTimeout(ensureNav,800);
+  setInterval(ensureNav,2000);
+}
+installSondaggiModule();
+
+
 })();
