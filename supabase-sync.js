@@ -800,144 +800,253 @@ function cleanupStrayMobileText(){
 
 function installAnalysisCompareFix(){
   const style=document.createElement("style");
-  style.id="analysis-compare-fix-v1";
+  style.id="analysis-compare-decision-v3";
   style.textContent=
-    "#tab-analisi #analisiCandidateCompare{color:#eaf4fb!important;background:transparent!important}" +
-    "#tab-analisi .analysis-c2{background:#0b2137;border:1px solid #24455f;border-radius:10px;padding:12px}" +
-    "#tab-analisi .analysis-c2-controls{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:10px}" +
-    "#tab-analisi .analysis-c2-field{min-width:0}" +
-    "#tab-analisi .analysis-c2-field label{display:block;margin-bottom:4px;font-size:8px;text-transform:uppercase;font-weight:900;color:#86a1b8}" +
-    "#tab-analisi .analysis-c2-field select{width:100%;box-sizing:border-box;background:#091827!important;color:#eff7fb!important;border:1px solid #2a4861!important;border-radius:8px;padding:9px 10px;font-size:10px!important;outline:none!important}" +
-    "#tab-analisi .analysis-c2-field select:focus{border-color:#4b8ebd!important;box-shadow:0 0 0 2px #2a6e9d33!important}" +
-    "#tab-analisi .analysis-c2-main{display:grid;grid-template-columns:1fr 40px 1fr;gap:8px;align-items:stretch}" +
-    "#tab-analisi .analysis-c2-player{background:#0e2942;border:1px solid #28506c;border-radius:9px;padding:10px;min-width:0}" +
-    "#tab-analisi .analysis-c2-player small{display:block;font-size:7px;color:#8aa6bb;text-transform:uppercase;font-weight:800}" +
-    "#tab-analisi .analysis-c2-player strong{display:block;margin-top:4px;font-size:11px;color:#eef7fb;overflow-wrap:anywhere}" +
-    "#tab-analisi .analysis-c2-player b{display:block;margin-top:7px;font-size:22px;color:#fff}" +
-    "#tab-analisi .analysis-c2-player span{display:block;margin-top:2px;font-size:8px;color:#93aec1}" +
-    "#tab-analisi .analysis-c2-vs{display:flex;align-items:center;justify-content:center;color:#7f9bb0;font-weight:900;font-size:10px}" +
-    "#tab-analisi .analysis-c2-delta{margin-top:8px;padding:9px;border-radius:8px;background:#102a41;border:1px solid #24475f;font-size:9px;color:#a8bfd0}" +
-    "#tab-analisi .analysis-c2-delta b{color:#fff;font-size:12px}" +
-    "#tab-analisi .analysis-c2-note{margin-top:8px;font-size:8px;line-height:1.45;color:#8fa9bc}" +
-    "#tab-analisi #analisiInsight{overflow:visible!important}" +
-    "#tab-analisi .analysis-s2{display:grid;grid-template-columns:1fr 1fr;gap:7px}" +
-    "#tab-analisi .analysis-s2-item{background:#0e2942;border:1px solid #28506c;border-radius:9px;padding:9px;min-width:0}" +
-    "#tab-analisi .analysis-s2-item small{display:block;font-size:7px;color:#7f9bb0;text-transform:uppercase;font-weight:900}" +
-    "#tab-analisi .analysis-s2-item b{display:block;margin-top:4px;font-size:10px;color:#eff7fb;overflow-wrap:anywhere;line-height:1.25}" +
-    "#tab-analisi .analysis-s2-item span{display:block;margin-top:4px;font-size:8px;color:#94adbf;line-height:1.4}" +
-    "@media(max-width:820px){#tab-analisi .analysis-c2-controls{grid-template-columns:1fr;gap:7px}#tab-analisi .analysis-c2-main{grid-template-columns:1fr;gap:7px}#tab-analisi .analysis-c2-vs{height:18px}#tab-analisi .analysis-s2{grid-template-columns:1fr 1fr;gap:6px}}" +
-    "@media(max-width:420px){#tab-analisi .analysis-s2{grid-template-columns:1fr}}" ;
+    "#tab-analisi #analisiCandidateCompare{display:block!important;color:#eaf4fb!important;background:transparent!important;min-height:120px!important}" +
+    "#tab-analisi .decision-panel{background:#0b2137;border:1px solid #24455f;border-radius:11px;padding:13px;width:100%;box-sizing:border-box}" +
+    "#tab-analisi .decision-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:11px}" +
+    "#tab-analisi .decision-head b{font-size:14px;color:#fff}" +
+    "#tab-analisi .decision-head small{display:block;margin-top:3px;font-size:8px;line-height:1.4;color:#91aabd;max-width:680px}" +
+    "#tab-analisi .decision-controls{display:grid;grid-template-columns:150px minmax(180px,1fr) minmax(180px,1fr) minmax(180px,1fr) auto;gap:8px;align-items:end}" +
+    "#tab-analisi .decision-field{min-width:0}" +
+    "#tab-analisi .decision-field label{display:block;margin-bottom:4px;font-size:7px;text-transform:uppercase;font-weight:900;color:#86a1b8}" +
+    "#tab-analisi .decision-field select{width:100%;box-sizing:border-box;background:#091827!important;color:#eff7fb!important;border:1px solid #2a4861!important;border-radius:8px;padding:9px 10px;font-size:10px!important;outline:none!important}" +
+    "#tab-analisi .decision-field select:focus{border-color:#4b8ebd!important;box-shadow:0 0 0 2px #2a6e9d33!important}" +
+    "#tab-analisi .decision-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:11px}" +
+    "#tab-analisi .decision-kpi{background:#0e2942;border:1px solid #28506c;border-radius:9px;padding:10px;min-width:0}" +
+    "#tab-analisi .decision-kpi small{display:block;font-size:7px;text-transform:uppercase;font-weight:900;color:#88a4ba}" +
+    "#tab-analisi .decision-kpi b{display:block;margin-top:5px;font-size:18px;color:#fff;overflow-wrap:anywhere}" +
+    "#tab-analisi .decision-kpi span{display:block;margin-top:3px;font-size:8px;color:#95adbf}" +
+    "#tab-analisi .decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}" +
+    "#tab-analisi .decision-box{background:#0e2942;border:1px solid #28506c;border-radius:9px;padding:10px;min-width:0}" +
+    "#tab-analisi .decision-box h4{margin:0 0 8px;font-size:9px;text-transform:uppercase;color:#91abc0}" +
+    "#tab-analisi .decision-compare{display:grid;grid-template-columns:1fr 26px 1fr;gap:7px;align-items:center}" +
+    "#tab-analisi .decision-player{background:#102f49;border:1px solid #315b78;border-radius:8px;padding:9px;min-width:0}" +
+    "#tab-analisi .decision-player b{display:block;font-size:10px;color:#fff;overflow-wrap:anywhere;line-height:1.3}" +
+    "#tab-analisi .decision-player strong{display:block;margin-top:5px;font-size:21px;color:#fff}" +
+    "#tab-analisi .decision-player span{display:block;margin-top:2px;font-size:8px;color:#91aabd}" +
+    "#tab-analisi .decision-vs{text-align:center;font-size:8px;font-weight:900;color:#7895aa}" +
+    "#tab-analisi .decision-table{width:100%;border-collapse:collapse;font-size:8px}" +
+    "#tab-analisi .decision-table th{text-align:left;font-size:7px;text-transform:uppercase;color:#7895aa;padding:6px;border-bottom:1px solid #26475e}" +
+    "#tab-analisi .decision-table td{padding:6px;border-bottom:1px solid #17354b;color:#dcecf6}" +
+    "#tab-analisi .decision-table td.num{text-align:right;font-weight:900;white-space:nowrap}" +
+    "#tab-analisi .decision-table tr:last-child td{border-bottom:0}" +
+    "#tab-analisi .decision-note{margin-top:9px;padding:8px 9px;background:#102a41;border:1px solid #24475f;border-radius:8px;font-size:8px;line-height:1.45;color:#99b0c0}" +
+    "@media(max-width:820px){#tab-analisi .decision-controls{grid-template-columns:1fr 1fr}#tab-analisi .decision-controls .decision-apply{grid-column:1/-1}#tab-analisi .decision-kpis{grid-template-columns:repeat(2,1fr)}#tab-analisi .decision-grid{grid-template-columns:1fr}#tab-analisi .decision-table-wrap{overflow-x:auto!important}#tab-analisi .decision-table{min-width:500px!important}}" +
+    "@media(max-width:420px){#tab-analisi .decision-controls{grid-template-columns:1fr}#tab-analisi .decision-controls .decision-apply{grid-column:auto}#tab-analisi .decision-kpis{grid-template-columns:1fr 1fr}#tab-analisi .decision-compare{grid-template-columns:1fr}#tab-analisi .decision-vs{height:14px}}";
   document.head.appendChild(style);
 
   const fmt=n=>Number(n||0).toLocaleString("it-IT");
-  const pct2=(n,d)=>d?((Number(n||0)/Number(d))*100).toFixed(1)+"%":"0.0%";
+  const pct=(n,d)=>d?((Number(n||0)/Number(d))*100):0;
+  const norm3=v=>typeof norm==="function"?norm(String(v||"")):String(v||"").trim().toUpperCase();
 
-  function group(rows,key){
+  function rowsFor(raw){
+    const src=Array.isArray(raw)?raw:[];
+    return src.map(r=>{
+      let g=r&&r.geo;
+      if(!g && typeof GEO!=="undefined" && GEO && r){
+        try{g=GEO[norm3(r.comune)]||GEO[r.comune]||null;}catch(_){}
+      }
+      return {...r,geo:g||{}};
+    });
+  }
+
+  function collegioValue(r,kind){
+    const g=r?.geo||{};
+    return kind==="camera" ? (g.camP??g.camera??"") : (g.senP??g.senato??"");
+  }
+
+  function collegi(rows,kind){
     const m={};
-    (Array.isArray(rows)?rows:[]).forEach(r=>{
-      const k=String(key(r)||"").trim();
-      if(!k) return;
-      m[k]=(m[k]||0)+(Number(r.preferenze)||0);
+    rows.forEach(r=>{
+      const v=String(collegioValue(r,kind)||"").trim();
+      if(v)m[v]=(m[v]||0)+(Number(r.preferenze)||0);
+    });
+    return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0],"it",{numeric:true}));
+  }
+
+  function candidateTotals(rows){
+    const m={};
+    rows.forEach(r=>{
+      const k=String(r.candidato||"").trim();
+      if(k)m[k]=(m[k]||0)+(Number(r.preferenze)||0);
     });
     return Object.entries(m).sort((a,b)=>b[1]-a[1]);
   }
-  function uniqueCandidates(rows){
-    return group(rows,r=>r.candidato).map(x=>x[0]);
+
+  function communeTotals(rows){
+    const m={};
+    rows.forEach(r=>{
+      const k=String(r.comune||"").trim();
+      if(k)m[k]=(m[k]||0)+(Number(r.preferenze)||0);
+    });
+    return Object.entries(m).sort((a,b)=>b[1]-a[1]);
   }
 
-  const state={a:"",b:""};
+  function ticketAdjustedTotal(rows){
+    const base=candidateTotals(rows);
+    const byProv={};
+    rows.forEach(r=>{
+      const p=norm3(r.prov);
+      const c=String(r.candidato||"").trim();
+      if(!p||!c)return;
+      if(!byProv[p])byProv[p]={};
+      byProv[p][c]=(byProv[p][c]||0)+(Number(r.preferenze)||0);
+    });
 
-  function enhance(){
+    const seen={};
+    let total=base.reduce((s,x)=>s+x[1],0);
+
+    (Array.isArray(ticketGroups)?ticketGroups:[]).forEach(t=>{
+      const names=t?.candidates||[];
+      if(names.length!==2)return;
+      const prov=norm3(t.prov);
+      const a=names[0],b=names[1];
+      if(seen[String(t.id)])return;
+      const vals=byProv[prov]||{};
+      const av=Number(vals[a]||0),bv=Number(vals[b]||0);
+      if(av>0&&bv>0) total-=Math.min(av,bv);
+      seen[String(t.id)]=1;
+    });
+    return total;
+  }
+
+  function euroForCommuneSet(communes,kindValue){
+    const e=rowsFor(typeof EURO_RAW!=="undefined"?EURO_RAW:[]);
+    const wanted=new Set(communes.map(norm3));
+    return e.reduce((s,r)=>{
+      if(!wanted.has(norm3(r.comune)))return s;
+      return s+(Number(r.preferenze)||0);
+    },0);
+  }
+
+  const state={kind:"camera",collegio:"",a:"",b:""};
+
+  function build(){
     try{
-      const compare=document.getElementById("analisiCandidateCompare");
-      const insight=document.getElementById("analisiInsight");
-      if(!compare&&!insight)return;
+      const host=document.getElementById("analisiCandidateCompare");
+      if(!host)return;
 
-      const rows=typeof filtered==="function"?filtered():[];
-      const candidates=uniqueCandidates(rows);
-      if(candidates.length<2){
-        if(compare) compare.innerHTML='<div class="analysis-c2"><div class="analysis-c2-note">Servono almeno due candidati nel perimetro selezionato per effettuare il confronto.</div></div>';
-      }else{
-        if(!candidates.includes(state.a)) state.a=candidates[0];
-        if(!candidates.includes(state.b)||state.b===state.a) state.b=candidates[1]||candidates[0];
+      const reg=rowsFor(typeof RAW!=="undefined"?RAW:[]);
+      const available=collegi(reg,state.kind);
 
-        const list=candidates.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join("");
-        const aRows=rows.filter(r=>String(r.candidato||"")===state.a);
-        const bRows=rows.filter(r=>String(r.candidato||"")===state.b);
-        const aTotal=aRows.reduce((n,r)=>n+(Number(r.preferenze)||0),0);
-        const bTotal=bRows.reduce((n,r)=>n+(Number(r.preferenze)||0),0);
-        const total=rows.reduce((n,r)=>n+(Number(r.preferenze)||0),0);
-        const d=aTotal-bTotal;
-
-        compare.innerHTML=
-          '<div class="analysis-c2">'+
-          '<div class="analysis-c2-controls">'+
-            '<div class="analysis-c2-field"><label>Candidato A</label><select id="analysisCompareA">'+list+'</select></div>'+
-            '<div class="analysis-c2-field"><label>Candidato B</label><select id="analysisCompareB">'+list+'</select></div>'+
-            '<button type="button" class="btn bg2" id="analysisCompareApply">CONFRONTA</button>'+
-          '</div>'+
-          '<div class="analysis-c2-main">'+
-            '<div class="analysis-c2-player"><small>Candidato A</small><strong>'+esc(state.a)+'</strong><b>'+fmt(aTotal)+'</b><span>'+pct2(aTotal,total)+' delle preferenze nel filtro</span></div>'+
-            '<div class="analysis-c2-vs">VS</div>'+
-            '<div class="analysis-c2-player"><small>Candidato B</small><strong>'+esc(state.b)+'</strong><b>'+fmt(bTotal)+'</b><span>'+pct2(bTotal,total)+' delle preferenze nel filtro</span></div>'+
-          '</div>'+
-          '<div class="analysis-c2-delta">Distacco: <b>'+(d>=0?"+":"")+fmt(d)+'</b> preferenze</div>'+
-          '<div class="analysis-c2-note">Il confronto usa esclusivamente il perimetro attualmente filtrato. Cliccando CONFRONTA il confronto resta indipendente dagli altri filtri.</div>'+
-          '</div>';
-
-        const sa=document.getElementById("analysisCompareA");
-        const sb=document.getElementById("analysisCompareB");
-        if(sa)sa.value=state.a;
-        if(sb)sb.value=state.b;
-        document.getElementById("analysisCompareApply")?.addEventListener("click",()=>{
-          state.a=sa?.value||state.a;
-          state.b=sb?.value||state.b;
-          enhance();
-        });
+      if(!available.length){
+        host.innerHTML='<div class="decision-panel"><div class="decision-note">Nessun collegio disponibile nei dati Regionali 2023.</div></div>';
+        return;
       }
 
-      if(insight){
-        const total=rows.reduce((n,r)=>n+(Number(r.preferenze)||0),0);
-        const prov=group(rows,r=>r.prov);
-        const cand=group(rows,r=>r.candidato);
-        const corr=typeof effectiveCurrentTotals==="function"?effectiveCurrentTotals(rows):[];
-        const cam=group(rows,r=>r.geo?.camP);
-        const sen=group(rows,r=>r.geo?.senP);
-        const comuni=group(rows,r=>r.comune);
-
-        const items=[
-          ["Provincia dominante",prov[0]?((typeof PROV_FULL==="object"?PROV_FULL[PROV_CODE[norm(prov[0][0])]]||prov[0][0]:prov[0][0])):"—",
-           prov[0]?fmt(prov[0][1])+" preferenze · "+pct2(prov[0][1],total):"Nessun dato"],
-          ["Candidato leader",cand[0]?cand[0][0]:"—",cand[0]?fmt(cand[0][1])+" preferenze · "+pct2(cand[0][1],total):"Nessun dato"],
-          ["Corrente più forte",election==="regionali"&&corr[0]?corr[0][0]:"—",
-           election==="regionali"&&corr[0]?fmt(corr[0][1])+" preferenze · "+pct2(corr[0][1],total):"Disponibile per le Regionali"],
-          ["Camera più forte",cam[0]?cam[0][0]:"—",cam[0]?fmt(cam[0][1])+" preferenze · "+pct2(cam[0][1],total):"Nessun dato"],
-          ["Senato più forte",sen[0]?sen[0][0]:"—",sen[0]?fmt(sen[0][1])+" preferenze · "+pct2(sen[0][1],total):"Nessun dato"],
-          ["Comune più forte",comuni[0]?comuni[0][0]:"—",comuni[0]?fmt(comuni[0][1])+" preferenze · "+pct2(comuni[0][1],total):"Nessun dato"]
-        ];
-
-        insight.innerHTML='<div class="analysis-s2">'+items.map(x=>
-          '<div class="analysis-s2-item"><small>'+esc(x[0])+'</small><b>'+esc(x[1])+'</b><span>'+esc(x[2])+'</span></div>'
-        ).join("")+'</div>';
+      if(!available.some(x=>x[0]===state.collegio))state.collegio=available[0][0];
+      const inCol=reg.filter(r=>String(collegioValue(r,state.kind)||"").trim()===state.collegio);
+      const cands=candidateTotals(inCol);
+      if(cands.length<2){
+        host.innerHTML='<div class="decision-panel"><div class="decision-note">Il collegio selezionato non contiene abbastanza candidati per il confronto.</div></div>';
+        return;
       }
+      if(!cands.some(x=>x[0]===state.a))state.a=cands[0][0];
+      if(!cands.some(x=>x[0]===state.b)||state.b===state.a)state.b=cands[1][0]||cands[0][0];
+
+      const collegioList=available.map(x=>'<option value="'+esc(x[0])+'">'+esc(x[0])+'</option>').join("");
+      const candidateList=cands.map(x=>'<option value="'+esc(x[0])+'">'+esc(x[0])+'</option>').join("");
+
+      const totalRaw=inCol.reduce((s,r)=>s+(Number(r.preferenze)||0),0);
+      const totalEff=ticketAdjustedTotal(inCol);
+      const aVal=Number(cands.find(x=>x[0]===state.a)?.[1]||0);
+      const bVal=Number(cands.find(x=>x[0]===state.b)?.[1]||0);
+      const communes=[...new Set(inCol.map(r=>String(r.comune||"").trim()).filter(Boolean))];
+      const communeRows=communeTotals(inCol).slice(0,8);
+      const europee=euroForCommuneSet(communes,state.collegio);
+
+      const winner=aVal>=bVal?state.a:state.b;
+      const lead=Math.abs(aVal-bVal);
+      const euroDelta=totalRaw?((europee-totalEff)/Math.max(totalEff,1))*100:0;
+
+      host.innerHTML=
+        '<div class="decision-panel">'+
+          '<div class="decision-head"><div><b>Confronto nel collegio</b><small>Strumento operativo: seleziona il collegio Camera o Senato e confronta due candidati sulle Regionali 2023. Sotto trovi anche la dimensione FdI del collegio e il raffronto con le Europee.</small></div></div>'+
+          '<div class="decision-controls">'+
+            '<div class="decision-field"><label>Tipo collegio</label><select id="decisionKind"><option value="camera">Camera</option><option value="senato">Senato</option></select></div>'+
+            '<div class="decision-field"><label>Collegio</label><select id="decisionCollegio">'+collegioList+'</select></div>'+
+            '<div class="decision-field"><label>Candidato A</label><select id="decisionA">'+candidateList+'</select></div>'+
+            '<div class="decision-field"><label>Candidato B</label><select id="decisionB">'+candidateList+'</select></div>'+
+            '<button type="button" class="btn bg2 decision-apply">AGGIORNA</button>'+
+          '</div>'+
+          '<div class="decision-kpis">'+
+            '<div class="decision-kpi"><small>FdI · Regionali</small><b>'+fmt(totalRaw)+'</b><span>preferenze nel collegio</span></div>'+
+            '<div class="decision-kpi"><small>FdI · ticket corretti</small><b>'+fmt(totalEff)+'</b><span>valore effettivo</span></div>'+
+            '<div class="decision-kpi"><small>Comuni</small><b>'+fmt(communes.length)+'</b><span>comuni nel collegio</span></div>'+
+            '<div class="decision-kpi"><small>Europee 2024</small><b>'+fmt(europee)+'</b><span>stessi comuni · FdI</span></div>'+
+          '</div>'+
+          '<div class="decision-grid">'+
+            '<div class="decision-box"><h4>Confronto candidati</h4>'+
+              '<div class="decision-compare">'+
+                '<div class="decision-player"><b>'+esc(state.a)+'</b><strong>'+fmt(aVal)+'</strong><span>'+pct(aVal,totalRaw).toFixed(1)+'% del collegio</span></div>'+
+                '<div class="decision-vs">VS</div>'+
+                '<div class="decision-player"><b>'+esc(state.b)+'</b><strong>'+fmt(bVal)+'</strong><span>'+pct(bVal,totalRaw).toFixed(1)+'% del collegio</span></div>'+
+              '</div>'+
+              '<div class="decision-note"><b>Leader nel confronto:</b> '+esc(winner)+' · distacco '+fmt(lead)+' preferenze.</div>'+
+            '</div>'+
+            '<div class="decision-box"><h4>Comuni più forti del collegio</h4>'+
+              '<div class="decision-table-wrap"><table class="decision-table"><thead><tr><th>Comune</th><th>FdI</th><th>%</th></tr></thead><tbody>'+
+                communeRows.map(x=>'<tr><td>'+esc(x[0])+'</td><td class="num">'+fmt(x[1])+'</td><td class="num">'+pct(x[1],totalRaw).toFixed(1)+'%</td></tr>').join("")+
+              '</tbody></table></div>'+
+            '</div>'+
+          '</div>'+
+          '<div class="decision-note"><b>Lettura:</b> nel collegio selezionato FdI ha '+fmt(totalEff)+' preferenze effettive dopo la correzione dei ticket. Le Europee 2024, sugli stessi comuni, valgono '+fmt(europee)+' preferenze; differenza indicativa '+(euroDelta>=0?"+":"")+euroDelta.toFixed(1)+'%.</div>'+
+          '<div class="decision-note">Questo modulo misura il peso interno di FdI e dei suoi candidati. Non è una previsione del vincitore del collegio: per quella servono anche i voti delle altre liste.</div>'+
+        '</div>';
+
+      const kindEl=document.getElementById("decisionKind");
+      const colEl=document.getElementById("decisionCollegio");
+      const aEl=document.getElementById("decisionA");
+      const bEl=document.getElementById("decisionB");
+      if(kindEl)kindEl.value=state.kind;
+      if(colEl)colEl.value=state.collegio;
+      if(aEl)aEl.value=state.a;
+      if(bEl)bEl.value=state.b;
+
+      const apply=()=>{
+        state.kind=kindEl?.value||"camera";
+        state.collegio=colEl?.value||"";
+        state.a=aEl?.value||"";
+        state.b=bEl?.value||"";
+        build();
+      };
+      [kindEl,colEl,aEl,bEl].forEach(el=>el?.addEventListener("change",apply));
+      host.querySelector(".decision-apply")?.addEventListener("click",apply);
     }catch(err){
-      console.error("Fix confronto/lettura strategica",err);
+      console.error("Confronto collegio",err);
+      const host=document.getElementById("analisiCandidateCompare");
+      if(host)host.innerHTML='<div class="decision-panel"><div class="decision-note">Impossibile costruire il confronto. I dati non sono stati modificati.</div></div>';
     }
   }
 
+  window.refreshAnalysisCompare=build;
+  const run=()=>{
+    build();
+    setTimeout(build,80);
+    setTimeout(build,300);
+  };
+
+  setTimeout(run,120);
+  setTimeout(run,500);
+  setTimeout(run,1200);
+
+  document.addEventListener("click",ev=>{
+    if(ev.target?.closest?.(".side-tab"))setTimeout(run,100);
+  });
+
   const base=window.renderAnalisi;
-  if(typeof base==="function" && !base.__analysisWrapped){
+  if(typeof base==="function" && !base.__analysisDecisionWrapped){
     const wrapped=function(){
       const ret=base.apply(this,arguments);
-      setTimeout(enhance,0);
+      setTimeout(run,30);
       return ret;
     };
-    wrapped.__analysisWrapped=true;
+    wrapped.__analysisDecisionWrapped=true;
     window.renderAnalisi=wrapped;
   }
-  setTimeout(enhance,250);
-  setTimeout(enhance,900);
 }
+
 installAnalysisCompareFix();
 
 
