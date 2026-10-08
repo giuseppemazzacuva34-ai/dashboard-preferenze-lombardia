@@ -660,8 +660,10 @@ function installAnalysisModule(){
     current:"",
     candA:"",
     candB:"",
-    compare:true
+    compare:true,
+    election:null
   };
+  const peerMaxCache={};
 
   const escH=(v)=>typeof esc==="function"?esc(String(v??"")):String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
   const normH=(v)=>typeof norm==="function"?norm(String(v??"")):String(v??"").trim().toUpperCase();
@@ -816,7 +818,7 @@ function installAnalysisModule(){
     if(!tab || !window.matchMedia("(max-width:820px), (min-width:821px)").matches) return;
 
     try{
-      const primary=(labelElection()==="Europee"||state.compare===false)?"Europee":"Regionali";
+      const primary=state.election||labelElection();
       const secondary=primary==="Regionali"?"Europee":"Regionali";
       const srcP=sourceFor(primary);
       const srcS=sourceFor(secondary);
@@ -827,8 +829,14 @@ function installAnalysisModule(){
       const comuni=comunaOptions(primary,dim,state.collegio);
       if(state.comune && !comuni.some(x=>normH(x)===normH(state.comune))) state.comune="";
 
-      const rowsP=rowsFor(srcP,dim,state.collegio,state.comune);
-      const rowsS=rowsFor(srcS,dim,state.collegio,state.comune);
+      const rawRowsP=rowsFor(srcP,dim,state.collegio,state.comune);
+      const currentCandidates=new Set(
+        Object.keys(sumsByCandidate(rawRowsP)).filter(c=>
+          state.current && normH(String(correnti?.[c]||""))===normH(state.current))
+      );
+      const rowsP=state.current ? rawRowsP.filter(r=>currentCandidates.has(String(r.candidato||""))) : rawRowsP;
+      const rawRowsS=rowsFor(srcS,dim,state.collegio,state.comune);
+      const rowsS=state.current ? rawRowsS.filter(r=>currentCandidates.has(String(r.candidato||""))) : rawRowsS;
       const candP=candidateList(primary);
       if(!state.candA || !candP.some(x=>normH(x)===normH(state.candA))) state.candA=candP[0]||"";
       if(!state.candB || !candP.some(x=>normH(x)===normH(state.candB)) || normH(state.candB)===normH(state.candA)) state.candB=candP[1]||"";
@@ -838,14 +846,22 @@ function installAnalysisModule(){
       const totalPrimary=Object.values(totalsP).reduce((a,b)=>a+b,0);
       const totalSecondary=Object.values(totalsS).reduce((a,b)=>a+b,0);
       const adjusted=ticketAdjustedTotal(rowsP);
-      const currents=currentGroups(rowsP);
+      const currents=currentGroups(rawRowsP);
       const ticketA=ticketForCandidate(state.candA,rowsP);
       const ticketB=ticketForCandidate(state.candB,rowsP);
-
-      const provCodeFor=state.collegio?null:"";
       const allCurrentLabel=primary+" · "+dim;
       const communesPrimary=sumsByComune(rowsP);
       const rankedCommunes=Object.entries(communesPrimary).sort((a,b)=>b[1]-a[1]).slice(0,12);
+      const peerKey=primary+"|"+dim;
+      if(peerMaxCache[peerKey]==null){
+        const peerTotals={};
+        rowsFor(srcP,dim,"","").forEach(r=>{
+          const g=geoDimension(r,dim)||"";
+          if(g) peerTotals[g]=(peerTotals[g]||0)+(Number(r.preferenze)||0);
+        });
+        peerMaxCache[peerKey]=Math.max(0,...Object.values(peerTotals));
+      }
+      const relativeStrength=state.collegio&&peerMaxCache[peerKey]?Math.min(100,totalPrimary/peerMaxCache[peerKey]*100):0;
       const shareA=totalPrimary?((totalsP[state.candA]||0)/totalPrimary*100):0;
       const shareB=totalPrimary?((totalsP[state.candB]||0)/totalPrimary*100):0;
       const diff=(totalsP[state.candA]||0)-(totalsP[state.candB]||0);
@@ -860,7 +876,7 @@ function installAnalysisModule(){
       const optionsComuni=comuni.map(c=>"<option value=\""+escH(c)+"\"></option>").join("");
 
       const currentOptions=currents.map(x=>"<option value=\""+escH(x.name)+"\">"+escH(x.name)+"</option>").join("");
-      const currentFiltered=state.current?currentGroups(rowsP).filter(x=>normH(x.name)===normH(state.current)):currents;
+      const currentFiltered=state.current?currents.filter(x=>normH(x.name)===normH(state.current)):currents;
 
       const currentRows=currentFiltered.slice(0,12).map((x,i)=>
         "<div class=\"analysis-v2-row\"><div class=\"analysis-v2-rank\">"+(i+1)+"</div><div><div class=\"analysis-v2-name\">"+escH(x.name)+"</div><div class=\"analysis-v2-meta\">"+x.cands+" candidati</div></div><div class=\"analysis-v2-value\">"+x.prefs.toLocaleString("it-IT")+"</div></div>"
@@ -881,7 +897,6 @@ function installAnalysisModule(){
       }
 
       const scope=state.comune?("Comune: "+state.comune):(state.collegio?(dim+" · "+state.collegio):"Tutta la Lombardia");
-      const index=Math.max(0,Math.min(100, totalPrimary ? (adjusted / Math.max(totalPrimary,adjusted))*100 : 0));
       const comparisonNote=
         "<div class=\"analysis-v2-note\"><b>Come leggere questo pannello.</b> Il confronto misura la forza delle preferenze FdI nel perimetro scelto, incrociando collegio, comuni, correnti, ticket e Regionali/Europee. Non è una previsione matematica del vincitore del collegio: per stimare il risultato complessivo servono anche i voti delle altre liste.</div>";
 
@@ -889,6 +904,7 @@ function installAnalysisModule(){
         "<div class=\"analysis-v2\">"+
         "<div class=\"analysis-v2-head\"><div><h2>Analisi del collegio</h2><p>Uno strumento semplice per capire dove è forte FdI, quali candidati prevalgono, quali correnti pesano e cosa cambia tra Regionali ed Europee.</p></div><div class=\"analysis-v2-badge\">"+escH(scope)+"</div></div>"+
         "<div class=\"analysis-v2-controls\">"+
+          "<div class=\"analysis-v2-control\"><label>Elezione</label><select id=\"a2Election\"><option>Regionali</option><option>Europee</option></select></div>"+
           "<div class=\"analysis-v2-control\"><label>Perimetro</label><select id=\"a2Dimension\"><option>Camera P</option><option>Camera U</option><option>Senato P</option><option>Senato U</option><option>Provincia</option></select></div>"+
           "<div class=\"analysis-v2-control\"><label>Collegio / Provincia</label><select id=\"a2Collegio\"><option value=\"\">Tutti</option>"+optionsCollegio+"</select></div>"+
           "<div class=\"analysis-v2-control\"><label>Comune</label><input id=\"a2Comune\" list=\"analysisComuni\" value=\""+escH(state.comune)+"\" placeholder=\"Tutti i comuni\"><datalist id=\"analysisComuni\">"+optionsComuni+"</datalist></div>"+
@@ -904,8 +920,8 @@ function installAnalysisModule(){
         "<div class=\"analysis-v2-grid\">"+
           "<div class=\"analysis-v2-card analysis-v2-wide\"><h3>Quadro del perimetro <small>"+escH(allCurrentLabel)+"</small></h3><div class=\"analysis-v2-kpis\">"+
             "<div class=\"analysis-v2-kpi\"><b>"+totalPrimary.toLocaleString("it-IT")+"</b><span>Preferenze "+escH(primary)+"</span></div>"+
+            "<div class=\"analysis-v2-kpi\"><b>"+adjusted.toLocaleString("it-IT")+"</b><span>Totale con ticket</span></div>"+
             "<div class=\"analysis-v2-kpi\"><b>"+totalSecondary.toLocaleString("it-IT")+"</b><span>Preferenze "+escH(secondary)+"</span></div>"+
-            "<div class=\"analysis-v2-kpi\"><b>"+index.toFixed(1)+"%</b><span>Peso FdI nel perimetro</span></div>"+
             "<div class=\"analysis-v2-kpi\"><b>"+Object.keys(communesPrimary).length.toLocaleString("it-IT")+"</b><span>Comuni coinvolti</span></div>"+
           "</div></div>"+
 
@@ -913,7 +929,9 @@ function installAnalysisModule(){
             "<div class=\"analysis-v2-player\"><strong>"+escH(state.candA||"Candidato A")+"</strong><b>"+Number(totalsP[state.candA]||0).toLocaleString("it-IT")+"</b><small>"+shareA.toFixed(1)+"% delle preferenze FdI nel perimetro</small></div>"+
             "<div class=\"analysis-v2-vs\">VS</div>"+
             "<div class=\"analysis-v2-player\"><strong>"+escH(state.candB||"Candidato B")+"</strong><b>"+Number(totalsP[state.candB]||0).toLocaleString("it-IT")+"</b><small>"+shareB.toFixed(1)+"% delle preferenze FdI nel perimetro</small></div>"+
-          "</div><div class=\"analysis-v2-delta\">Distacco A − B: <b>"+(diff>=0?"+":"")+diff.toLocaleString("it-IT")+"</b></div></div>"+
+          "</div><div class=\"analysis-v2-delta\">Distacco A − B: <b>"+(diff>=0?"+":"")+diff.toLocaleString("it-IT")+"</b></div>"+
+          (state.collegio?"<div class=\"analysis-v2-delta\">Forza relativa del collegio FdI: <b>"+relativeStrength.toFixed(1)+"%</b></div>":"")+
+          "</div>"+
 
           "<div class=\"analysis-v2-card\"><h3>Correnti</h3><div class=\"analysis-v2-list\">"+currentRows+"</div></div>"+
 
@@ -936,12 +954,15 @@ function installAnalysisModule(){
       const comEl=document.getElementById("a2Comune");
       const curEl=document.getElementById("a2Current");
       const cmpEl=document.getElementById("a2Compare");
+      const eleEl=document.getElementById("a2Election");
+      if(eleEl) eleEl.value=primary;
       if(dimEl) dimEl.value=dim;
       if(colEl) colEl.value=collegi.find(x=>normH(x)===normH(state.collegio))||"";
       if(curEl) curEl.value=currents.find(x=>normH(x.name)===normH(state.current))?state.current:"";
       if(cmpEl) cmpEl.value=state.compare?"1":"0";
 
       document.getElementById("a2Apply")?.addEventListener("click",()=>{
+        state.election=document.getElementById("a2Election")?.value||labelElection();
         state.dimension=document.getElementById("a2Dimension")?.value||"Camera P";
         state.collegio=document.getElementById("a2Collegio")?.value||"";
         state.comune=(document.getElementById("a2Comune")?.value||"").trim();
@@ -953,7 +974,7 @@ function installAnalysisModule(){
       });
 
       document.getElementById("a2Reset")?.addEventListener("click",()=>{
-        state.dimension="Camera P"; state.collegio=""; state.comune=""; state.current=""; state.candA=""; state.candB=""; state.compare=true;
+        state.dimension="Camera P"; state.collegio=""; state.comune=""; state.current=""; state.candA=""; state.candB=""; state.compare=true; state.election=null;
         refreshAnalysis();
       });
     }catch(err){
