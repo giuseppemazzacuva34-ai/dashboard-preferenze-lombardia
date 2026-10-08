@@ -2103,3 +2103,125 @@ installSondaggiModule();
 
 })();
 
+
+
+/* ===== FINAL FIX HOME PROVINCE CHART ===== */
+(function(){
+  function provinceRowsForHome(){
+    try{
+      const source=(typeof election!=="undefined"&&election==="europee")
+        ?(typeof EURO_RAW!=="undefined"&&Array.isArray(EURO_RAW)?EURO_RAW:[])
+        :(typeof RAW!=="undefined"&&Array.isArray(RAW)?RAW:[]);
+      const sums=Object.create(null);
+      source.forEach(r=>{
+        const p=String(r?.prov||"").trim().toUpperCase();
+        if(!p)return;
+        sums[p]=(sums[p]||0)+(Number(r?.preferenze)||0);
+      });
+      return Object.entries(sums).sort((a,b)=>b[1]-a[1]);
+    }catch(err){
+      console.error("Home province chart data",err);
+      return [];
+    }
+  }
+
+  function drawHomeProvinceChart(){
+    try{
+      const canvas=document.getElementById("provChart");
+      if(!canvas)return;
+      const rows=provinceRowsForHome();
+      const w=canvas.clientWidth||700;
+      const h=canvas.clientHeight||300;
+      const d=Math.max(2,window.devicePixelRatio||1);
+
+      canvas.width=Math.max(1,Math.round(w*d));
+      canvas.height=Math.max(1,Math.round(h*d));
+
+      const ctx=canvas.getContext("2d");
+      if(!ctx)return;
+      ctx.setTransform(d,0,0,d,0,0);
+      ctx.clearRect(0,0,w,h);
+
+      if(!rows.length)return;
+
+      const total=rows.reduce((sum,x)=>sum+x[1],0);
+      const max=Math.max(...rows.map(x=>x[1]),1);
+      const names={
+        "MONZA E DELLA BRIANZA":"MONZA E BRIANZA"
+      };
+      const left=Math.min(225,Math.max(195,w*.32));
+      const right=100;
+      const top=10;
+      const bottom=10;
+      const rowH=Math.max(21,(h-top-bottom)/rows.length);
+      const barMax=Math.max(45,w-left-right);
+      const palette=["#2b8cff","#22c88a","#8b5cf6","#f0a500"];
+
+      rows.forEach((item,i)=>{
+        const name=item[0];
+        const value=item[1];
+        const y=top+i*rowH+rowH/2;
+        const barW=barMax*(value/max);
+
+        ctx.textBaseline="middle";
+        ctx.textAlign="right";
+        ctx.font="600 13px Arial";
+        ctx.fillStyle="#d7e5f2";
+        ctx.fillText(names[name]||name,left-12,y);
+
+        ctx.fillStyle="rgba(16,44,69,.9)";
+        ctx.fillRect(left,y-6,barMax,12);
+
+        ctx.fillStyle=palette[i%palette.length];
+        ctx.fillRect(left,y-6,Math.max(4,barW),12);
+
+        ctx.textAlign="left";
+        ctx.font="700 13px Arial";
+        ctx.fillStyle="#f2f7fb";
+        const pct=total?((value/total)*100).toFixed(1)+"%":"0.0%";
+        ctx.fillText(value.toLocaleString("it-IT")+" · "+pct,Math.min(left+barW+10,w-96),y);
+      });
+    }catch(err){
+      console.error("Home province chart draw",err);
+    }
+  }
+
+  function syncHomeProvinceChart(){
+    setTimeout(drawHomeProvinceChart,0);
+    setTimeout(drawHomeProvinceChart,120);
+  }
+
+  const previousDashboardSetMacro=window.dashboardSetMacro;
+  window.dashboardSetMacro=function(v){
+    if(typeof previousDashboardSetMacro==="function"){
+      previousDashboardSetMacro(v);
+    }else{
+      try{
+        if(typeof election!=="undefined")election=v;
+        if(typeof setElectionData==="function")setElectionData();
+        if(typeof render==="function")render();
+      }catch(err){
+        console.error("Home macro chart fallback",err);
+      }
+    }
+    syncHomeProvinceChart();
+  };
+
+  window.switchElection=window.dashboardSetMacro;
+  window.drawHomeProvinceChart=drawHomeProvinceChart;
+
+  document.addEventListener("click",function(ev){
+    const tab=ev.target?.closest?.(".macro-tab");
+    if(tab)syncHomeProvinceChart();
+  },true);
+
+  window.addEventListener("resize",function(){
+    syncHomeProvinceChart();
+  });
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",syncHomeProvinceChart,{once:true});
+  }else{
+    syncHomeProvinceChart();
+  }
+})();
