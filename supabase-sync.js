@@ -1513,6 +1513,64 @@ function installSondaggiModule(){
     });
   }
 
+  function selectedCollege(){
+    const list=collegesFor(S.chamber,S.region);
+    if(!list.length){S.college="";return null;}
+    if(!list.some(x=>x.name===S.college))S.college=list[0].name;
+    return list.find(x=>x.name===S.college)||list[0];
+  }
+
+  function regionValues(){
+    S.regionalSenate[S.region]??={};
+    Object.keys(S.parties).forEach(k=>{
+      if(S.regionalSenate[S.region][k]==null)S.regionalSenate[S.region][k]=num(S.parties[k].senate);
+    });
+    return Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.regionalSenate[S.region][k])]));
+  }
+
+  function collegeValues(){
+    const c=selectedCollege();
+    const bucket=(S.collegeValues[S.chamber]??={})[c?.name]??{};
+    const base={};
+    const region=regionValues();
+    Object.keys(S.parties).forEach(k=>{
+      const fallback=S.chamber==="camera"?S.parties[k].camera:region[k];
+      base[k]=num(bucket[k]??fallback);
+    });
+    return base;
+  }
+
+  function coalitionFor(id){return S.coalitions.find(c=>c.id===id);}
+
+  function coalitionMap(){
+    const m={};
+    S.coalitions.forEach(c=>(c.members||[]).forEach(k=>m[k]=c.id));
+    return m;
+  }
+
+  function makeCoalition(){
+    const name=prompt("Nome della coalizione:");
+    if(!name||!name.trim())return;
+    S.coalitions.push({id:"C"+Date.now(),name:name.trim(),members:[]});
+    save();render();
+  }
+
+  function toggleMember(id,slug){
+    const c=coalitionFor(id);if(!c)return;
+    S.coalitions.forEach(x=>{
+      if(x.id!==id)x.members=(x.members||[]).filter(k=>k!==slug);
+    });
+    c.members=(c.members||[]).includes(slug)
+      ?c.members.filter(k=>k!==slug)
+      :[...(c.members||[]),slug];
+    save();render();
+  }
+
+  function removeCoalition(id){
+    S.coalitions=S.coalitions.filter(c=>c.id!==id);
+    save();render();
+  }
+
   function senate20Exception(slug){
     if(!slug)return false;
     try{
