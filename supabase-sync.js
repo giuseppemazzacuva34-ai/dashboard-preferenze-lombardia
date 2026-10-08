@@ -1353,7 +1353,7 @@ function installSondaggiModule(){
     ["M5S","Movimento 5 Stelle",12.8],
     ["FN","Futuro Nazionale",7.7],
     ["FI","Forza Italia",7.4],
-    ["AVS","Alleanza Verdi e Sinistra",6.3],
+    ["AVS","Alleanza Verdi Sinistra",6.3],
     ["LEGA","Lega",5.7],
     ["AZ","Azione",3.2],
     ["IV","Italia Viva",2.2],
@@ -1531,8 +1531,9 @@ function installSondaggiModule(){
       legacy.nationalVotes=legacy.nationalVotes&&typeof legacy.nationalVotes==="object"?legacy.nationalVotes:{};
       legacy.nationalVotes.camera={};
       legacy.nationalVotes.senato={};
+      const LEGACY_NAMES={AVS:"Alleanza Verdi Sinistra"};
       Object.entries(S.parties).forEach(([slug,p])=>{
-        const name=p.name||POLLS.find(x=>x[0]===slug)?.[1]||slug;
+        const name=LEGACY_NAMES[slug]||p.name||POLLS.find(x=>x[0]===slug)?.[1]||slug;
         legacy.parties[name]=num(p.senate);
         legacy.nationalVotes.camera[name]=num(p.camera);
         legacy.nationalVotes.senato[name]=num(p.senate);
@@ -1545,7 +1546,7 @@ function installSondaggiModule(){
       SENATE_PROP_REGIONS.forEach(region=>{
         legacy.circVotes.senato[region]={};
         Object.entries(S.parties).forEach(([slug,p])=>{
-          const name=p.name||POLLS.find(x=>x[0]===slug)?.[1]||slug;
+          const name=LEGACY_NAMES[slug]||p.name||POLLS.find(x=>x[0]===slug)?.[1]||slug;
           legacy.circVotes.senato[region][name]=num(S.regionalSenate[region]?.[slug]??p.senate);
         });
       });
