@@ -1672,24 +1672,82 @@ function installSondaggiModule(){
     const cam=allocate(camVals,bonus?camBase-70:camBase,"camera");
     const sen=allocate(senVals,bonus?senBase-35:senBase,"senato");
 
+    function redistributeResidual(res,values,excluded,residual){
+      if(residual<=0)return;
+      const eligible=(res.eligible||[]).filter(k=>!excluded.has(k)&&(values[k]||0)>0);
+      const total=eligible.reduce((sum,k)=>sum+(values[k]||0),0);
+      if(!eligible.length||total<=0)return;
+      const quotas=eligible.map(k=>{
+        const q=residual*(values[k]||0)/total;
+        return {k,base:Math.floor(q),rest:q-Math.floor(q)};
+      });
+      quotas.forEach(x=>{res.seats[x.k]=(res.seats[x.k]||0)+x.base;});
+      let used=quotas.reduce((sum,x)=>sum+x.base,0);
+      quotas.sort((a,b)=>b.rest-a.rest||String(a.k).localeCompare(String(b.k),"it"));
+      for(const x of quotas){
+        if(used>=residual)break;
+        res.seats[x.k]=(res.seats[x.k]||0)+1;
+        used++;
+      }
+    }
+
+    function trimWinnerToCap(res,members,cap){
+      let current=members.reduce((sum,k)=>sum+(res.seats[k]||0),0);
+      let excess=Math.max(0,current-cap);
+      if(!excess)return 0;
+      const ordered=members.slice().sort((a,b)=>(res.seats[b]||0)-(res.seats[a]||0));
+      let guard=0;
+      while(excess>0&&guard<10000){
+        const k=ordered[guard%Math.max(1,ordered.length)];
+        if((res.seats[k]||0)>0){
+          res.seats[k]--;
+          excess--;
+        }
+        guard++;
+        if(guard>10000)break;
+      }
+      return current-cap;
+    }
+
     function applyBonus(res,amount,cap,chamber,winner){
       if(!bonus||!amount)return;
-      const members=winner.members;
+      const members=(winner.members||[]).filter(k=>(res.seats[k]||0)>0);
       const values=chamber==="camera"?camVals:senVals;
-      const total=members.reduce((s,k)=>s+(values[k]||0),0);
-      if(total<=0)return;
-      let current=members.reduce((s,k)=>s+(res.seats[k]||0),0);
-      const add=Math.min(amount,Math.max(0,cap-current));
-      if(!add)return;
-      let used=0;
-      members.forEach(k=>{
-        const q=Math.floor(add*(values[k]/total));
-        res.seats[k]=(res.seats[k]||0)+q;
-        used+=q;
-      });
-      const best=members.slice().sort((a,b)=>(values[b]||0)-(values[a]||0))[0];
-      if(best)res.seats[best]=(res.seats[best]||0)+(add-used);
+      if(!members.length)return;
+      const excluded=new Set(winner.members||[]);
+      const current=members.reduce((sum,k)=>sum+(res.seats[k]||0),0);
+
+      // Il tetto 220/113 vale sul blocco beneficiario. Se il riparto
+      // proporzionale lo porta già oltre il tetto, riduciamo al tetto e
+      // redistribuiamo tutti i posti liberati più i 70/35 del premio.
+      if(current>cap){
+        const released=trimWinnerToCap(res,members,cap);
+        redistributeResidual(res,values,excluded,amount+released);
+        res.bonusSeats=0;
+        res.premiumSeats=amount;
+        return;
+      }
+
+      const add=Math.min(amount,cap-current);
+      if(add){
+        const total=members.reduce((sum,k)=>sum+(values[k]||0),0);
+        const quotas=members.map(k=>{
+          const q=add*(values[k]||0)/total;
+          return {k,base:Math.floor(q),rest:q-Math.floor(q)};
+        });
+        quotas.forEach(x=>{res.seats[x.k]=(res.seats[x.k]||0)+x.base;});
+        let used=quotas.reduce((sum,x)=>sum+x.base,0);
+        quotas.sort((a,b)=>b.rest-a.rest||String(a.k).localeCompare(String(b.k),"it"));
+        for(const x of quotas){
+          if(used>=add)break;
+          res.seats[x.k]=(res.seats[x.k]||0)+1;
+          used++;
+        }
+      }
+      const residual=amount-add;
+      redistributeResidual(res,values,excluded,residual);
       res.bonusSeats=add;
+      res.premiumSeats=amount;
     }
 
     if(bonus){
