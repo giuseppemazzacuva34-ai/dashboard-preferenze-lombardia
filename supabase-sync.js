@@ -1325,26 +1325,26 @@ function installSondaggiModule(){
   };
 
   const SEN_COLLEGI={
-    "Piemonte":["Piemonte - P01|6","Piemonte - P02|8"],
-    "Valle d'Aosta":["Valle d'Aosta - U01|1"],
-    "Lombardia":["Lombardia - P01|9","Lombardia - P02|12","Lombardia - P03|10"],
-    "Trentino-Alto Adige/Südtirol":["Trentino-Alto Adige - U01|1","Trentino-Alto Adige - U02|1","Trentino-Alto Adige - U03|1","Trentino-Alto Adige - U04|1","Trentino-Alto Adige - U05|1","Trentino-Alto Adige - U06|1"],
-    "Veneto":["Veneto - P01|7","Veneto - P02|9"],
-    "Friuli-Venezia Giulia":["Friuli-Venezia Giulia - P01|4"],
-    "Liguria":["Liguria - P01|5","Liguria - P02|5"],
-    "Emilia-Romagna":["Emilia-Romagna - P01|6","Emilia-Romagna - P02|8"],
-    "Toscana":["Toscana - P01|12"],
-    "Umbria":["Umbria - P01|3"],
-    "Marche":["Marche - P01|5"],
-    "Lazio":["Lazio - P01|9","Lazio - P02|9"],
-    "Abruzzo":["Abruzzo - P01|4"],
-    "Molise":["Molise - P01|2"],
-    "Campania":["Campania - P01|10","Campania - P02|8"],
-    "Puglia":["Puglia - P01|13"],
-    "Basilicata":["Basilicata - P01|3"],
-    "Calabria":["Calabria - P01|6"],
-    "Sicilia":["Sicilia - P01|8","Sicilia - P02|8"],
-    "Sardegna":["Sardegna - P01|5"]
+    "Piemonte":["Piemonte - P01|6|5","Piemonte - P02|8|6"],
+    "Valle d'Aosta":["Valle d'Aosta - U01|1|1|SPECIAL"],
+    "Lombardia":["Lombardia - P01|9|8","Lombardia - P02|13|10","Lombardia - P03|10|8"],
+    "Trentino-Alto Adige/Südtirol":["Trentino-Alto Adige - U01|1|1|SPECIAL","Trentino-Alto Adige - U02|1|1|SPECIAL","Trentino-Alto Adige - U03|1|1|SPECIAL","Trentino-Alto Adige - U04|1|1|SPECIAL","Trentino-Alto Adige - U05|1|1|SPECIAL","Trentino-Alto Adige - U06|1|1|SPECIAL"],
+    "Veneto":["Veneto - P01|7|6","Veneto - P02|9|7"],
+    "Friuli-Venezia Giulia":["Friuli-Venezia Giulia - P01|4|3"],
+    "Liguria":["Liguria - P01|5|4"],
+    "Emilia-Romagna":["Emilia-Romagna - P01|6|5","Emilia-Romagna - P02|8|6"],
+    "Toscana":["Toscana - P01|12|10"],
+    "Umbria":["Umbria - P01|3|2"],
+    "Marche":["Marche - P01|5|4"],
+    "Lazio":["Lazio - P01|9|8","Lazio - P02|9|7"],
+    "Abruzzo":["Abruzzo - P01|4|3"],
+    "Molise":["Molise - P01|2|2"],
+    "Campania":["Campania - P01|10|9","Campania - P02|8|6"],
+    "Puglia":["Puglia - P01|13|11"],
+    "Basilicata":["Basilicata - P01|3|3"],
+    "Calabria":["Calabria - P01|6|5"],
+    "Sicilia":["Sicilia - P01|7|6","Sicilia - P02|8|6"],
+    "Sardegna":["Sardegna - P01|5|4"]
   };
 
   const POLLS=[
@@ -1481,30 +1481,16 @@ function installSondaggiModule(){
 
   function normalizedCollegeSeatMap(chamber,bonusActive){
     const src=chamber==="camera"?CAM_COLLEGI:SEN_COLLEGI;
-    const target=(SPECIAL_SEATS[chamber]?.proportional||0)-(bonusActive?(chamber==="camera"?70:35):0);
-    const rows=[];
+    const out=new Map();
     Object.entries(src).forEach(([region,items])=>{
       (items||[]).forEach(raw=>{
         const parts=String(raw).split("|");
         const name=parts[0];
         const special=String(parts[3]||"").toUpperCase()==="SPECIAL" || (chamber==="senato" && name.includes(" - U"));
-        const rawSeats=Number(bonusActive?(parts[2]??parts[1]):parts[1])||0;
-        rows.push({region,name,special,raw:rawSeats});
+        const seats=Number(bonusActive?(parts[2]??parts[1]):parts[1])||0;
+        out.set(region+"|"+name,{seats,special});
       });
     });
-    const ordinary=rows.filter(r=>!r.special);
-    const rawTotal=ordinary.reduce((sum,r)=>sum+r.raw,0);
-    if(rawTotal<=0)return new Map(rows.map(r=>[r.region+"|"+r.name,0]));
-    const quotas=ordinary.map(r=>{
-      const q=target*r.raw/rawTotal;
-      const base=Math.floor(q);
-      return {...r,base,rest:q-base};
-    });
-    let remaining=target-quotas.reduce((sum,r)=>sum+r.base,0);
-    quotas.slice().sort((a,b)=>b.rest-a.rest||a.name.localeCompare(b.name,"it",{numeric:true}))
-      .slice(0,Math.max(0,remaining)).forEach(r=>{r.base++;});
-    const out=new Map(rows.filter(r=>r.special).map(r=>[r.region+"|"+r.name,r.raw]));
-    quotas.forEach(r=>out.set(r.region+"|"+r.name,r.base));
     return out;
   }
 
@@ -1515,11 +1501,11 @@ function installSondaggiModule(){
     return (src[region]||[]).map(x=>{
       const parts=String(x).split("|");
       const name=parts[0];
-      const special=String(parts[3]||"").toUpperCase()==="SPECIAL" || (chamber==="senato" && name.includes(" - U"));
+      const rec=normalized.get(region+"|"+name)||{seats:0,special:false};
       return {
         name,
-        seats:Number(normalized.get(region+"|"+name)||0),
-        special,
+        seats:Number(rec.seats)||0,
+        special:!!rec.special,
         noBonusSeats:Number(parts[1])||0,
         bonusSeats:Number(parts[2]??parts[1])||0,
         provisional:chamber==="senato"
@@ -1527,233 +1513,259 @@ function installSondaggiModule(){
     });
   }
 
-  function selectedCollege(){
-    const list=collegesFor(S.chamber,S.region);
-    if(!list.length){S.college="";return null;}
-    if(!list.some(x=>x.name===S.college))S.college=list[0].name;
-    return list.find(x=>x.name===S.college)||list[0];
-  }
-
-  function regionValues(){
-    S.regionalSenate[S.region]??={};
-    Object.keys(S.parties).forEach(k=>{
-      if(S.regionalSenate[S.region][k]==null)S.regionalSenate[S.region][k]=num(S.parties[k].senate);
-    });
-    return Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.regionalSenate[S.region][k])]));
-  }
-
-  function collegeValues(){
-    const c=selectedCollege();
-    const bucket=(S.collegeValues[S.chamber]??={})[c?.name]??{};
-    const base={};
-    const region=regionValues();
-    Object.keys(S.parties).forEach(k=>{
-      const fallback=S.chamber==="camera"?S.parties[k].camera:region[k];
-      base[k]=num(bucket[k]??fallback);
-    });
-    return base;
-  }
-
-  function coalitionFor(id){return S.coalitions.find(c=>c.id===id);}
-
-  function coalitionMap(){
-    const m={};
-    S.coalitions.forEach(c=>(c.members||[]).forEach(k=>m[k]=c.id));
-    return m;
-  }
-
-  function makeCoalition(){
-    const name=prompt("Nome della coalizione:");
-    if(!name||!name.trim())return;
-    S.coalitions.push({id:"C"+Date.now(),name:name.trim(),members:[]});
-    save();render();
-  }
-
-  function toggleMember(id,slug){
-    const c=coalitionFor(id);if(!c)return;
-    S.coalitions.forEach(x=>{if(x.id!==id)x.members=(x.members||[]).filter(k=>k!==slug);});
-    c.members=(c.members||[]).includes(slug)?c.members.filter(k=>k!==slug):[...(c.members||[]),slug];
-    save();render();
-  }
-
-  function removeCoalition(id){
-    S.coalitions=S.coalitions.filter(c=>c.id!==id);
-    save();render();
-  }
-
   function senate20Exception(slug){
     if(!slug)return false;
-    try{return Object.values(S.regionalSenate||{}).some(region=>Number(region?.[slug]||0)>=20);}
-    catch(_){return false;}
+    try{
+      const regions=S.regionalSenate||{};
+      return Object.values(regions).some(region=>Number(region?.[slug]||0)>=20);
+    }catch(_){return false;}
+  }
+
+  function coalitionFigure(members,values,chamber){
+    const positive=(members||[]).filter(k=>(values[k]||0)>0);
+    const onePlus=positive.filter(k=>(values[k]||0)>=1);
+    let total=onePlus.reduce((sum,k)=>sum+(values[k]||0),0);
+    return {total,onePlus};
+  }
+
+  function allocationUnits(values,chamber){
+    const cmap=coalitionMap();
+    const units=[];
+    const admittedByCoalition=new Map();
+    const coalStats=[];
+
+    S.coalitions.forEach(c=>{
+      const members=(c.members||[]).filter(k=>values[k]!=null);
+      if(!members.length)return;
+      const stats=coalitionFigure(members,values,chamber);
+      const qualifiesCoalition=stats.total>=10;
+      if(!qualifiesCoalition)return;
+
+      const admitted=members.filter(k=>(values[k]||0)>=3 || (chamber==="senato"&&senate20Exception(k)));
+      const admittedSet=new Set(admitted);
+      const ripCandidate=members
+        .filter(k=>!admittedSet.has(k) && (values[k]||0)>0)
+        .sort((a,b)=>(values[b]||0)-(values[a]||0)||String(a).localeCompare(String(b),"it"))[0];
+      if(ripCandidate)admitted.push(ripCandidate);
+
+      let figure=members.filter(k=>(values[k]||0)>=1).reduce((sum,k)=>sum+(values[k]||0),0);
+      if(ripCandidate && (values[ripCandidate]||0)<1)figure+=(values[ripCandidate]||0);
+
+      const uniqueMembers=[...new Set(admitted)];
+      admittedByCoalition.set(c.id,uniqueMembers);
+      const unitId="C:"+c.id;
+      units.push({id:unitId,type:"coalition",coalitionId:c.id,members:uniqueMembers,votes:figure,name:c.name});
+      coalStats.push({id:c.id,members,figure,admitted:uniqueMembers});
+    });
+
+    const coalitionIds=new Set(S.coalitions.filter(c=>{
+      const stats=coalitionFigure((c.members||[]).filter(k=>values[k]!=null),values,chamber);
+      return stats.total>=10;
+    }).map(c=>c.id));
+
+    Object.keys(values).forEach(k=>{
+      if(cmap[k] && coalitionIds.has(cmap[k]))return;
+      const v=values[k]||0;
+      const eligible=v>=3 || (chamber==="senato"&&senate20Exception(k));
+      if(eligible)units.push({id:"P:"+k,type:"list",members:[k],votes:v,name:k});
+    });
+
+    return {units,admittedByCoalition,coalStats};
+  }
+
+  function hamilton(items,seats){
+    const clean=(items||[]).filter(x=>(Number(x.votes)||0)>0);
+    const out={};
+    if(!clean.length||seats<=0)return out;
+    const total=clean.reduce((sum,x)=>sum+(Number(x.votes)||0),0);
+    if(total<=0)return out;
+    clean.forEach(x=>{out[x.id]=Math.floor(seats*(Number(x.votes)||0)/total);});
+    let used=Object.values(out).reduce((sum,v)=>sum+v,0);
+    clean.map(x=>{
+      const q=seats*(Number(x.votes)||0)/total;
+      return {id:x.id,rest:q-Math.floor(q),votes:Number(x.votes)||0};
+    }).sort((a,b)=>b.rest-a.rest||b.votes-a.votes||String(a.id).localeCompare(String(b.id),"it"))
+      .slice(0,Math.max(0,seats-used)).forEach(x=>{out[x.id]=(out[x.id]||0)+1;});
+    return out;
+  }
+
+  function splitCoalitionSeats(unit,seatCount,values){
+    if(!unit||unit.type!=="coalition")return {[unit?.members?.[0]||unit?.id]:seatCount};
+    const items=(unit.members||[]).map(k=>({id:k,votes:values[k]||0}));
+    return hamilton(items,seatCount);
   }
 
   function eligibility(values,chamber){
-    const cmap=coalitionMap();
+    const {units,admittedByCoalition,coalStats}=allocationUnits(values,chamber);
+    const ok=[];
+    units.forEach(u=>(u.members||[]).forEach(k=>{if(!ok.includes(k))ok.push(k);}));
     const coalTotals={};
-    S.coalitions.forEach(c=>{
-      coalTotals[c.id]=(c.members||[]).reduce((sum,k)=>sum+(values[k]||0),0);
-    });
-    const ok=new Set();
-    Object.keys(values).forEach(k=>{
-      const v=values[k]||0,cid=cmap[k];
-      const senateException=chamber==="senato"&&senate20Exception(k);
-      if(!cid){
-        if(v>=3||senateException)ok.add(k);
-      }else{
-        if((coalTotals[cid]||0)>=10&&(v>=3||senateException))ok.add(k);
-      }
-    });
-    S.coalitions.forEach(c=>{
-      if((coalTotals[c.id]||0)>=10){
-        const m=(c.members||[]).filter(k=>values[k]!=null).sort((a,b)=>(values[b]||0)-(values[a]||0));
-        if(m.length&&!m.some(k=>(values[k]||0)>=3))ok.add(m[0]);
-      }
-    });
-    return {ok:[...ok],coalTotals};
+    coalStats.forEach(c=>{coalTotals[c.id]=c.figure;});
+    return {ok,coalTotals,units,admittedByCoalition};
   }
 
   function allocate(values,seats,chamber){
-    const el=eligibility(values,chamber),list=el.ok;
-    const total=list.reduce((s,k)=>s+(values[k]||0),0);
+    const plan=allocationUnits(values,chamber);
+    const unitItems=plan.units.map(u=>({id:u.id,votes:u.votes}));
+    const unitSeats=hamilton(unitItems,seats);
     const out={};
-    if(!list.length||!total)return {seats:out,eligible:[],coalTotals:el.coalTotals};
-    list.forEach(k=>out[k]=Math.floor(seats*(values[k]||0)/total));
-    let used=Object.values(out).reduce((s,v)=>s+v,0);
-    list.map(k=>({k,rest:seats*(values[k]||0)/total-Math.floor(seats*(values[k]||0)/total)}))
-      .sort((a,b)=>b.rest-a.rest)
-      .slice(0,Math.max(0,seats-used))
-      .forEach(x=>out[x.k]++);
-    return {seats:out,eligible:list,coalTotals:el.coalTotals};
+    plan.units.forEach(u=>{
+      const count=unitSeats[u.id]||0;
+      if(!count)return;
+      if(u.type==="coalition"){
+        const split=splitCoalitionSeats(u,count,values);
+        Object.entries(split).forEach(([k,v])=>{out[k]=(out[k]||0)+v;});
+      }else{
+        const k=u.members[0];
+        out[k]=(out[k]||0)+count;
+      }
+    });
+    return {seats:out,eligible:plan.units.flatMap(u=>u.members),coalTotals:Object.fromEntries(plan.coalStats.map(c=>[c.id,c.figure])),units:plan.units,unitSeats,admittedByCoalition:plan.admittedByCoalition};
   }
 
   function bonusTarget(){
     const cam=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].camera)]));
     const sen=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
-    const camEligible=new Set(eligibility(cam,"camera").ok);
-    const senEligible=new Set(eligibility(sen,"senato").ok);
-    const cmap=coalitionMap();
-    const blocks=[];
-    S.coalitions.forEach(c=>blocks.push({
-      id:c.id,members:[...(c.members||[])],
-      cam:(c.members||[]).filter(k=>camEligible.has(k)).reduce((sum,k)=>sum+(cam[k]||0),0),
-      sen:(c.members||[]).filter(k=>senEligible.has(k)).reduce((sum,k)=>sum+(sen[k]||0),0)
-    }));
-    Object.keys(S.parties).forEach(k=>{
-      if(!cmap[k])blocks.push({
-        id:"P:"+k,members:[k],
-        cam:camEligible.has(k)?(cam[k]||0):0,
-        sen:senEligible.has(k)?(sen[k]||0):0
-      });
-    });
-    const candidates=blocks.filter(b=>b.cam>=42&&b.sen>=42);
+    const camPlan=allocationUnits(cam,"camera");
+    const senPlan=allocationUnits(sen,"senato");
+    const allIds=[...new Set(camPlan.units.map(u=>u.id).concat(senPlan.units.map(u=>u.id)))];
+    const cm=new Map(camPlan.units.map(u=>[u.id,u]));
+    const sm=new Map(senPlan.units.map(u=>[u.id,u]));
+    const candidates=allIds.map(id=>{
+      const c=cm.get(id),s=sm.get(id);
+      if(!c||!s)return null;
+      return {...c,cam:c.votes,sen:s.votes,members:c.members};
+    }).filter(Boolean).filter(b=>b.cam>=42&&b.sen>=42);
     if(!candidates.length)return null;
-    candidates.sort((a,b)=>{
-      const ca=Math.min(a.cam,a.sen),cb=Math.min(b.cam,b.sen);
-      return cb-ca||Math.max(b.cam,b.sen)-Math.max(a.cam,a.sen);
-    });
+    candidates.sort((a,b)=>Math.min(b.cam,b.sen)-Math.min(a.cam,a.sen)||Math.max(b.cam,b.sen)-Math.max(a.cam,a.sen)||String(a.id).localeCompare(String(b.id),"it"));
     const best=candidates[0];
-    const topCam=Math.max(...blocks.map(b=>b.cam),0);
-    const topSen=Math.max(...blocks.map(b=>b.sen),0);
+    const topCam=Math.max(...camPlan.units.map(u=>u.votes),0);
+    const topSen=Math.max(...senPlan.units.map(u=>u.votes),0);
     if(best.cam<topCam||best.sen<topSen)return null;
     return best;
   }
-
-  const SPECIAL_SEATS={
-    camera:{estero:8,valleDAosta:1,trentinoAltoAdige:7,total:16,proportional:384},
-    senato:{estero:4,valleDAosta:1,trentinoAltoAdige:6,total:11,proportional:189}
-  };
 
   function nationalResults(){
     const camVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].camera)]));
     const senVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
     const bonus=bonusTarget();
-    const camBase=SPECIAL_SEATS.camera.proportional;
-    const senBase=SPECIAL_SEATS.senato.proportional;
-    const cam=allocate(camVals,bonus?camBase-70:camBase,"camera");
-    const sen=allocate(senVals,bonus?senBase-35:senBase,"senato");
 
-    function redistributeResidual(res,values,excluded,residual){
-      if(residual<=0)return;
-      const eligible=(res.eligible||[]).filter(k=>!excluded.has(k)&&(values[k]||0)>0);
-      const total=eligible.reduce((sum,k)=>sum+(values[k]||0),0);
-      if(!eligible.length||total<=0)return;
-      const quotas=eligible.map(k=>{
-        const q=residual*(values[k]||0)/total;
-        return {k,base:Math.floor(q),rest:q-Math.floor(q)};
+    function redistributeExcept(res,plan,values,seats){
+      const others=plan.units.filter(u=>u.id!==(bonus?.id||""));
+      const allocations=hamilton(others.map(u=>({id:u.id,votes:u.votes})),seats);
+      others.forEach(u=>{
+        const count=allocations[u.id]||0;
+        if(!count)return;
+        if(u.type==="coalition"){
+          const split=splitCoalitionSeats(u,count,values);
+          Object.entries(split).forEach(([k,v])=>{res.seats[k]=(res.seats[k]||0)+v;});
+        }else{
+          const k=u.members[0];
+          res.seats[k]=(res.seats[k]||0)+count;
+        }
       });
-      quotas.forEach(x=>{res.seats[x.k]=(res.seats[x.k]||0)+x.base;});
-      let used=quotas.reduce((sum,x)=>sum+x.base,0);
-      quotas.sort((a,b)=>b.rest-a.rest||String(a.k).localeCompare(String(b.k),"it"));
-      for(const x of quotas){
-        if(used>=residual)break;
-        res.seats[x.k]=(res.seats[x.k]||0)+1;
-        used++;
-      }
     }
 
-    function trimWinnerToCap(res,members,cap){
-      let current=members.reduce((sum,k)=>sum+(res.seats[k]||0),0);
-      let excess=Math.max(0,current-cap);
-      if(!excess)return 0;
-      const ordered=members.slice().sort((a,b)=>(res.seats[b]||0)-(res.seats[a]||0));
-      let guard=0;
-      while(excess>0&&guard<10000){
-        const k=ordered[guard%Math.max(1,ordered.length)];
-        if((res.seats[k]||0)>0){
-          res.seats[k]--;
-          excess--;
+    const camPlan=allocationUnits(camVals,"camera");
+    const senPlan=allocationUnits(senVals,"senato");
+
+    const cam={seats:{},eligible:[],coalTotals:{}};
+    const sen={seats:{},eligible:[],coalTotals:{}};
+
+    if(!bonus){
+      const base=allocate(camVals,384,"camera");
+      Object.assign(cam,base);
+      cam.premiumSeats=0;
+      cam.bonusSeats=0;
+
+      const baseSen=allocate(senVals,189,"senato");
+      Object.assign(sen,baseSen);
+      sen.premiumSeats=0;
+      sen.bonusSeats=0;
+    }else{
+      const winnerId=bonus.id;
+
+      // Camera: 150 proportional seats to the winner + 164 to the other units;
+      // 70 additional premium seats are assigned to the winner.
+      const camWin=camPlan.units.find(u=>u.id===winnerId);
+      if(camWin){
+        const ordinaryWinner=150;
+        const split=camWin.type==="coalition"
+          ?splitCoalitionSeats(camWin,ordinaryWinner,camVals)
+          :{[camWin.members[0]]:ordinaryWinner};
+        Object.entries(split).forEach(([k,v])=>{cam.seats[k]=(cam.seats[k]||0)+v;});
+      }
+      redistributeExcept(cam,camPlan,camVals,164);
+
+      if(camWin){
+        const premiumSplit=camWin.type==="coalition"
+          ?splitCoalitionSeats(camWin,70,camVals)
+          :{[camWin.members[0]]:70};
+        Object.entries(premiumSplit).forEach(([k,v])=>{cam.seats[k]=(cam.seats[k]||0)+v;});
+      }
+      cam.premiumSeats=70;
+      cam.bonusSeats=70;
+
+      // Senate: 189 proportional seats with the winner capped at 78 ordinary
+      // seats, plus 35 premium seats. In this national simulator the regional
+      // compensation is represented by a national largest-remainder redistribution.
+      const baseSen=allocate(senVals,189,"senato");
+      const winnerSen=senPlan.units.find(u=>u.id===winnerId);
+      let winnerOrd=0;
+      if(winnerSen)winnerOrd=(winnerSen.members||[]).reduce((sum,k)=>sum+(baseSen.seats[k]||0),0);
+
+      if(winnerSen && winnerOrd>78){
+        const excess=winnerOrd-78;
+        const keep={};
+        let left=78;
+        const members=(winnerSen.members||[]).slice().sort((a,b)=>(baseSen.seats[b]||0)-(baseSen.seats[a]||0)||String(a).localeCompare(String(b),"it"));
+        for(const k of members){
+          const take=Math.min(baseSen.seats[k]||0,left);
+          if(take)keep[k]=take;
+          left-=take;
         }
-        guard++;
-        if(guard>10000)break;
-      }
-      return current-cap;
-    }
-
-    function applyBonus(res,amount,cap,chamber,winner){
-      if(!bonus||!amount)return;
-      const members=(winner.members||[]).filter(k=>(res.seats[k]||0)>0);
-      const values=chamber==="camera"?camVals:senVals;
-      if(!members.length)return;
-      const excluded=new Set(winner.members||[]);
-      const current=members.reduce((sum,k)=>sum+(res.seats[k]||0),0);
-
-      // Il tetto 220/113 vale sul blocco beneficiario. Se il riparto
-      // proporzionale lo porta già oltre il tetto, riduciamo al tetto e
-      // redistribuiamo tutti i posti liberati più i 70/35 del premio.
-      if(current>cap){
-        const released=trimWinnerToCap(res,members,cap);
-        redistributeResidual(res,values,excluded,amount+released);
-        res.bonusSeats=0;
-        res.premiumSeats=amount;
-        return;
-      }
-
-      const add=Math.min(amount,cap-current);
-      if(add){
-        const total=members.reduce((sum,k)=>sum+(values[k]||0),0);
-        const quotas=members.map(k=>{
-          const q=add*(values[k]||0)/total;
-          return {k,base:Math.floor(q),rest:q-Math.floor(q)};
+        winnerSen.members.forEach(k=>{
+          const old=baseSen.seats[k]||0;
+          const nw=keep[k]||0;
+          baseSen.seats[k]=nw;
         });
-        quotas.forEach(x=>{res.seats[x.k]=(res.seats[x.k]||0)+x.base;});
-        let used=quotas.reduce((sum,x)=>sum+x.base,0);
-        quotas.sort((a,b)=>b.rest-a.rest||String(a.k).localeCompare(String(b.k),"it"));
-        for(const x of quotas){
-          if(used>=add)break;
-          res.seats[x.k]=(res.seats[x.k]||0)+1;
-          used++;
-        }
+        const others=senPlan.units.filter(u=>u.id!==winnerId);
+        const redist=hamilton(others.map(u=>({id:u.id,votes:u.votes})),excess);
+        others.forEach(u=>{
+          const count=redist[u.id]||0;
+          if(!count)return;
+          if(u.type==="coalition"){
+            const split=splitCoalitionSeats(u,count,senVals);
+            Object.entries(split).forEach(([k,v])=>{baseSen.seats[k]=(baseSen.seats[k]||0)+v;});
+          }else{
+            const k=u.members[0];
+            baseSen.seats[k]=(baseSen.seats[k]||0)+count;
+          }
+        });
       }
-      const residual=amount-add;
-      redistributeResidual(res,values,excluded,residual);
-      res.bonusSeats=add;
-      res.premiumSeats=amount;
+
+      Object.assign(sen,baseSen);
+      if(winnerSen){
+        const premiumSplit=winnerSen.type==="coalition"
+          ?splitCoalitionSeats(winnerSen,35,senVals)
+          :{[winnerSen.members[0]]:35};
+        Object.entries(premiumSplit).forEach(([k,v])=>{sen.seats[k]=(sen.seats[k]||0)+v;});
+      }
+      sen.premiumSeats=35;
+      sen.bonusSeats=35;
+      sen.eligible=baseSen.eligible;
+      sen.units=baseSen.units;
+      sen.unitSeats=baseSen.unitSeats;
+      sen.admittedByCoalition=baseSen.admittedByCoalition;
+      sen.coalTotals=baseSen.coalTotals;
     }
 
-    if(bonus){
-      applyBonus(cam,70,220,"camera",bonus);
-      applyBonus(sen,35,113,"senato",bonus);
-    }
+    cam.eligible=camPlan.units.flatMap(u=>u.members);
+    cam.units=camPlan.units;
+    sen.eligible=sen.eligible||senPlan.units.flatMap(u=>u.members);
+    sen.units=sen.units||senPlan.units;
+    cam.coalTotals=Object.fromEntries(camPlan.coalStats.map(c=>[c.id,c.figure]));
+    if(!Object.keys(sen.coalTotals||{}).length)sen.coalTotals=Object.fromEntries(senPlan.coalStats.map(c=>[c.id,c.figure]));
 
     return {
       cam,sen,bonus,
@@ -1870,7 +1882,7 @@ function installSondaggiModule(){
           '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione seggi nazionale</b><span>scenario legge 8/10/2026</span></div><div class="sg-two"><div><h3>Camera · 400</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.cam,"camera")+'</tbody></table></div><div><h3>Senato · 200</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.sen,"senato")+'</tbody></table></div></div><div class="sg-special"><b>SEGGI SPECIALI ESCLUSI DAL RIPARTO PROPORZIONALE</b> · Camera ${SPECIAL_SEATS.camera.total} (Estero ${SPECIAL_SEATS.camera.estero}, Valle d&#39;Aosta ${SPECIAL_SEATS.camera.valleDAosta}, Trentino-Alto Adige ${SPECIAL_SEATS.camera.trentinoAltoAdige}) · Senato ${SPECIAL_SEATS.senato.total} (Estero ${SPECIAL_SEATS.senato.estero}, Valle d&#39;Aosta ${SPECIAL_SEATS.senato.valleDAosta}, Trentino-Alto Adige ${SPECIAL_SEATS.senato.trentinoAltoAdige})</div>'+(national.bonus?'<div class="sg-bonus">PREMIO ATTIVO · '+esc2(coalitionFor(national.bonus.id)?.name||national.bonus.members.map(k=>S.parties[k]?.name||k).join(" + "))+' · 70 Camera / 35 Senato</div>':'<div class="sg-note">Il premio non scatta: la stessa lista o coalizione deve essere prima e raggiungere almeno il 42% in entrambe le Camere.</div>')+'</div>'+
           '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione nel collegio</b><span>'+esc2(c?.name||"")+' · '+fmt0(c?.seats||0)+' seggi</span></div><table class="sg-table"><thead><tr><th>Partito</th><th>% collegio</th><th>Seggi</th></tr></thead><tbody>'+collegeRows+'</tbody></table><div class="sg-note">Il collegio usa le percentuali locali che inserisci. Le assegnazioni nazionali della riforma restano nella simulazione sopra.</div></div>'+
         '</div>'+
-        '<div class="sg-source">Partiti e valori iniziali: Supermedia YouTrend/Agi, rilevazione 1 ottobre 2026. Camera: riparti 384/314. Senato: riparti nazionali 189/154; la distribuzione nei collegi è normalizzata sul quadro territoriale disponibile ed è da riallineare al decreto di riparto dei seggi. I collegi speciali di Valle d’Aosta e Trentino-Alto Adige sono esclusi dal riparto proporzionale.</div>'+
+        '<div class="sg-source">Partiti e valori iniziali: Supermedia YouTrend/Agi, rilevazione 1 ottobre 2026. Camera: 384 seggi proporzionali, oppure 314 nella base su cui opera il premio. Senato: 189 seggi proporzionali, con riparto regionale dei collegi; la simulazione nazionale qui mostrata usa le percentuali inserite come proxy dove non sono disponibili voti regionali distinti. Valle d’Aosta e Trentino-Alto Adige sono gestiti come seggi speciali separati.</div>'+
       '</div>';
 
     document.getElementById("sgChamber").value=S.chamber;
