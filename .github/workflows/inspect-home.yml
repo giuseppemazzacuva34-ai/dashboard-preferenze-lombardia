@@ -67,6 +67,18 @@ jobs:
           lines += ["", "TARGET ROWS:"]
           for q in ["Ronago","Uggiate-Trevano","Campospinoso","Albaredo Arnoboldi","Lirio","Montalto Pavese","Bardello","Bregano","Malgesso"]:
               lines += [repr(x) for x in geo if norm(x.get("comune"))==norm(q)]
+                    # Controlla anche i nomi presenti nei due dataset elettorali.
+          def parse_js_array(label):
+              ai=src.find(label)
+              if ai<0: return []
+              a=src.find("[",ai); b=src.find("];",a)
+              return json.loads(src[a:b+1])
+          for label,name in [("const RAW=","RAW"),("const EURO_RAW=","EURO_RAW")]:
+              arr=parse_js_array(label)
+              lines += ["", name+"_LEN="+str(len(arr))]
+              for q in ["Ronago","Uggiate-Trevano","Uggiate con Ronago","Albaredo Arnaboldi","Campospinoso","Campospinoso Albaredo","Lirio","Montalto Pavese","Bardello","Bregano","Malgesso","Bardello con Malgesso e Bregano"]:
+                  n=sum(1 for x in arr if norm(x.get("comune"))==norm(q))
+                  if n: lines += [name+"|"+q+"|"+str(n)]
           Path("geo-check.txt").write_text("\n".join(lines),encoding="utf-8")
       - name: Commit inspection
         shell: bash
