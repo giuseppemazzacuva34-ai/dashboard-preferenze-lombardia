@@ -4,7 +4,10 @@ const bin=atob(b64);
 const bytes=new Uint8Array(bin.length);
 for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
 new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).text().then(html=>{
-  html=html.replace(/<\/body>/i,"<\/body>");
-  html=html.replace(/apiKey:\s*"[^"]+"/,'apiKey:"AIzaSyBGU00bycBZJoQrVy-J2Yfh0N96LVlqxiU"');document.open();document.write(html);document.close();
+  const bridge='<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script>window.SUPABASE_URL="https://ywunvnammdubnvuolneu.supabase.co";window.SUPABASE_PUBLISHABLE_KEY="sb_publishable_g7byaP5qsNM0FoPNPSIU5A_zXS5nXXE";window.supabaseClient=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_PUBLISHABLE_KEY);<\/script>';
+  html=html.replace(/<\/head>/i,bridge+"</head>");
+  document.open();
+  document.write(html);
+  document.close();
 }).catch(e=>{document.body.textContent="Errore caricamento dashboard: "+e});
 </script></body></html>
