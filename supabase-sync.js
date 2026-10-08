@@ -1571,12 +1571,10 @@ function installSondaggiModule(){
     save();render();
   }
 
-  function senate20Exception(slug){
-    if(!slug)return false;
-    try{
-      const regions=S.regionalSenate||{};
-      return Object.values(regions).some(region=>Number(region?.[slug]||0)>=20);
-    }catch(_){return false;}
+  function senate20Exception(slug,regionContext){
+    if(!slug||!regionContext)return false;
+    try{return Number(S.regionalSenate?.[regionContext]?.[slug]||0)>=20;}
+    catch(_){return false;}
   }
 
   function coalitionFigure(members,values,chamber){
@@ -1586,7 +1584,7 @@ function installSondaggiModule(){
     return {total,onePlus};
   }
 
-  function allocationUnits(values,chamber){
+  function allocationUnits(values,chamber,regionContext=null){
     const cmap=coalitionMap();
     const units=[];
     const admittedByCoalition=new Map();
@@ -1599,7 +1597,7 @@ function installSondaggiModule(){
       const qualifiesCoalition=stats.total>=10;
       if(!qualifiesCoalition)return;
 
-      const admitted=members.filter(k=>(values[k]||0)>=3 || (chamber==="senato"&&senate20Exception(k)));
+      const admitted=members.filter(k=>(values[k]||0)>=3 || (chamber==="senato"&&senate20Exception(k,regionContext)));
       const admittedSet=new Set(admitted);
       const ripCandidate=members
         .filter(k=>!admittedSet.has(k) && (values[k]||0)>0)
@@ -1624,7 +1622,7 @@ function installSondaggiModule(){
     Object.keys(values).forEach(k=>{
       if(cmap[k] && coalitionIds.has(cmap[k]))return;
       const v=values[k]||0;
-      const eligible=v>=3 || (chamber==="senato"&&senate20Exception(k));
+      const eligible=v>=3 || (chamber==="senato"&&senate20Exception(k,regionContext));
       if(eligible)units.push({id:"P:"+k,type:"list",members:[k],votes:v,name:k});
     });
 
@@ -1653,8 +1651,8 @@ function installSondaggiModule(){
     return hamilton(items,seatCount);
   }
 
-  function eligibility(values,chamber){
-    const {units,admittedByCoalition,coalStats}=allocationUnits(values,chamber);
+  function eligibility(values,chamber,regionContext=null){
+    const {units,admittedByCoalition,coalStats}=allocationUnits(values,chamber,regionContext);
     const ok=[];
     units.forEach(u=>(u.members||[]).forEach(k=>{if(!ok.includes(k))ok.push(k);}));
     const coalTotals={};
@@ -1662,8 +1660,8 @@ function installSondaggiModule(){
     return {ok,coalTotals,units,admittedByCoalition};
   }
 
-  function allocate(values,seats,chamber){
-    const plan=allocationUnits(values,chamber);
+  function allocate(values,seats,chamber,regionContext=null){
+    const plan=allocationUnits(values,chamber,regionContext);
     const unitItems=plan.units.map(u=>({id:u.id,votes:u.votes}));
     const unitSeats=hamilton(unitItems,seats);
     const out={};
@@ -1922,7 +1920,7 @@ function installSondaggiModule(){
 
     const collegeAlloc=c?.special
       ? {seats:{},eligible:[]}
-      : allocate(cVals,c?.seats||0,S.chamber==="camera"?"camera":"senato");
+      : allocate(cVals,c?.seats||0,S.chamber==="camera"?"camera":"senato",S.chamber==="senato"?S.region:null);
     const collegeRows=c?.special
       ? '<tr><td colspan="3">Collegio speciale: escluso dal riparto proporzionale della simulazione.</td></tr>'
       : Object.entries(collegeAlloc.seats).sort((a,b)=>b[1]-a[1]).map(([k,seats])=>
