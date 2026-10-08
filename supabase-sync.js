@@ -707,7 +707,7 @@ function installAnalysisModule(){
   }
 
   function sourceFor(label){
-    return label==="Europee"?EURO_RAW:RAW;
+    return String(label||"").toLowerCase().includes("euro")?EURO_RAW:RAW;
   }
 
   function rowsFor(src,dimension,collegio,comune){
@@ -810,7 +810,8 @@ function installAnalysisModule(){
   }
 
   function labelElection(){
-    return typeof electionLabel==="function"?electionLabel():(typeof election==="string"?election:"Regionali");
+    const raw=typeof electionLabel==="function"?electionLabel():(typeof election==="string"?election:"Regionali");
+    return String(raw||"").toLowerCase().includes("euro")?"Europee":"Regionali";
   }
 
   function refreshAnalysis(){
@@ -875,6 +876,7 @@ function installAnalysisModule(){
       const optionsCollegio=collegi.map(c=>"<option value=\""+escH(c)+"\">"+escH(c)+"</option>").join("");
       const optionsComuni=comuni.map(c=>"<option value=\""+escH(c)+"\"></option>").join("");
 
+      if(state.current && !currents.some(x=>normH(x.name)===normH(state.current))) state.current="";
       const currentOptions=currents.map(x=>"<option value=\""+escH(x.name)+"\">"+escH(x.name)+"</option>").join("");
       const currentFiltered=state.current?currents.filter(x=>normH(x.name)===normH(state.current)):currents;
 
