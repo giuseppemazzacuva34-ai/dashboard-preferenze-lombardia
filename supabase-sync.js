@@ -1703,6 +1703,11 @@ function installSondaggiModule(){
     return best;
   }
 
+  const SPECIAL_SEATS={
+    camera:{estero:8,valleDAosta:1,trentinoAltoAdige:7,total:16,proportional:384},
+    senato:{estero:4,valleDAosta:1,trentinoAltoAdige:6,total:11,proportional:189}
+  };
+
   function nationalResults(){
     const camVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].camera)]));
     const senVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
