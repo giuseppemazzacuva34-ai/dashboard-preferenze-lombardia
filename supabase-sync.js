@@ -131,7 +131,7 @@ document.addEventListener("click",function(ev){
   const addTicket=ev.target.closest&&ev.target.closest("#ticketManagerInline button");
   if(addTicket && (addTicket.textContent||"").includes("AGGIUNGI TICKET")){
     setTimeout(function(){
-      try{ uploadTickets(ticketGroups); }catch(err){console.error("Supabase ticket add",err);}
+      uploadTickets(ticketGroups).catch(err=>console.error("Supabase ticket add",err));
     },0);
   }
 });
@@ -561,7 +561,6 @@ function installMobileLayout(){
 }
 
 installMobileLayout();
-installMobileLayout();
 installMobilePreferences();
 installMobileAnalysisToolsStatic();
 cleanupStrayMobileText();
@@ -843,11 +842,12 @@ function installAnalysisCompareFix(){
   function rowsFor(raw){
     const src=Array.isArray(raw)?raw:[];
     return src.map(r=>{
+      const cc=typeof currentComune==="function"?currentComune(r?.comune):r?.comune;
       let g=r&&r.geo;
-      if(!g && typeof GEO!=="undefined" && GEO && r){
-        try{g=GEO[norm3(r.comune)]||GEO[r.comune]||null;}catch(_){}
+      if(!g && typeof geoMap!=="undefined" && geoMap && typeof geoMap.get==="function"){
+        try{g=geoMap.get(norm3(r?.prov)+"|"+norm3(cc))||null;}catch(_){}
       }
-      return {...r,geo:g||{}};
+      return {...r,comune:cc,geo:g||{}};
     });
   }
 
@@ -1189,15 +1189,30 @@ function installComuniPreferencesFix(){
     catch(_){return String(v||"").trim().toUpperCase();}
   };
 
+  function canonicalComune(v){
+    try{return typeof currentComune==="function"?currentComune(String(v||"")):String(v||"");}
+    catch(_){return String(v||"");}
+  }
+  function normalizeProv(v){
+    const n=normC(v);
+    try{if(typeof PROV_CODE!=="undefined" && PROV_CODE && PROV_CODE[n])return normC(PROV_CODE[n]);}catch(_){}
+    return n;
+  }
+  function totalsKey(prov,comune){
+    const c=normC(canonicalComune(comune));
+    if(!c)return "";
+    const p=normalizeProv(prov);
+    return p?p+"|"+c:c;
+  }
   function buildTotals(){
     const raw=(typeof election!=="undefined"&&election==="europee"&&typeof EURO_RAW!=="undefined")
       ? EURO_RAW
       : (typeof RAW!=="undefined"?RAW:[]);
     const totals={};
     (Array.isArray(raw)?raw:[]).forEach(r=>{
-      const comune=normC(r?.comune);
-      if(!comune)return;
-      totals[comune]=(totals[comune]||0)+(Number(r?.preferenze)||0);
+      const key=totalsKey(r?.prov,r?.comune);
+      if(!key)return;
+      totals[key]=(totals[key]||0)+(Number(r?.preferenze)||0);
     });
     return totals;
   }
@@ -1230,7 +1245,14 @@ function installComuniPreferencesFix(){
           const comune=normC(comuneCell.textContent);
           if(!comune)return;
 
-          const value=Number(totals[comune]||0);
+          const provIndex=ths.findIndex(th=>normC(th.textContent).includes("PROVINCIA"));
+          let value=0;
+          if(provIndex>=0 && cells[provIndex]){
+            const prov=normalizeProv(cells[provIndex].textContent);
+            value=Number(totals[prov+"|"+comune]||0);
+          }else{
+            value=Number(totals[comune]||0);
+          }
           const cell=cells[prefIndex];
           cell.textContent=value.toLocaleString("it-IT");
           cell.classList.remove("comuni-pref-fixed","comuni-pref-zero");
@@ -1280,26 +1302,26 @@ function installSondaggiModule(){
   ];
 
   const CAM_COLLEGI={
-    "Piemonte":["Piemonte 1 - P01|8","Piemonte 1 - P02|7","Piemonte 2 - P01|6","Piemonte 2 - P02|8"],
-    "Valle d'Aosta":["Valle d'Aosta - U01|1"],
-    "Lombardia":["Lombardia 1 - P01|13","Lombardia 1 - P02|12","Lombardia 2 - P01|6","Lombardia 2 - P02|8","Lombardia 3 - P01|6","Lombardia 3 - P02|8","Lombardia 4 - P01|11"],
-    "Trentino-Alto Adige/Südtirol":["Trentino-Alto Adige - P01|7"],
-    "Veneto":["Veneto 1 - P01|13","Veneto 2 - P01|7","Veneto 2 - P02|6","Veneto 2 - P03|6"],
-    "Friuli-Venezia Giulia":["Friuli-Venezia Giulia - P01|8"],
-    "Liguria":["Liguria - P01|10"],
-    "Emilia-Romagna":["Emilia-Romagna - P01|8","Emilia-Romagna - P02|11","Emilia-Romagna - P03|10"],
-    "Toscana":["Toscana - P01|8","Toscana - P02|8","Toscana - P03|8"],
-    "Umbria":["Umbria - P01|6"],
-    "Marche":["Marche - P01|10"],
-    "Lazio":["Lazio 1 - P01|8","Lazio 1 - P02|8","Lazio 1 - P03|8","Lazio 2 - P01|5","Lazio 2 - P02|7"],
-    "Abruzzo":["Abruzzo - P01|9"],
-    "Molise":["Molise - P01|2"],
-    "Campania":["Campania 1 - P01|9","Campania 1 - P02|11","Campania 2 - P01|8","Campania 2 - P02|10"],
-    "Puglia":["Puglia - P01|7","Puglia - P02|6","Puglia - P03|6","Puglia - P04|8"],
-    "Basilicata":["Basilicata - P01|4"],
-    "Calabria":["Calabria - P01|13"],
-    "Sicilia":["Sicilia 1 - P01|8","Sicilia 1 - P02|7","Sicilia 2 - P01|5","Sicilia 2 - P02|6","Sicilia 2 - P03|6"],
-    "Sardegna":["Sardegna - P01|11"]
+    "Piemonte":["Piemonte 1 - P01|8|7","Piemonte 1 - P02|7|5","Piemonte 2 - P01|6|5","Piemonte 2 - P02|8|7"],
+    "Valle d'Aosta":["Valle d'Aosta - U01|1|1|SPECIAL"],
+    "Lombardia":["Lombardia 1 - P01|14|12","Lombardia 1 - P02|13|10","Lombardia 2 - P01|6|5","Lombardia 2 - P02|8|7","Lombardia 3 - P01|7|5","Lombardia 3 - P02|8|7","Lombardia 4 - P01|11|9"],
+    "Trentino-Alto Adige/Südtirol":["Trentino-Alto Adige - P01|7|7|SPECIAL"],
+    "Veneto":["Veneto 1 - P01|13|11","Veneto 2 - P01|7|6","Veneto 2 - P02|6|4","Veneto 2 - P03|6|5"],
+    "Friuli-Venezia Giulia":["Friuli-Venezia Giulia - P01|8|7"],
+    "Liguria":["Liguria - P01|10|8"],
+    "Emilia-Romagna":["Emilia-Romagna - P01|8|7","Emilia-Romagna - P02|11|9","Emilia-Romagna - P03|10|8"],
+    "Toscana":["Toscana - P01|8|7","Toscana - P02|8|6","Toscana - P03|8|7"],
+    "Umbria":["Umbria - P01|6|5"],
+    "Marche":["Marche - P01|10|8"],
+    "Lazio":["Lazio 1 - P01|8|6","Lazio 1 - P02|8|7","Lazio 1 - P03|9|7","Lazio 2 - P01|6|5","Lazio 2 - P02|7|6"],
+    "Abruzzo":["Abruzzo - P01|8|6"],
+    "Molise":["Molise - P01|2|2"],
+    "Campania":["Campania 1 - P01|9|7","Campania 1 - P02|11|9","Campania 2 - P01|8|6","Campania 2 - P02|9|8"],
+    "Puglia":["Puglia - P01|6|5","Puglia - P02|6|5","Puglia - P03|6|4","Puglia - P04|8|7"],
+    "Basilicata":["Basilicata - P01|4|3"],
+    "Calabria":["Calabria - P01|12|10"],
+    "Sicilia":["Sicilia 1 - P01|8|6","Sicilia 1 - P02|7|6","Sicilia 2 - P01|5|4","Sicilia 2 - P02|6|5","Sicilia 2 - P03|6|5"],
+    "Sardegna":["Sardegna - P01|10|8"]
   };
 
   const SEN_COLLEGI={
@@ -1457,11 +1479,51 @@ function installSondaggiModule(){
     if(host)host.style.display="none";
   }
 
+  function normalizedCollegeSeatMap(chamber,bonusActive){
+    const src=chamber==="camera"?CAM_COLLEGI:SEN_COLLEGI;
+    const target=(SPECIAL_SEATS[chamber]?.proportional||0)-(bonusActive?(chamber==="camera"?70:35):0);
+    const rows=[];
+    Object.entries(src).forEach(([region,items])=>{
+      (items||[]).forEach(raw=>{
+        const parts=String(raw).split("|");
+        const name=parts[0];
+        const special=String(parts[3]||"").toUpperCase()==="SPECIAL" || (chamber==="senato" && name.includes(" - U"));
+        const rawSeats=Number(bonusActive?(parts[2]??parts[1]):parts[1])||0;
+        rows.push({region,name,special,raw:rawSeats});
+      });
+    });
+    const ordinary=rows.filter(r=>!r.special);
+    const rawTotal=ordinary.reduce((sum,r)=>sum+r.raw,0);
+    if(rawTotal<=0)return new Map(rows.map(r=>[r.region+"|"+r.name,0]));
+    const quotas=ordinary.map(r=>{
+      const q=target*r.raw/rawTotal;
+      const base=Math.floor(q);
+      return {...r,base,rest:q-base};
+    });
+    let remaining=target-quotas.reduce((sum,r)=>sum+r.base,0);
+    quotas.slice().sort((a,b)=>b.rest-a.rest||a.name.localeCompare(b.name,"it",{numeric:true}))
+      .slice(0,Math.max(0,remaining)).forEach(r=>{r.base++;});
+    const out=new Map(rows.filter(r=>r.special).map(r=>[r.region+"|"+r.name,r.raw]));
+    quotas.forEach(r=>out.set(r.region+"|"+r.name,r.base));
+    return out;
+  }
+
   function collegesFor(chamber,region){
     const src=chamber==="camera"?CAM_COLLEGI:SEN_COLLEGI;
+    const bonusActive=!!bonusTarget();
+    const normalized=normalizedCollegeSeatMap(chamber,bonusActive);
     return (src[region]||[]).map(x=>{
-      const [name,seats]=x.split("|");
-      return {name,seats:Number(seats)||0,special:name.includes(" - U")};
+      const parts=String(x).split("|");
+      const name=parts[0];
+      const special=String(parts[3]||"").toUpperCase()==="SPECIAL" || (chamber==="senato" && name.includes(" - U"));
+      return {
+        name,
+        seats:Number(normalized.get(region+"|"+name)||0),
+        special,
+        noBonusSeats:Number(parts[1])||0,
+        bonusSeats:Number(parts[2]??parts[1])||0,
+        provisional:chamber==="senato"
+      };
     });
   }
 
@@ -1519,19 +1581,26 @@ function installSondaggiModule(){
     save();render();
   }
 
+  function senate20Exception(slug){
+    if(!slug)return false;
+    try{return Object.values(S.regionalSenate||{}).some(region=>Number(region?.[slug]||0)>=20);}
+    catch(_){return false;}
+  }
+
   function eligibility(values,chamber){
     const cmap=coalitionMap();
     const coalTotals={};
     S.coalitions.forEach(c=>{
-      coalTotals[c.id]=(c.members||[]).reduce((s,k)=>s+(values[k]||0),0);
+      coalTotals[c.id]=(c.members||[]).reduce((sum,k)=>sum+(values[k]||0),0);
     });
     const ok=new Set();
     Object.keys(values).forEach(k=>{
       const v=values[k]||0,cid=cmap[k];
+      const senateException=chamber==="senato"&&senate20Exception(k);
       if(!cid){
-        if(v>=3||chamber==="senato"&&v>=20)ok.add(k);
+        if(v>=3||senateException)ok.add(k);
       }else{
-        if((coalTotals[cid]||0)>=10&&v>=3)ok.add(k);
+        if((coalTotals[cid]||0)>=10&&(v>=3||senateException))ok.add(k);
       }
     });
     S.coalitions.forEach(c=>{
@@ -1560,17 +1629,28 @@ function installSondaggiModule(){
   function bonusTarget(){
     const cam=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].camera)]));
     const sen=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
+    const camEligible=new Set(eligibility(cam,"camera").ok);
+    const senEligible=new Set(eligibility(sen,"senato").ok);
     const cmap=coalitionMap();
     const blocks=[];
-    S.coalitions.forEach(c=>blocks.push({id:c.id,members:[...(c.members||[])]}));
-    Object.keys(S.parties).forEach(k=>{if(!cmap[k])blocks.push({id:"P:"+k,members:[k]});});
-    const candidates=blocks.map(b=>{
-      const cv=b.members.reduce((s,k)=>s+(cam[k]||0),0);
-      const sv=b.members.reduce((s,k)=>s+(sen[k]||0),0);
-      return {...b,cam:cv,sen:sv};
-    }).filter(b=>b.cam>=42&&b.sen>=42);
+    S.coalitions.forEach(c=>blocks.push({
+      id:c.id,members:[...(c.members||[])],
+      cam:(c.members||[]).filter(k=>camEligible.has(k)).reduce((sum,k)=>sum+(cam[k]||0),0),
+      sen:(c.members||[]).filter(k=>senEligible.has(k)).reduce((sum,k)=>sum+(sen[k]||0),0)
+    }));
+    Object.keys(S.parties).forEach(k=>{
+      if(!cmap[k])blocks.push({
+        id:"P:"+k,members:[k],
+        cam:camEligible.has(k)?(cam[k]||0):0,
+        sen:senEligible.has(k)?(sen[k]||0):0
+      });
+    });
+    const candidates=blocks.filter(b=>b.cam>=42&&b.sen>=42);
     if(!candidates.length)return null;
-    candidates.sort((a,b)=>Math.min(b.cam,b.sen)-Math.min(a.cam,a.sen));
+    candidates.sort((a,b)=>{
+      const ca=Math.min(a.cam,a.sen),cb=Math.min(b.cam,b.sen);
+      return cb-ca||Math.max(b.cam,b.sen)-Math.max(a.cam,a.sen);
+    });
     const best=candidates[0];
     const topCam=Math.max(...blocks.map(b=>b.cam),0);
     const topSen=Math.max(...blocks.map(b=>b.sen),0);
@@ -1707,10 +1787,14 @@ function installSondaggiModule(){
       ).join("")||'<tr><td colspan="3">Nessun partito supera le soglie con i valori inseriti.</td></tr>';
     }
 
-    const collegeAlloc=allocate(cVals,c?.seats||0,S.chamber==="camera"?"camera":"senato");
-    const collegeRows=Object.entries(collegeAlloc.seats).sort((a,b)=>b[1]-a[1]).map(([k,seats])=>
-      '<tr><td>'+esc2(S.parties[k]?.name||k)+'</td><td>'+num(cVals[k]).toFixed(1)+'%</td><td><b>'+fmt0(seats)+'</b></td></tr>'
-    ).join("")||'<tr><td colspan="3">Nessun seggio assegnabile con le percentuali inserite.</td></tr>';
+    const collegeAlloc=c?.special
+      ? {seats:{},eligible:[]}
+      : allocate(cVals,c?.seats||0,S.chamber==="camera"?"camera":"senato");
+    const collegeRows=c?.special
+      ? '<tr><td colspan="3">Collegio speciale: escluso dal riparto proporzionale della simulazione.</td></tr>'
+      : Object.entries(collegeAlloc.seats).sort((a,b)=>b[1]-a[1]).map(([k,seats])=>
+        '<tr><td>'+esc2(S.parties[k]?.name||k)+'</td><td>'+num(cVals[k]).toFixed(1)+'%</td><td><b>'+fmt0(seats)+'</b></td></tr>'
+      ).join("")||'<tr><td colspan="3">Nessun seggio assegnabile con le percentuali inserite.</td></tr>';
 
     host.innerHTML=
       '<div class="sg-wrap">'+
@@ -1728,7 +1812,7 @@ function installSondaggiModule(){
           '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione seggi nazionale</b><span>scenario legge 8/10/2026</span></div><div class="sg-two"><div><h3>Camera · 400</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.cam,"camera")+'</tbody></table></div><div><h3>Senato · 200</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.sen,"senato")+'</tbody></table></div></div><div class="sg-special"><b>SEGGI SPECIALI ESCLUSI DAL RIPARTO PROPORZIONALE</b> · Camera ${SPECIAL_SEATS.camera.total} (Estero ${SPECIAL_SEATS.camera.estero}, Valle d&#39;Aosta ${SPECIAL_SEATS.camera.valleDAosta}, Trentino-Alto Adige ${SPECIAL_SEATS.camera.trentinoAltoAdige}) · Senato ${SPECIAL_SEATS.senato.total} (Estero ${SPECIAL_SEATS.senato.estero}, Valle d&#39;Aosta ${SPECIAL_SEATS.senato.valleDAosta}, Trentino-Alto Adige ${SPECIAL_SEATS.senato.trentinoAltoAdige})</div>'+(national.bonus?'<div class="sg-bonus">PREMIO ATTIVO · '+esc2(coalitionFor(national.bonus.id)?.name||national.bonus.members.map(k=>S.parties[k]?.name||k).join(" + "))+' · 70 Camera / 35 Senato</div>':'<div class="sg-note">Il premio non scatta: la stessa lista o coalizione deve essere prima e raggiungere almeno il 42% in entrambe le Camere.</div>')+'</div>'+
           '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione nel collegio</b><span>'+esc2(c?.name||"")+' · '+fmt0(c?.seats||0)+' seggi</span></div><table class="sg-table"><thead><tr><th>Partito</th><th>% collegio</th><th>Seggi</th></tr></thead><tbody>'+collegeRows+'</tbody></table><div class="sg-note">Il collegio usa le percentuali locali che inserisci. Le assegnazioni nazionali della riforma restano nella simulazione sopra.</div></div>'+
         '</div>'+
-        '<div class="sg-source">Partiti e valori iniziali: Supermedia YouTrend/Agi, rilevazione 1 ottobre 2026. Collegamento dei collegi alla geografia plurinominale vigente utilizzata dalla riforma. La simulazione è uno scenario operativo e va riallineata al testo ufficiale pubblicato.</div>'+
+        '<div class="sg-source">Partiti e valori iniziali: Supermedia YouTrend/Agi, rilevazione 1 ottobre 2026. Camera: riparti 384/314. Senato: riparti nazionali 189/154; la distribuzione nei collegi è normalizzata sul quadro territoriale disponibile ed è da riallineare al decreto di riparto dei seggi. I collegi speciali di Valle d’Aosta e Trentino-Alto Adige sono esclusi dal riparto proporzionale.</div>'+
       '</div>';
 
     document.getElementById("sgChamber").value=S.chamber;
