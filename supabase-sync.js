@@ -1437,6 +1437,9 @@ function installSondaggiModule(){
       });
       [...SENATE_PROP_REGIONS,"Valle d'Aosta","Trentino-Alto Adige/Südtirol"].forEach(region=>{
         if(base.regionalCustom[region]===undefined)base.regionalCustom[region]=false;
+        if(!base.regionalCustom[region] && SENATE_PROP_REGIONS.includes(region)){
+          base.regionalSenate[region]=Object.fromEntries(POLLS.map(p=>[p[0],Number(base.parties[p[0]]?.senate??p[2])]));
+        }
       });
       base.collegeValues=saved.collegeValues&&typeof saved.collegeValues==="object"?saved.collegeValues:{camera:{},senato:{}};
       if(!base.collegeValues.camera)base.collegeValues.camera={};
@@ -1500,10 +1503,17 @@ function installSondaggiModule(){
         const source=legacyRegions[region];
         if(source&&typeof source==="object"){
           S.regionalSenate[region]??={};
+          let differs=false;
           Object.keys(S.parties).forEach(k=>{
             const legacyName=POLLS.find(p=>p[0]===k)?.[1];
-            if(legacyName&&source[legacyName]!=null)S.regionalSenate[region][k]=num(source[legacyName]);
+            if(legacyName&&source[legacyName]!=null){
+              const value=num(source[legacyName]);
+              S.regionalSenate[region][k]=value;
+              if(Math.abs(value-num(S.parties[k].senate))>0.0001)differs=true;
+            }
           });
+          S.regionalCustom[region]=differs;
+          if(!differs)S.regionalSenate[region]={...Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]))};
         }
       });
       return true;
@@ -2052,7 +2062,15 @@ function installSondaggiModule(){
   function saveValue(slug,kind,value){
     if(!S.parties[slug])return;
     if(kind==="camera")S.parties[slug].camera=num(value);
-    if(kind==="senate")S.parties[slug].senate=num(value);
+    if(kind==="senate"){
+      S.parties[slug].senate=num(value);
+      SENATE_PROP_REGIONS.forEach(region=>{
+        if(!S.regionalCustom[region]){
+          S.regionalSenate[region]??={};
+          S.regionalSenate[region][slug]=S.parties[slug].senate;
+        }
+      });
+    }
     if(kind==="region"){
       S.regionalSenate[S.region]??={};
       S.regionalSenate[S.region][slug]=num(value);
