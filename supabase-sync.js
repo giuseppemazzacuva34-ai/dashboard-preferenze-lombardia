@@ -1848,6 +1848,32 @@ installSondaggiModule();
 })();
 
 /* ===== FIX HOME EUROPEE / REGIONALI ===== */
+  // Sostituisce il vecchio setElectionData che faceva riferimento a elementi
+  // HTML non più presenti nella Home.
+  const originalSetElectionData=window.setElectionData;
+  window.setElectionData=function(){
+    try{
+      const raw=(typeof election!=="undefined"&&election==="europee")?EURO_RAW:RAW;
+      data=raw.map(r=>({...r,geo:geoMap.get(norm(r.prov)+"|"+norm(r.comune))||null}));
+      CANDS=[...new Set(data.map(r=>r.candidato).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"it"));
+      PROVS=["BERGAMO","BRESCIA","COMO","CREMONA","LECCO","LODI","MANTOVA","MILANO","MONZA E DELLA BRIANZA","PAVIA","SONDRIO","VARESE"];
+      filters={prov:"",comune:"",candidato:"",corrente:"",camP:"",senP:"",lista:""};
+      if(typeof applyCorrenti==="function")applyCorrenti();
+      const title=(typeof election!=="undefined"&&election==="europee")?"DATI EUROPEE · 2024":"DATI REGIONALI · 2023";
+      const p="prefEyebrow";
+      const mt=document.getElementById("macroTitle");
+      if(mt)mt.textContent=title;
+      const pe=document.getElementById(p);
+      if(pe)pe.textContent=title+" · PREFERENZE";
+      document.querySelectorAll(".macro-tab").forEach(x=>x.classList.toggle("active",x.id==="macro-"+election));
+    }catch(err){
+      console.error("setElectionData",err);
+      if(typeof originalSetElectionData==="function"){
+        try{ originalSetElectionData(); }catch(_){}
+      }
+    }
+  };
+
 (function(){
   function homeDatasetComuneCount(){
     const rows=Array.isArray(window.data)?window.data:(typeof data!=="undefined"?data:[]);
