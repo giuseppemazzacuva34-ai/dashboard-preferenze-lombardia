@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -26,6 +26,31 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
+
+      - name: Prepare survey panel source
+        if: contains(github.event.head_commit.message, 'Prepare survey panel source')
+        shell: python
+        run: |
+          import base64, gzip
+          from pathlib import Path
+          import re
+          s=Path("index.html").read_text(encoding="utf-8")
+          m=re.search(r'const b64="([^"]+)"',s)
+          if not m:
+              raise SystemExit("b64 non trovato")
+          raw=gzip.decompress(base64.b64decode(m.group(1))).decode("utf-8")
+          Path("index.decoded.js").write_text(raw,encoding="utf-8")
+          print("decoded bytes",len(raw))
+      - name: Commit survey panel source
+        if: contains(github.event.head_commit.message, 'Prepare survey panel source')
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.decoded.js
+          git commit -m "Prepare survey panel source" || exit 0
+          git push
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
