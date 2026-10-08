@@ -941,4 +941,93 @@ function installAnalysisCompareFix(){
 installAnalysisCompareFix();
 
 
+function installEuropeeRegionaliFix(){
+  const style=document.createElement("style");
+  style.id="euro-reg-fix-v1";
+  style.textContent=
+    "#tab-analisi #analisiConfronto{color:#eaf4fb!important}" +
+    "#tab-analisi .euro-reg-box{background:#0b2137;border:1px solid #24455f;border-radius:10px;padding:12px}" +
+    "#tab-analisi .euro-reg-kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}" +
+    "#tab-analisi .euro-reg-kpi{background:#0e2942;border:1px solid #28506c;border-radius:9px;padding:10px}" +
+    "#tab-analisi .euro-reg-kpi b{display:block;font-size:18px;color:#fff}" +
+    "#tab-analisi .euro-reg-kpi span{display:block;margin-top:3px;font-size:7px;text-transform:uppercase;font-weight:900;color:#88a4ba}" +
+    "#tab-analisi .euro-reg-table{width:100%;border-collapse:collapse;font-size:9px}" +
+    "#tab-analisi .euro-reg-table th{font-size:7px;text-transform:uppercase;color:#7e9ab2;text-align:left;padding:7px;border-bottom:1px solid #24445e}" +
+    "#tab-analisi .euro-reg-table td{padding:7px;border-bottom:1px solid #17354c;color:#dcecf6}" +
+    "#tab-analisi .euro-reg-table td.num{text-align:right;font-weight:900;white-space:nowrap}" +
+    "#tab-analisi .euro-reg-table tr:last-child td{border-bottom:0}" +
+    "#tab-analisi .euro-reg-note{margin-top:8px;padding:8px;border-radius:8px;background:#102a41;border:1px solid #24475f;font-size:8px;line-height:1.45;color:#93aabd}" +
+    "@media(max-width:820px){#tab-analisi .euro-reg-kpis{grid-template-columns:1fr 1fr}#tab-analisi .euro-reg-table-wrap{overflow-x:auto!important}#tab-analisi .euro-reg-table{min-width:620px!important}}";
+  document.head.appendChild(style);
+
+  const fmt=n=>Number(n||0).toLocaleString("it-IT");
+  const pct=(a,b)=>b?((Number(a||0)/Number(b)-1)*100):0;
+  const norm2=v=>typeof norm==="function"?norm(String(v||"")):String(v||"").trim().toUpperCase();
+  const provName=v=>{
+    try{return PROV_FULL[PROV_CODE[norm2(v)]]||v||"—"}catch(_){return v||"—"}
+  };
+
+  function rows(){
+    const e=Array.isArray(EURO_RAW)?EURO_RAW:[];
+    const r=Array.isArray(RAW)?RAW:[];
+    const map={};
+    e.forEach(x=>{
+      const p=norm2(x.prov); if(!p)return;
+      if(!map[p])map[p]={prov:x.prov,euro:0,reg:0};
+      map[p].euro+=(Number(x.preferenze)||0);
+    });
+    r.forEach(x=>{
+      const p=norm2(x.prov); if(!p)return;
+      if(!map[p])map[p]={prov:x.prov,euro:0,reg:0};
+      map[p].reg+=(Number(x.preferenze)||0);
+    });
+    return Object.values(map).sort((a,b)=>b.reg-a.reg);
+  }
+
+  function render(){
+    const host=document.getElementById("analisiConfronto");
+    if(!host)return;
+    try{
+      const data=rows();
+      const euro=data.reduce((s,x)=>s+x.euro,0);
+      const reg=data.reduce((s,x)=>s+x.reg,0);
+      const top=[...data].sort((a,b)=>Math.abs(b.reg-b.euro)-Math.abs(a.reg-a.euro)).slice(0,12);
+
+      host.innerHTML=
+        '<div class="euro-reg-box">'+
+          '<div class="euro-reg-kpis">'+
+            '<div class="euro-reg-kpi"><b>'+fmt(euro)+'</b><span>Preferenze FdI · Europee 2024</span></div>'+
+            '<div class="euro-reg-kpi"><b>'+fmt(reg)+'</b><span>Preferenze FdI · Regionali 2023</span></div>'+
+          '</div>'+
+          '<div class="euro-reg-table-wrap"><table class="euro-reg-table"><thead><tr><th>Provincia</th><th>Europee</th><th>Regionali</th><th>Var. %</th><th>Δ</th></tr></thead><tbody>'+
+          (top.map(x=>{
+            const d=x.reg-x.euro;
+            return '<tr><td>'+esc(provName(x.prov))+'</td><td class="num">'+fmt(x.euro)+'</td><td class="num">'+fmt(x.reg)+'</td><td class="num">'+(x.euro?pct(x.reg,x.euro).toFixed(1):"—")+'%</td><td class="num">'+(d>=0?"+":"")+fmt(d)+'</td></tr>';
+          }).join("") || '<tr><td colspan="5">Nessun dato disponibile.</td></tr>')+
+          '</tbody></table></div>'+
+          '<div class="euro-reg-note">Il confronto è calcolato sui dati FdI disponibili per provincia. La variazione positiva indica che le preferenze Regionali sono superiori alle Europee in quella provincia.</div>'+
+        '</div>';
+    }catch(err){
+      console.error("Confronto Europee/Regionali",err);
+      host.innerHTML='<div class="euro-reg-box"><div class="euro-reg-note">Impossibile costruire il confronto: '+esc(err?.message||err)+'</div></div>';
+    }
+  }
+
+  setTimeout(render,350);
+  setTimeout(render,1200);
+
+  const old=window.renderAnalisi;
+  if(typeof old==="function" && !old.__euroRegWrapped){
+    const wrapped=function(){
+      const result=old.apply(this,arguments);
+      setTimeout(render,20);
+      return result;
+    };
+    wrapped.__euroRegWrapped=true;
+    window.renderAnalisi=wrapped;
+  }
+}
+installEuropeeRegionaliFix();
+
+
 })();
