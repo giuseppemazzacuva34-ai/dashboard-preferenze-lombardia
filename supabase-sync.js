@@ -488,7 +488,7 @@ function installMobileLayout(){
 @media (min-width: 821px){
   #dashboard-mobile-fixes{display:none}
 }
-\`;
+`;
   document.head.appendChild(style);
 }
 
