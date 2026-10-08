@@ -59,6 +59,34 @@ jobs:
           git commit -m "Split survey source" || exit 0
           git push
 
+
+      - name: Find survey module
+        if: contains(github.event.head_commit.message, 'Find survey module')
+        shell: python
+        run: |
+          from pathlib import Path
+          terms=["SONDAGGI — Nuovo sistema elettorale","Nuovo sistema elettorale","PREMIO DI GOVERNABILITA","Nuova coalizione","AGGIORNA DA YOUTREND"]
+          hits=[]
+          for p in sorted(Path("survey-source-parts").glob("part-*.txt")):
+              c=p.read_text(encoding="utf-8")
+              for term in terms:
+                  i=c.lower().find(term.lower())
+                  if i>=0:
+                      hits.append(f"PART={p.name} TERM={term} IDX={i}
+{c[max(0,i-5000):i+25000]}
+")
+          Path("survey-sondaggi-snippet.txt").write_text("\n====\n".join(hits) if hits else "NESSUN MATCH",encoding="utf-8")
+          print("matches",len(hits))
+      - name: Commit survey module snippet
+        if: contains(github.event.head_commit.message, 'Find survey module')
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add survey-sondaggi-snippet.txt
+          git commit -m "Find survey module" || exit 0
+          git push
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
