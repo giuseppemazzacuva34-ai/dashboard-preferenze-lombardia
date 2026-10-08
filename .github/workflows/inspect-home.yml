@@ -1,0 +1,39 @@
+name: Inspect home logic
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    if: contains(github.event.head_commit.message, 'Inspect home logic')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode and extract home
+        shell: python
+        run: |
+          import base64,gzip,re
+          from pathlib import Path
+          s=Path("index.html").read_text(encoding="utf-8")
+          m=re.search(r'const b64="([^"]+)"',s)
+          if not m: raise SystemExit("b64 non trovato")
+          src=gzip.decompress(base64.b64decode(m.group(1))).decode("utf-8")
+          terms=["function renderHome","function setMacro","function setElectionData","k-comuni","EURO_RAW","REGIONALI 2023","Europee 2024"]
+          hits=[]
+          for t in terms:
+              i=src.find(t)
+              if i>=0:
+                  hits.append("TERM="+t+" IDX="+str(i)+"\n"+src[max(0,i-3500):i+12000])
+          Path("home-snippet.txt").write_text("\n====\n".join(hits) or "NESSUN MATCH",encoding="utf-8")
+      - name: Commit inspection
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add home-snippet.txt
+          git commit -m "Inspect home logic" || exit 0
+          git push
