@@ -1176,4 +1176,98 @@ function installEuropeeRegionaliFix(){
 installEuropeeRegionaliFix();
 
 
+function installComuniPreferencesFix(){
+  const style=document.createElement("style");
+  style.id="comuni-preferences-fix-v1";
+  style.textContent=
+    "#tab-comuni .comuni-pref-fixed{font-weight:900!important;color:#fff!important}" +
+    "#tab-comuni .comuni-pref-zero{color:#7f9ab0!important}" ;
+  document.head.appendChild(style);
+
+  const normC=v=>{
+    try{return typeof norm==="function"?norm(String(v||"")):String(v||"").trim().toUpperCase();}
+    catch(_){return String(v||"").trim().toUpperCase();}
+  };
+
+  function buildTotals(){
+    const raw=(typeof election!=="undefined"&&election==="europee"&&typeof EURO_RAW!=="undefined")
+      ? EURO_RAW
+      : (typeof RAW!=="undefined"?RAW:[]);
+    const totals={};
+    (Array.isArray(raw)?raw:[]).forEach(r=>{
+      const comune=normC(r?.comune);
+      if(!comune)return;
+      totals[comune]=(totals[comune]||0)+(Number(r?.preferenze)||0);
+    });
+    return totals;
+  }
+
+  function getHost(){
+    return document.getElementById("tab-comuni")
+      || document.getElementById("panel-comuni")
+      || document.querySelector('[data-panel="comuni"]');
+  }
+
+  function repair(){
+    try{
+      const host=getHost();
+      if(!host)return false;
+
+      const totals=buildTotals();
+      const tables=[...host.querySelectorAll("table")];
+      let changed=false;
+
+      tables.forEach(table=>{
+        const ths=[...table.querySelectorAll("thead th")];
+        const prefIndex=ths.findIndex(th=>normC(th.textContent).includes("PREFERENZE"));
+        if(prefIndex<0)return;
+
+        table.querySelectorAll("tbody tr").forEach(tr=>{
+          const cells=[...tr.children];
+          if(cells.length<=prefIndex)return;
+          const comuneCell=cells[0];
+          if(!comuneCell)return;
+          const comune=normC(comuneCell.textContent);
+          if(!comune)return;
+
+          const value=Number(totals[comune]||0);
+          const cell=cells[prefIndex];
+          cell.textContent=value.toLocaleString("it-IT");
+          cell.classList.remove("comuni-pref-fixed","comuni-pref-zero");
+          cell.classList.add("comuni-pref-fixed");
+          if(value===0)cell.classList.add("comuni-pref-zero");
+          changed=true;
+        });
+      });
+
+      return changed;
+    }catch(err){
+      console.error("Correzione preferenze Comuni",err);
+      return false;
+    }
+  }
+
+  window.refreshComuniPreferences=repair;
+
+  const run=()=>{
+    repair();
+    setTimeout(repair,80);
+    setTimeout(repair,300);
+    setTimeout(repair,800);
+  };
+
+  setTimeout(run,150);
+  setTimeout(run,700);
+  setTimeout(run,1300);
+
+  document.addEventListener("click",ev=>{
+    if(ev.target?.closest?.(".side-tab")){
+      const txt=String(ev.target.closest(".side-tab")?.textContent||"").toUpperCase();
+      if(txt.includes("COMUNI"))setTimeout(run,100);
+    }
+  });
+}
+installComuniPreferencesFix();
+
+
 })();
