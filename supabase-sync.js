@@ -1528,6 +1528,13 @@ function installSondaggiModule(){
 
   const SENATE_PROP_REGIONS=REGIONS.filter(r=>Object.prototype.hasOwnProperty.call(SENATE_PREMIO_REGIONI,r));
 
+  const SPECIAL_SEATS={
+    camera:{estero:8,valleDAosta:1,trentinoAltoAdige:7,total:16,proportional:384},
+    senato:{estero:4,valleDAosta:1,trentinoAltoAdige:6,total:11,proportional:189}
+  };
+
+  const SPECIAL_CATS=["estero","valleDAosta","trentinoAltoAdige"];
+
   function defaultCoalitions(){
     return DEFAULT_COALITIONS.map(c=>({...c,members:[...(c.members||[])]}));
   }
@@ -2083,13 +2090,6 @@ function installSondaggiModule(){
 
     return {...topCam,cam:topCam.votes,sen:topSen.votes};
   }
-  const SPECIAL_SEATS={
-    camera:{estero:8,valleDAosta:1,trentinoAltoAdige:7,total:16,proportional:384},
-    senato:{estero:4,valleDAosta:1,trentinoAltoAdige:6,total:11,proportional:189}
-  };
-
-  const SPECIAL_CATS=["estero","valleDAosta","trentinoAltoAdige"];
-
   function specialSeatState(){
     const out={camera:{},senato:{}};
     ["camera","senato"].forEach(ch=>{
