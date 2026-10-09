@@ -1550,6 +1550,8 @@ function installSondaggiModule(){
       specialSeats:specialSeatState(),
       meta:{legacyBridgeInitialized:false},
       collegeValues:{camera:{},senato:{}},
+      capilista:{camera:{},senato:{}},
+      capilistaSelectedParty:"",
       coalitions:defaultCoalitions(),
       coalitionPresetVersion:COALITION_PRESET_VERSION
     };
@@ -1590,6 +1592,13 @@ function installSondaggiModule(){
       base.collegeValues=saved.collegeValues&&typeof saved.collegeValues==="object"?saved.collegeValues:{camera:{},senato:{}};
       if(!base.collegeValues.camera)base.collegeValues.camera={};
       if(!base.collegeValues.senato)base.collegeValues.senato={};
+
+      base.capilista=saved.capilista&&typeof saved.capilista==="object"
+        ?saved.capilista
+        :{camera:{},senato:{}};
+      if(!base.capilista.camera)base.capilista.camera={};
+      if(!base.capilista.senato)base.capilista.senato={};
+      base.capilistaSelectedParty=String(saved.capilistaSelectedParty||"");
 
       const savedCoalitions=Array.isArray(saved.coalitions)?saved.coalitions:null;
       base.coalitions=savedCoalitions?savedCoalitions:[];
@@ -2864,6 +2873,40 @@ function installSondaggiModule(){
       }
     };
   }
+  function capilistaRecord(chamber,college,slug){
+    const row=S.capilista?.[chamber]?.[college]?.[slug];
+    return row&&typeof row==="object"
+      ?{name:String(row.name||""),gender:String(row.gender||"")}
+      :{name:"",gender:""};
+  }
+  function setCapilista(slug,name,gender){
+    const college=selectedCollege()?.name||"";
+    if(!college||!slug||!S.parties[slug])return;
+    S.capilista??={camera:{},senato:{}};
+    S.capilista[S.chamber]??={};
+    S.capilista[S.chamber][college]??={};
+    const cleanName=String(name||"").trim();
+    const cleanGender=gender==="M"||gender==="F"?gender:"";
+    if(!cleanName)delete S.capilista[S.chamber][college][slug];
+    else S.capilista[S.chamber][college][slug]={name:cleanName,gender:cleanGender};
+    S.capilistaSelectedParty=slug;
+    save();
+    render();
+  }
+  function clearCapilista(slug){
+    const college=selectedCollege()?.name||"";
+    if(!college||!slug)return;
+    const bucket=S.capilista?.[S.chamber]?.[college];
+    if(bucket)delete bucket[slug];
+    save();
+    render();
+  }
+  function capilistaGenderSequence(gender){
+    if(gender!=="M"&&gender!=="F")return Array.from({length:7},()=>"?");
+    const other=gender==="M"?"F":"M";
+    return Array.from({length:7},(_,i)=>i%2===0?gender:other);
+  }
+
   function saveValue(slug,kind,value){
     if(!S.parties[slug])return;
     if(kind==="camera")S.parties[slug].camera=num(value);
@@ -3007,6 +3050,38 @@ function installSondaggiModule(){
       };
     }
 
+    function capilistaEditor(){
+      const college=selectedCollege();
+      if(!college)return "";
+      const partyKeys=Object.keys(S.parties);
+      const selected=(S.capilistaSelectedParty&&S.parties[S.capilistaSelectedParty])
+        ?S.capilistaSelectedParty:(partyKeys[0]||"");
+      S.capilistaSelectedParty=selected;
+      const cur=capilistaRecord(S.chamber,college.name,selected);
+      const summary=partyKeys.map(slug=>{
+        const row=capilistaRecord(S.chamber,college.name,slug);
+        return {slug,name:S.parties[slug]?.name||slug,cap:row.name,gender:row.gender};
+      });
+      const assigned=summary.filter(x=>x.cap).length;
+      const male=summary.filter(x=>x.gender==="M").length;
+      const female=summary.filter(x=>x.gender==="F").length;
+      const seq=capilistaGenderSequence(cur.gender);
+      return '<div class="sg-card-title"><b>GESTIONE CAPILISTA</b><span>'+esc2(college.name)+'</span></div>'+
+        '<div class="sg-note">Ogni lista presenta 7 candidati nel collegio, capolista compreso. L’ordine deve essere alternato per genere; il sesso del capolista determina la sequenza. La pluricandidatura nello stesso contrassegno sarà controllata nella gestione dedicata.</div>'+
+        '<div class="sg-capilista-kpis"><span><b>'+assigned+'/'+partyKeys.length+'</b><small>inseriti</small></span><span><b>'+male+'</b><small>uomini</small></span><span><b>'+female+'</b><small>donne</small></span></div>'+
+        '<div class="sg-cap-party-buttons">'+partyKeys.map(k=>'<button type="button" data-cap-party="'+esc2(k)+'" class="'+(k===selected?'active':'')+'">'+esc2(k)+'</button>').join('')+'</div>'+
+        '<div class="sg-capilista-editor">'+
+          '<div><label>Lista</label><strong>'+esc2(S.parties[selected]?.name||selected)+'</strong></div>'+
+          '<div><label>Nome e cognome capolista</label><input id="sgCapName" type="text" value="'+esc2(cur.name)+'" placeholder="Nome e cognome"></div>'+
+          '<div><label>Sesso</label><select id="sgCapGender"><option value="">Seleziona</option><option value="M" '+(cur.gender==="M"?"selected":"")+'>Maschio</option><option value="F" '+(cur.gender==="F"?"selected":"")+'>Femmina</option></select></div>'+
+          '<div class="sg-cap-sequence"><label>Sequenza dei 7 candidati</label><div>'+seq.map((g,i)=>'<span class="'+(g===cur.gender&&cur.gender?'same':'')+'"><b>'+String(i+1)+'</b>'+g+'</span>').join('')+'</div></div>'+
+          '<div class="sg-actions"><button type="button" class="sg-btn primary" id="sgSaveCap">SALVA CAPOLISTA</button><button type="button" class="sg-btn" id="sgClearCap">CANCELLA</button></div>'+
+        '</div>'+
+        '<div class="sg-table-wrap"><table class="sg-table sg-cap-table"><thead><tr><th>Lista</th><th>Capolista</th><th>Sesso</th><th>Stato</th></tr></thead><tbody>'+
+          summary.map(x=>'<tr><td><b>'+esc2(x.name)+'</b><small>'+esc2(x.slug)+'</small></td><td>'+esc2(x.cap||"—")+'</td><td>'+ (x.gender==="M"?"Maschio":x.gender==="F"?"Femmina":"—") +'</td><td>'+ (x.cap?(x.gender?"OK":"SESSO DA COMPLETARE"):"NON INSERITO") +'</td></tr>').join('')+
+        '</tbody></table></div>';
+    }
+
     function specialEditor(chamber){
       const cats=[
         ["estero","Estero"],["valleDAosta","Valle d'Aosta"],["trentinoAltoAdige","Trentino-Alto Adige"]
@@ -3065,6 +3140,7 @@ function installSondaggiModule(){
             '<div class="sg-note">CONTROLLO DI QUADRATURA · Camera: '+fmt0(parliamentRows(national.cam,"camera").assigned)+' assegnati + '+fmt0(parliamentRows(national.cam,"camera").pending)+' da assegnare = 400 · Senato: '+fmt0(parliamentRows(national.sen,"senato").assigned)+' assegnati + '+fmt0(parliamentRows(national.sen,"senato").pending)+' da assegnare = 200.</div>'+
           '</div>'+
           '<div class="sg-card">'+specialEditor("camera")+specialEditor("senato")+'</div>'+
+          '<div class="sg-card sg-capilista-wrap">'+capilistaEditor()+'</div>'+
           '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione dei seggi modellati</b><span>quote ordinarie + premio; esclusi i seggi speciali non inseriti</span></div><div class="sg-two"><div><h3>Camera · pool nazionale 384</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi modellati</th></tr></thead><tbody>'+resultRows(national.cam,"camera")+'</tbody></table></div><div><h3>Senato · pool nazionale 189</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi modellati</th></tr></thead><tbody>'+resultRows(national.sen,"senato")+'</tbody></table><div class="sg-note">'+(national.sen.complete?'✅ Senato: riparto regione per regione su '+national.sen.regionCount+' regioni proporzionali.':'⚠️ Dati regionali Senato incompleti: risultato provvisorio.')+'</div></div></div></div>'+
           (national.bonus?'<div class="sg-bonus">PREMIO ATTIVO · '+esc2(coalitionFor(national.bonus.id)?.name||national.bonus.members.map(k=>S.parties[k]?.name||k).join(" + "))+' · pool 70 Camera / 35 Senato</div>':'<div class="sg-note">Il premio non scatta: la stessa lista o coalizione deve essere prima e raggiungere almeno il 42% in entrambe le Camere.</div>')+
         '</div>'+
@@ -3082,6 +3158,23 @@ function installSondaggiModule(){
         saveValue(inp.getAttribute("data-sv"),inp.getAttribute("data-kind"),inp.value);
         render();
       });
+    });
+
+    host.querySelectorAll("[data-cap-party]").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        S.capilistaSelectedParty=btn.getAttribute("data-cap-party")||"";
+        render();
+      });
+    });
+    document.getElementById("sgSaveCap")?.addEventListener("click",()=>{
+      setCapilista(
+        S.capilistaSelectedParty||Object.keys(S.parties)[0]||"",
+        document.getElementById("sgCapName")?.value||"",
+        document.getElementById("sgCapGender")?.value||""
+      );
+    });
+    document.getElementById("sgClearCap")?.addEventListener("click",()=>{
+      clearCapilista(S.capilistaSelectedParty||Object.keys(S.parties)[0]||"");
     });
 
     host.querySelectorAll("[data-special]").forEach(inp=>{
@@ -3190,7 +3283,7 @@ function installSondaggiModule(){
 .sg-results .sg-card:first-child{grid-column:1/-1}
 .sg-coal-total{margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.08)}
 .sg-coal-total .sg-card-title{margin-bottom:5px}
-.sg-parliament{min-width:860px}.sg-parliament th{text-align:right}.sg-parliament th:first-child{text-align:left}.sg-parliament td:not(:first-child){text-align:right}.sg-parliament td:first-child small{display:block;color:#6f8ca2;font-size:6px;margin-top:2px}.sg-pending-row td{background:#173249;color:#9eb5c5;border-top:1px solid #2d526e}.sg-parliament-kpi{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;align-items:center;background:#102b42;border:1px solid #254b67;border-radius:8px;padding:8px;margin:7px 0}.sg-parliament-kpi b{font-size:20px;color:#fff}.sg-parliament-kpi span{font-size:7px;text-transform:uppercase;font-weight:900;color:#7fa3bd}.sg-parliament-kpi em{grid-column:1/-1;font-size:7px;color:#9eb9ca;font-style:normal}.sg-special-editor{background:#0b1e31;border:1px solid #203d55;border-radius:10px;padding:11px;margin-top:0}.sg-special-editor+.sg-special-editor{margin-top:10px}.sg-special-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}.sg-special-totals span{display:block;background:#102a40;border:1px solid #274a64;border-radius:7px;padding:7px}.sg-special-totals b{display:block;color:#fff;font-size:11px}.sg-special-totals small{display:block;margin-top:2px;color:#7898ae;font-size:6px;text-transform:uppercase}.sg-special-table{min-width:840px}.sg-special-table input{width:54px;box-sizing:border-box;padding:6px 5px}.sg-special-table td,.sg-special-table th{text-align:center}.sg-special-table td:first-child,.sg-special-table th:first-child{text-align:left}.sg-special-table td:first-child small{display:block;color:#6f8ca2;font-size:6px;margin-top:2px}
+.sg-parliament{min-width:860px}.sg-parliament th{text-align:right}.sg-parliament th:first-child{text-align:left}.sg-parliament td:not(:first-child){text-align:right}.sg-parliament td:first-child small{display:block;color:#6f8ca2;font-size:6px;margin-top:2px}.sg-pending-row td{background:#173249;color:#9eb5c5;border-top:1px solid #2d526e}.sg-parliament-kpi{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;align-items:center;background:#102b42;border:1px solid #254b67;border-radius:8px;padding:8px;margin:7px 0}.sg-parliament-kpi b{font-size:20px;color:#fff}.sg-parliament-kpi span{font-size:7px;text-transform:uppercase;font-weight:900;color:#7fa3bd}.sg-parliament-kpi em{grid-column:1/-1;font-size:7px;color:#9eb9ca;font-style:normal}.sg-special-editor{background:#0b1e31;border:1px solid #203d55;border-radius:10px;padding:11px;margin-top:0}.sg-special-editor+.sg-special-editor{margin-top:10px}.sg-special-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}.sg-special-totals span{display:block;background:#102a40;border:1px solid #274a64;border-radius:7px;padding:7px}.sg-special-totals b{display:block;color:#fff;font-size:11px}.sg-special-totals small{display:block;margin-top:2px;color:#7898ae;font-size:6px;text-transform:uppercase}.sg-special-table{min-width:840px}.sg-capilista-wrap{margin-top:10px}.sg-capilista-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.sg-capilista-kpis span{background:#102a40;border:1px solid #274a64;border-radius:7px;padding:7px}.sg-capilista-kpis b{display:block;color:#fff;font-size:14px}.sg-capilista-kpis small{display:block;color:#7898ae;font-size:6px;text-transform:uppercase}.sg-cap-party-buttons{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.sg-cap-party-buttons button{border:1px solid #315875;background:#0a2135;color:#cfe2ef;border-radius:8px;padding:7px 9px;font-size:8px;font-weight:900;cursor:pointer}.sg-cap-party-buttons button.active{border-color:#2187ff;background:#17466c;color:#fff}.sg-capilista-editor{display:grid;grid-template-columns:1.1fr 2fr 1fr;gap:8px;align-items:end;background:#0a1d30;border:1px solid #203d55;border-radius:9px;padding:9px}.sg-capilista-editor label{display:block;color:#7f9ab0;font-size:6px;text-transform:uppercase;margin-bottom:4px}.sg-capilista-editor strong{display:block;color:#fff;font-size:10px;padding:7px 0}.sg-capilista-editor input,.sg-capilista-editor select{width:100%;box-sizing:border-box;padding:7px 8px;background:#0e2941;color:#fff;border:1px solid #2a4b65;border-radius:7px}.sg-cap-sequence{grid-column:1/-1}.sg-cap-sequence>div{display:flex;gap:5px;flex-wrap:wrap}.sg-cap-sequence span{min-width:28px;padding:5px 6px;border:1px solid #294b64;border-radius:6px;background:#102a40;color:#c6d9e5;text-align:center;font-size:7px}.sg-cap-sequence span.same{border-color:#2187ff;background:#17466c;color:#fff}.sg-cap-sequence b{display:block;font-size:6px;color:#7898ae;margin-bottom:2px}.sg-cap-table{min-width:760px}.sg-cap-table td small{display:block;color:#6f8ca2;font-size:6px;margin-top:2px}.sg-cap-table td:nth-child(3),.sg-cap-table td:nth-child(4){text-align:center}@media(max-width:820px){.sg-capilista-editor{grid-template-columns:1fr}.sg-cap-sequence{grid-column:auto}.sg-cap-party-buttons{display:grid;grid-template-columns:repeat(3,1fr)}.sg-cap-party-buttons button{min-height:34px}.sg-capilista-kpis{grid-template-columns:1fr 1fr 1fr}}.sg-special-table input{width:54px;box-sizing:border-box;padding:6px 5px}.sg-special-table td,.sg-special-table th{text-align:center}.sg-special-table td:first-child,.sg-special-table th:first-child{text-align:left}.sg-special-table td:first-child small{display:block;color:#6f8ca2;font-size:6px;margin-top:2px}
 .sg-regional-status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-height:280px;overflow:auto;margin-top:8px}
 .sg-region-status{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;border:1px solid #23465f;background:#0a2135;color:#dcecf6;border-radius:8px;padding:7px 8px;cursor:pointer}
 .sg-region-status.active{border-color:#2187ff;box-shadow:0 0 0 1px #2187ff33 inset}
