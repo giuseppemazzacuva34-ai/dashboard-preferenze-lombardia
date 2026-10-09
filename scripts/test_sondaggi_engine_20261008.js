@@ -127,5 +127,44 @@ assert(Math.abs(engine.trunc6(1.23456789)-1.234567)<1e-12);
 assert.strictEqual(law.premiumCandidate({A:43,B:0},{A:43,B:0},[]).id,"A");
 assert.strictEqual(law.premiumCandidate({A:43,B:44},{A:44,B:43},[]),null);
 
+
+Object.entries(r.cam.collegeResults?.ordinary||{}).forEach(([,cols])=>{
+  Object.entries(cols||{}).forEach(([college,rec])=>{
+    const assigned=Object.values(rec.alloc||{}).reduce((a,v)=>a+v,0);
+    assert(assigned<=rec.seats,"Camera college "+college+": capacità superata");
+  });
+});
+
+Object.entries(r.sen.regions||{}).forEach(([region,rr])=>{
+  const target=rr.ordinarySeats;
+  const got=Object.values(rr.listTargets||{}).reduce((a,v)=>a+v,0);
+  assert.strictEqual(got,target,"Senato "+region+": lista/regione non quadrata");
+  Object.entries(rr.collegeResults?.byList||{}).forEach(([list,cols])=>{
+    const gotList=Object.values(cols||{}).reduce((a,v)=>a+v,0);
+    assert.strictEqual(
+      gotList,
+      Math.floor(rr.listTargets?.[list]||0),
+      "Senato "+region+"/"+list+": college non chiusi"
+    );
+  });
+});
+
+const capVals={...prizeVals};
+capVals.FdI=55; capVals.LEGA=4; capVals.FI=6; capVals.NM=1;
+const capRun=run(capVals,{...capVals},{
+  camera:{estero:{},valleDAosta:{FdI:1},trentinoAltoAdige:{FdI:7}},
+  senato:{estero:{},valleDAosta:{FdI:1},trentinoAltoAdige:{FdI:6}}
+});
+assert(capRun.bonus,"Scenario cap: premio attivo");
+assert(capRun.cam.capTriggered,"Scenario cap Camera non attivato");
+assert.strictEqual(capRun.cam.winnerOrdinary,142,"Camera: cap ordinario con 8 seggi speciali");
+assert.strictEqual(capRun.cam.simulatedTotal,384);
+assert.strictEqual(
+  Object.values(capRun.cam.prizeSeatsByParty).reduce((a,v)=>a+v,0),
+  70
+);
+assert(capRun.sen.capTriggered,"Scenario cap Senato non attivato");
+assert(capRun.sen.winnerOrdinary<=71,"Senato: cap ordinario con 7 seggi speciali");
+
 console.log("TEST MOTORE ELETTORALE 08-10-2026: SUPERATO");
 console.log("Mappe Camera/Senato quadrate, riparto nazionale, regioni, premio 70/35, cap 220/113, speciali e troncamento a 6 decimali verificati.");
