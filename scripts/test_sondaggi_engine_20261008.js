@@ -65,7 +65,7 @@ const parties={
   AVS:{name:"Alleanza Verdi Sinistra",camera:6.7,senate:6.7},
   LEGA:{name:"Lega",camera:5.7,senate:5.7},
   AZ:{name:"Azione",camera:3.2,senate:3.2},
-  IV:{name:"Italia Viva",camera:2.4,senate:2.4},
+  IV:{name:"Italia Viva",camera:1.5,senate:1.5},
   PIU:{name:"+Europa",camera:1.3,senate:1.3},
   NM:{name:"Noi Moderati",camera:1.1,senate:1.1},
   ALTRI:{name:"Altri",camera:4.8,senate:4.8}
