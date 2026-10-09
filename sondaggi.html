@@ -14,7 +14,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#061323}
 </head>
 <body>
 <div id="loading"><div>CARICAMENTO SONDAGGI…<small>Apro direttamente il modulo completo, con i dati e le quattro sezioni già configurate.</small></div></div>
-<iframe id="app" title="Sondaggi — Nuovo sistema elettorale" src="index.html?dedicated=sondaggi"></iframe>
+<iframe id="app" title="Sondaggi — Nuovo sistema elettorale" src="index.html?dedicated=sondaggi&v=20261009-1343"></iframe>
 
 <script>
 (function(){
@@ -68,6 +68,19 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#061323}
           main.style.maxWidth="none";
           main.style.width="100%";
         }
+        const back=d.getElementById("sg7Back");
+        if(back){
+          back.onclick=function(ev){
+            ev.preventDefault();
+            ev.stopPropagation();
+            window.top.location.href="index.html?v=20261009-dashboard";
+          };
+        }
+        try{
+          const tabs=d.querySelectorAll("#sg7 .sg7tab");
+          const active=[...tabs].find(x=>x.classList.contains("active"))||tabs[0];
+          if(active)active.click();
+        }catch(_){}
         finish();
         return;
       }
