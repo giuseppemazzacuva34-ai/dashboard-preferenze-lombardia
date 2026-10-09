@@ -1486,18 +1486,18 @@ function installSondaggiModule(){
 
   const POLLS=[
     ["FdI","Fratelli d'Italia",26.8],
-    ["PD","Partito Democratico",20.4],
-    ["M5S","Movimento 5 Stelle",12.8],
-    ["FN","Futuro Nazionale",7.7],
-    ["FI","Forza Italia",7.4],
-    ["AVS","Alleanza Verdi Sinistra",6.3],
+    ["PD","Partito Democratico",20.7],
+    ["M5S","Movimento 5 Stelle",12.7],
+    ["FN","Futuro Nazionale",7.5],
+    ["FI","Forza Italia",7.1],
+    ["AVS","Alleanza Verdi Sinistra",6.7],
     ["LEGA","Lega",5.7],
     ["AZ","Azione",3.2],
-    ["IV","Italia Viva",2.2],
-    ["PIU","+Europa",1.7],
+    ["IV","Italia Viva",2.4],
+    ["PIU","+Europa",1.3],
     ["PLD","Partito Liberaldemocratico",1.3],
     ["NM","Noi Moderati",1.1],
-    ["ALTRI","Altri",3.4]
+    ["ALTRI","Altri",4.8]
   ];
 
   const COALITION_PRESET_VERSION=2;
