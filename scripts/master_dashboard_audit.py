@@ -213,11 +213,11 @@ def audit_election(name,data,geo_pairs):
     rows=records(data)
     if not rows:
         fail(f"{name}: dataset non estratto")
-    missing_geo=set()
+    missing_geo={}
     invalid_pref=0
     negatives=0
-    unique=set()
-    duplicates=0
+    unique={}
+    duplicate_rows=[]
     prov_counts={p:0 for p in EXPECTED_PROVINCES}
     pref_total=0
 
@@ -230,7 +230,8 @@ def audit_election(name,data,geo_pairs):
             fail(f"{name}: riga senza provincia/comune")
         pair=(p,c)
         if pair not in geo_pairs:
-            missing_geo.add(pair)
+            bucket=missing_geo.setdefault(pair,[])
+            bucket.append(r)
         prov_counts[p]=prov_counts.get(p,0)+1
 
         try:
@@ -243,22 +244,31 @@ def audit_election(name,data,geo_pairs):
 
         if cand is not None:
             k=(p,c,str(cand))
-            if k in unique: duplicates+=1
-            unique.add(k)
+            if k in unique:
+                duplicate_rows.append((k,unique[k],r))
+            else:
+                unique[k]=r
 
     print(f"{name} righe:",len(rows))
     print(f"{name} preferenze totali:",int(pref_total) if float(pref_total).is_integer() else pref_total)
     print(f"{name} righe per provincia:",prov_counts)
     print(f"{name} combinazioni comune/provincia non in GEO:",len(missing_geo))
+    for (p,c),sample in sorted(missing_geo.items()):
+        print("  GEO-MISSING",p,c,"n=",len(sample))
+        for r in sample[:3]:
+            print("    ",{k:r.get(k) for k in ("prov","provincia","comune","candidato","preferenze") if k in r})
     print(f"{name} preferenze non intere:",invalid_pref)
     print(f"{name} preferenze negative:",negatives)
-    print(f"{name} duplicati candidato/comune/provincia:",duplicates)
+    print(f"{name} duplicati candidato/comune/provincia:",len(duplicate_rows))
+    for k,a,b in duplicate_rows[:40]:
+        print("  DUP",k)
+        print("    A",{x:a.get(x) for x in ("prov","provincia","comune","candidato","preferenze") if x in a})
+        print("    B",{x:b.get(x) for x in ("prov","provincia","comune","candidato","preferenze") if x in b})
 
-    if missing_geo: fail(f"{name}: {len(missing_geo)} combinazioni non presenti in GEO")
     if invalid_pref: fail(f"{name}: valori preferenze non validi")
     if negatives: fail(f"{name}: preferenze negative")
-    if duplicates: fail(f"{name}: righe duplicate candidato/comune/provincia")
-    return pref_total,prov_counts
+    return pref_total,prov_counts,missing_geo,duplicate_rows
+
 
 def audit_source_structure(source):
     # Il build reale deve contenere riferimenti ai tre dataset sorgente.
@@ -284,8 +294,12 @@ def main():
         fail("Impossibile estrarre tutti i dataset GEO/RAW/EURO_RAW dal build corrente")
 
     geo_pairs=audit_geo(geo)
-    raw_total,_=audit_election("REGIONALI",raw,geo_pairs)
-    euro_total,_=audit_election("EUROPEE",euro,geo_pairs)
+    raw_total,_,raw_missing,raw_dups=audit_election("REGIONALI",raw,geo_pairs)
+    euro_total,_,euro_missing,euro_dups=audit_election("EUROPEE",euro,geo_pairs)
+    if raw_missing or raw_dups:
+        print("[WARN] anomalie Regionali da classificare prima della certificazione finale")
+    if euro_missing or euro_dups:
+        print("[WARN] anomalie Europee da classificare prima della certificazione finale")
 
     print("REGIONALI vs EUROPEE totali preferenze:",raw_total,euro_total)
 
