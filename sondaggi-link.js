@@ -1,5 +1,19 @@
 (function(){
 "use strict";
+
+function loadIntegrityGuard(){
+  try{
+    if(document.getElementById("dashboard-runtime-integrity")) return;
+    const s=document.createElement("script");
+    s.id="dashboard-runtime-integrity";
+    s.src="dashboard-runtime-integrity.js?v=20261009-1";
+    s.async=false;
+    (document.head||document.documentElement).appendChild(s);
+  }catch(err){
+    console.error("Dashboard integrity guard load",err);
+  }
+}
+
 function ensure(){
   const side=document.querySelector(".app-sidebar");
   if(!side)return;
@@ -24,6 +38,8 @@ function ensure(){
     side.appendChild(btn);
   }
 }
+
+loadIntegrityGuard();
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",ensure,{once:true});
 else ensure();
 setTimeout(ensure,200);
