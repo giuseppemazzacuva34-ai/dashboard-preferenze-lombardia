@@ -874,14 +874,14 @@
           nationalTargets:final.seats,
           circum,
           circData,
-          ordinarySeats:c=>c.noPrizeSeats
+          ordinarySeats:c=>premium?c.withPrizeSeats:c.noPrizeSeats
         });
 
     const errors=[];
     const warnings=[];
     if(!mapCheck.valid)errors.push(
-      "Mappa Camera non quadrata: ordinari="+mapCheck.ordinary+
-      ", totale con premio="+mapCheck.withPremium+
+      "Mappa Camera non quadrata: senza premio="+mapCheck.base+
+      ", ordinari con premio="+mapCheck.withPremium+
       ", premio="+mapCheck.prize
     );
     if(sumSeats(ordinaryCirc.byCirc)!==384-errors.length*0){
