@@ -22,7 +22,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check dashboard-runtime-integrity.js
-          node --check sondaggio-link.js
+          node --check sondaggi-link.js
           node --check sondaggi-app.js
           node --check home-election-fix.js
           node --check home-count-fix.js
