@@ -360,12 +360,12 @@ def audit_election(label, data, geo_pairs):
 def audit_sondaggi_module():
     source = (ROOT / "sondaggi-app.js").read_text(encoding="utf-8")
     required = (
-        "winnerOrdinaryCap",
-        "ordinarySeats",
-        "prizeSeatsTotal",
-        "senateSeatPlan",
-        "allocateNationalToCircs",
-        "specialDomesticWinnerSeats",
+        "nationalCamera",
+        "nationalSenate",
+        "distributeCameraCircoscrizioni",
+        "simulateSenateRegions",
+        "SPECIAL_SEATS",
+        "coalitionResultRows",
     )
     for marker in required:
         if marker not in source:
