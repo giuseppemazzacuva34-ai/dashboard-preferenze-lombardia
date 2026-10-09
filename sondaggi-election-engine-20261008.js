@@ -430,6 +430,11 @@
     return (units||[]).find(u=>u.id===id)||null;
   }
 
+  function nationalUnitIdForSubject(subject){
+    if(!subject)return null;
+    return subject.type==="coalition"?"C:"+subject.id:"P:"+subject.id;
+  }
+
   function getCircSeats(circ,bonusActive){
     return bonusActive?circ.withPrizeSeats:circ.noPrizeSeats;
   }
@@ -811,7 +816,7 @@
     let majorityQ=0;
     let minorityQ=0;
 
-    const winnerUnit=premium?nationalUnitById(units,premium.id):null;
+    const winnerUnit=premium?nationalUnitById(units,nationalUnitIdForSubject(premium)):null;
 
     if(premium&&winnerUnit){
       const special=specialWinnerSeats(winnerUnit);
@@ -1213,7 +1218,7 @@
       regionResults[region].regionalValues=reg;
     });
 
-    const winnerUnitId=winner?.id||null;
+    const winnerUnitId=nationalUnitIdForSubject(winner);
     let winnerOrdinary=regions.reduce((a,r)=>a+(regionResults[r].targets[winnerUnitId]||0),0);
 
     const winnerSpecial=(winner?.members||[]).reduce((a,k)=>
