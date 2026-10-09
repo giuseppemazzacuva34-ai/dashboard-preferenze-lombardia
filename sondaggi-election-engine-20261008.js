@@ -1773,20 +1773,38 @@
       const nSeats=Math.floor(cleanPositive(rr.prizeSeats));
       if(!nSeats)return {byList:out,detail};
 
+      const weightFor=(col)=>{
+        return cleanPositive(
+          collegeWeights?.[rr.region]?.[col.name] ??
+          collegeWeights?.[col.name] ??
+          col.noPrizeSeats
+        );
+      };
+      const figureFor=(col,k)=>{
+        const explicit=collegeValues?.[rr.region]?.[col.name]?.[k] ??
+          collegeValues?.[col.name]?.[k];
+        const base=explicit==null
+          ?cleanPositive(rr.regionalValues[k])
+          :cleanPositive(explicit);
+        return base*weightFor(col);
+      };
+      const totalFigureFor=(k)=>
+        rr.colleges.reduce((a,col)=>a+figureFor(col,k),0);
+
       const members=winner.members||[winner.id];
       const split=winner.type==="coalition"
         ?quotientAllocate(
-          members.map(k=>({
-            id:k,
-            votes:Object.values(data).reduce((a,row)=>a+cleanPositive(row?.[k]),0)
-          })),
+          members.map(k=>({id:k,votes:totalFigureFor(k)})),
           nSeats,
           k=>cleanPositive(nationalValues[k])
         )
         :{seats:{[members[0]]:nSeats}};
+
       Object.entries(split.seats||{}).forEach(([k,target])=>{
         const cols=rr.colleges.filter(c=>c.prizeSeats>0).map(c=>({
-          id:c.name,figure:cleanPositive(data[c.name]?.[k]),cap:c.prizeSeats
+          id:c.name,
+          figure:figureFor(c,k),
+          cap:c.prizeSeats
         }));
         const total=cols.reduce((a,x)=>a+x.figure,0);
         const alloc={},rem={};
@@ -1795,15 +1813,25 @@
           cols.forEach(x=>{
             const raw=target*x.figure/total;
             alloc[x.id]=Math.min(Math.floor(raw),x.cap);
-            rem[x.id]=raw-Math.floor(raw);used+=alloc[x.id];
+            rem[x.id]=raw-Math.floor(raw);
+            used+=alloc[x.id];
           });
           cols.slice().sort((a,b)=>
-            (rem[b.id]||0)-(rem[a.id]||0)||b.figure-a.figure||tieOrder(a,b)
+            (rem[b.id]||0)-(rem[a.id]||0)||
+            b.figure-a.figure||
+            tieOrder(a,b)
           ).forEach(x=>{
             if(used>=target)return;
             if((alloc[x.id]||0)>=x.cap)return;
-            alloc[x.id]=(alloc[x.id]||0)+1;used++;
+            alloc[x.id]=(alloc[x.id]||0)+1;
+            used++;
           });
+        }
+        if(used!==target){
+          warnings.push(
+            "Senato "+rr.region+": premio regionale non completamente distribuito a "+k+
+            " ("+used+" di "+target+")."
+          );
         }
         out[k]=alloc;
         detail[k]={target,seats:alloc,remainders:rem};
