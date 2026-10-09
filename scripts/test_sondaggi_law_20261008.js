@@ -68,6 +68,13 @@ const noWinner=law.premiumCandidate(
 );
 assert.strictEqual(noWinner,null);
 
+const differentWinners=law.premiumCandidate(
+  {A:43,B:0,C:44,D:0},
+  {A:44,B:0,C:43,D:0},
+  []
+);
+assert.strictEqual(differentWinners,null);
+
 const alloc=law.largestRemainder(
   [{id:"A",votes:45},{id:"B",votes:35},{id:"C",votes:20}],
   10
