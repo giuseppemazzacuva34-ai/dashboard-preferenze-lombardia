@@ -24,6 +24,10 @@ assert.strictEqual(premiumByRegion,35);
 
 assert.strictEqual(law.listNationallyEligible(2.99),false);
 assert.strictEqual(law.listNationallyEligible(3),true);
+assert.strictEqual(law.listAllocationEligible(1.99,"camera",true),false);
+assert.strictEqual(law.listAllocationEligible(2,"camera",true),true);
+assert.strictEqual(law.listAllocationEligible(1.99,"camera",false),false);
+assert.strictEqual(law.listAllocationEligible(1.99,"senato",true,20),true);
 assert.strictEqual(law.listRegionallyEligibleForSenate(2.99,19.99),false);
 assert.strictEqual(law.listRegionallyEligibleForSenate(2.99,20),true);
 

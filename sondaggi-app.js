@@ -537,10 +537,12 @@ function installSondaggiModule(){
     const units=[];
     const admittedByCoalition=new Map();
     const coalStats=[];
+    const qualifiedCoalitions=new Set();
 
     S.coalitions.forEach(co=>{
-      const allMembers=(co.members||[]).filter(k=>values[k]!=null);
+      const allMembers=(co.members||[]).filter(k=>values[k]!=null && !AGGREGATE_POLL_PARTIES.has(k));
       if(!allMembers.length)return;
+
       const stats=coalitionFigure(allMembers,values,chamber,regionContext);
       if(!stats.qualifies)return;
 
@@ -548,6 +550,7 @@ function installSondaggiModule(){
       const rip=stats.ripCandidate;
       if(rip&&!admitted.includes(rip))admitted.push(rip);
 
+      qualifiedCoalitions.add(co.id);
       admittedByCoalition.set(co.id,admitted);
       units.push({
         id:"C:"+co.id,
@@ -567,23 +570,48 @@ function installSondaggiModule(){
       });
     });
 
-    const coalitionIds=new Set(coalStats.map(c=>c.id));
     Object.keys(values).forEach(k=>{
       if(AGGREGATE_POLL_PARTIES.has(k))return;
-      if(cmap[k]&&coalitionIds.has(cmap[k]))return;
-      const v=values[k]||0;
-      const eligible=v>=3 ||
-        (chamber==="senato" && (regionContext?senate20Exception(k,regionContext):senate20ExceptionAny(k)));
-      if(eligible){
-        units.push({
-          id:"P:"+k,
-          type:"list",
-          members:[k],
-          allMembers:[k],
-          votes:v,
-          name:k
-        });
+
+      const coalId=cmap[k];
+      const inQualifiedCoalition=coalId&&qualifiedCoalitions.has(coalId);
+      if(inQualifiedCoalition)return;
+
+      const regionalValue=regionContext?Number(values[k]||0):undefined;
+      const nationalValue=num(S.parties[k]?.[chamber==="camera"?"camera":"senate"]);
+
+      let eligible=false;
+      if(coalId){
+        // Coalizione sotto l'8%: la lista collegata accede al riparto
+        // già dal 2%, secondo il testo approvato.
+        eligible=window.SONDAGGI_LAW_20261008.listAllocationEligible(
+          nationalValue,
+          chamber,
+          true,
+          regionalValue
+        );
+      }else{
+        eligible=chamber==="senato"
+          ?window.SONDAGGI_LAW_20261008.listRegionallyEligibleForSenate(
+            nationalValue,
+            regionalValue
+          )
+          :window.SONDAGGI_LAW_20261008.listNationallyEligible(nationalValue);
       }
+
+      if(!eligible)return;
+
+      const v=Number(values[k]||0);
+      if(v<=0)return;
+
+      units.push({
+        id:"P:"+k,
+        type:"list",
+        members:[k],
+        allMembers:[k],
+        votes:v,
+        name:k
+      });
     });
 
     return {units,admittedByCoalition,coalStats};
@@ -823,7 +851,19 @@ function installSondaggiModule(){
       }else{
         const k=nu.members?.[0],v=regionalValues[k]||0;
         const nationalValue=num(S.parties[k]?.senate||0);
-        if(k&&v>0&&(nationalValue>=3||v>=20)){
+        const coalId=coalitionMap()[k];
+        const coalitionObj=coalId?coalitionFor(coalId):null;
+        const coalFailed=!!coalitionObj && !nationalCoalitions.has(coalId);
+
+        const eligible=coalFailed
+          ?window.SONDAGGI_LAW_20261008.listAllocationEligible(
+            nationalValue,"senato",true,v
+          )
+          :window.SONDAGGI_LAW_20261008.listRegionallyEligibleForSenate(
+            nationalValue,v
+          );
+
+        if(k&&v>0&&eligible){
           units.push({
             id:nu.id,
             type:"list",
@@ -845,7 +885,20 @@ function installSondaggiModule(){
       if(v<0.000001||used.has(k))return;
       const coalId=cmap[k];
       if(coalId&&nationalCoalitions.has(coalId))return;
-      const eligible=num(S.parties[k]?.senate||0)>=3 || v>=20;
+
+      const coalitionObj=coalId?coalitionFor(coalId):null;
+      const eligible=coalitionObj
+        ?window.SONDAGGI_LAW_20261008.listAllocationEligible(
+          num(S.parties[k]?.senate||0),
+          "senato",
+          true,
+          v
+        )
+        :window.SONDAGGI_LAW_20261008.listRegionallyEligibleForSenate(
+          num(S.parties[k]?.senate||0),
+          v
+        );
+
       if(eligible){
         units.push({
           id:"P:"+k,
@@ -1840,7 +1893,7 @@ function installSondaggiModule(){
     host.innerHTML=
       '<div class="sg-wrap">'+
         '<div class="sg-head"><div><div class="sg-kicker">SONDAGGI ELETTORALI</div><h1>Simulatore nazionale e per collegio</h1><p>Inserisci le percentuali nazionali e quelle del territorio selezionato, costruisci le coalizioni e verifica l&#39;effetto sul riparto dei seggi.</p></div><button class="sg-btn primary" id="sondaggiRefreshYT">AGGIORNA DA YOUTREND</button></div>'+
-        '<div class="sg-law">LEGGE ELETTORALE · TESTO APPROVATO DEFINITIVAMENTE 8 OTTOBRE 2026 · sistema proporzionale su collegi plurinominali, con collegi uninominali speciali nelle circoscrizioni previste dalla legge · soglia 3% liste · soglia 8% coalizioni con almeno una lista al 2% · deroga del 20% regionale al Senato · premio 70 Camera / 35 Senato se lo stesso soggetto è primo in entrambe le Camere e raggiunge il 42% in entrambe. Testo definitivamente approvato, in attesa di pubblicazione.</div>'+
+        '<div class="sg-law">LEGGE ELETTORALE · TESTO APPROVATO DEFINITIVAMENTE 8 OTTOBRE 2026 · soglia 3% per le liste non collegate · soglia 2% per le liste collegate a coalizioni che non raggiungono l’8% · soglia 8% per le coalizioni con almeno una lista al 2% · deroga del 20% regionale al Senato · premio 70 Camera / 35 Senato se lo stesso soggetto è primo in entrambe le Camere e raggiunge il 42% in entrambe. Testo definitivamente approvato, in attesa di pubblicazione.</div>'+
         '<div class="sg-layout">'+
           '<div class="sg-map-card"><div class="sg-card-title"><b>Italia</b><span>'+esc2(S.region)+'</span></div><div class="sg-map"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Italy_map_with_regions.svg" alt="Mappa d’Italia divisa in regioni"><div class="sg-map-caption">La mappa mostra la divisione regionale; usa i pulsanti per selezionare la regione e caricare i relativi collegi.</div></div><div class="sg-regions">'+REGIONS.map(x=>'<button type="button" data-region="'+esc2(x)+'" class="'+(x===S.region?"active":"")+'">'+esc2(x)+'</button>').join("")+'</div></div>'+
           '<div class="sg-main">'+
