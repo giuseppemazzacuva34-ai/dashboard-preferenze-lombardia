@@ -5,8 +5,8 @@ const R=law.rules;
 
 assert.strictEqual(R.approvedDate,"2026-10-08");
 assert.strictEqual(R.national.thresholdList,3);
-assert.strictEqual(R.national.thresholdCoalition,8);
-assert.strictEqual(R.national.thresholdMemberForCoalitionQualification,2);
+assert.strictEqual(R.national.thresholdCoalition,10);
+assert.strictEqual(R.national.thresholdMemberForCoalitionQualification,3);
 assert.strictEqual(R.national.regionalSenateException,20);
 assert.strictEqual(R.national.premiumThreshold,42);
 
@@ -24,8 +24,8 @@ assert.strictEqual(premiumByRegion,35);
 
 assert.strictEqual(law.listNationallyEligible(2.99),false);
 assert.strictEqual(law.listNationallyEligible(3),true);
-assert.strictEqual(law.listAllocationEligible(1.99,"camera",true),false);
-assert.strictEqual(law.listAllocationEligible(2,"camera",true),true);
+assert.strictEqual(law.listAllocationEligible(2.99,"camera",true),false);
+assert.strictEqual(law.listAllocationEligible(3,"camera",true),true);
 assert.strictEqual(law.listAllocationEligible(1.99,"camera",false),false);
 assert.strictEqual(law.listAllocationEligible(1.99,"senato",true,20),true);
 assert.strictEqual(law.listRegionallyEligibleForSenate(2.99,19.99),false);
@@ -33,29 +33,31 @@ assert.strictEqual(law.listRegionallyEligibleForSenate(2.99,20),true);
 
 let q=law.coalitionQualification(["A","B"],{A:5,B:3},"camera");
 assert.strictEqual(q.qualifies,true);
-q=law.coalitionQualification(["A","B"],{A:6,B:2},"camera");
+q=law.coalitionQualification(["A","B"],{A:7,B:3},"camera");
 assert.strictEqual(q.qualifies,true);
-q=law.coalitionQualification(["A","B"],{A:5.9,B:2},"camera");
+q=law.coalitionQualification(["A","B"],{A:9.9,B:0.1},"camera");
 assert.strictEqual(q.qualifies,false);
-q=law.coalitionQualification(["A","B"],{A:8,B:2},"camera");
+q=law.coalitionQualification(["A","B"],{A:8,B:2.99},"camera");
+assert.strictEqual(q.qualifies,false);
+q=law.coalitionQualification(["A","B"],{A:10,B:0},"camera");
 assert.strictEqual(q.qualifies,true);
 
-const score2=law.coalitionScores(["A","B"],{A:6,B:2},"camera");
+const score2=law.coalitionScores(["A","B"],{A:7.5,B:2.5},"camera");
 assert.strictEqual(score2.qualifies,true);
 assert.strictEqual(score2.admitted.length,1);
 assert.strictEqual(score2.ripCandidate,"B");
-assert.strictEqual(score2.allocationFigure,8);
-assert.strictEqual(score2.premiumFigure,8);
+assert.strictEqual(score2.allocationFigure,10);
+assert.strictEqual(score2.premiumFigure,10);
 
-let cs=law.coalitionScores(["A","B","C"],{A:5,B:2.5,C:0.5},"camera");
+let cs=law.coalitionScores(["A","B","C"],{A:6.5,B:3,C:0.5},"camera");
 assert.strictEqual(cs.qualifies,true);
 
-cs=law.coalitionScores(["A","B","C"],{A:5,B:2.5,C:0.5},"camera");
+cs=law.coalitionScores(["A","B","C"],{A:6.5,B:3,C:0.5},"camera");
 assert.strictEqual(cs.qualifies,true);
-assert.deepStrictEqual(cs.admitted,["A"]);
-assert.strictEqual(cs.ripCandidate,"B");
-assert.strictEqual(cs.premiumFigure,7.5);
-assert.strictEqual(cs.allocationFigure,7.5);
+assert.deepStrictEqual(cs.admitted,["A","B"]);
+assert.strictEqual(cs.ripCandidate,"C");
+assert.strictEqual(cs.premiumFigure,10);
+assert.strictEqual(cs.allocationFigure,10);
 
 const coalitions=[
   {id:"C1",name:"Coalizione A",members:["A","B"]},
