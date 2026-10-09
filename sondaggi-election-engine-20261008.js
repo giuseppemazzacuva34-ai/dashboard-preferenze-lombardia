@@ -1731,7 +1731,9 @@
     if(!law)throw new Error("Motore legge 08/10/2026 non caricato.");
     const cameraValues=input.camera?.nationalValues||{};
     const senateValues=input.senato?.nationalValues||{};
-    const winner=normalizeWinner(law,cameraValues,senateValues,input.coalitions||[]);
+    const winner=law.premiumCandidate?.(
+      cameraValues,senateValues,input.coalitions||[]
+    )||null;
 
     const cam=cameraResult({
       nationalValues:cameraValues,
