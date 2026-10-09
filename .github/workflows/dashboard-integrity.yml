@@ -1,0 +1,30 @@
+name: Dashboard Integrity
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify immutable dashboard core
+        run: python3 scripts/verify_dashboard_integrity.py
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check dashboard-runtime-integrity.js
+          node --check sondaggi-link.js
+          node --check sondaggi-app.js
+          node --check home-election-fix.js
+          node --check home-count-fix.js
+          node --check estero-eletti.js
+          node --check supabase-sync.js

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "baseline_commit": "1be3e4dcbec1b6f503921fad218b544572637a3f",
+  "policy": "I file protetti non si modificano per nuove funzionalita. Le evoluzioni devono stare nei moduli esterni dedicati.",
+  "protected_files": {
+    "index.html": "f75bf81d13678c7a4eb0ef091b5df08fcf742848",
+    "supabase-sync.js": "b51b75cf3d09636414fd5ff9764e5c5f3702f446",
+    "home-election-fix.js": "3dac107d26fcb50cc3a9db8e6bcfc290b46eb88e",
+    "home-count-fix.js": "de53fffdde15ced3b71db5e470f9ad8410e20605",
+    "estero-eletti.js": "456020c5027f6745cccc8b3cefc5da90aca506a7",
+    "supabase_schema.sql": "c286a57ae48b84401471ba6d2acb31386e8ec6fd",
+    "sondaggi-link.js": "6e47d6241d8fbbead8116fb7825527f9eb179ccb",
+    "dashboard-runtime-integrity.js": "a481d12f353222bfc24828aac2c9f433a27fc20e",
+    ".github/workflows/pages.yml": "c3768b179b72ec4dbacf3d0adfa0a4575baeedae"
+  },
+  "mutable_modules": [
+    "sondaggi.html",
+    "sondaggi-app.js"
+  ]
+}
