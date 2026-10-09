@@ -851,7 +851,19 @@ function installSondaggiModule(){
       }else{
         const k=nu.members?.[0],v=regionalValues[k]||0;
         const nationalValue=num(S.parties[k]?.senate||0);
-        if(k&&v>0&&(nationalValue>=3||v>=20)){
+        const coalId=coalitionMap()[k];
+        const coalitionObj=coalId?coalitionFor(coalId):null;
+        const coalFailed=!!coalitionObj && !nationalCoalitions.has(coalId);
+
+        const eligible=coalFailed
+          ?window.SONDAGGI_LAW_20261008.listAllocationEligible(
+            nationalValue,"senato",true,v
+          )
+          :window.SONDAGGI_LAW_20261008.listRegionallyEligibleForSenate(
+            nationalValue,v
+          );
+
+        if(k&&v>0&&eligible){
           units.push({
             id:nu.id,
             type:"list",
@@ -873,7 +885,20 @@ function installSondaggiModule(){
       if(v<0.000001||used.has(k))return;
       const coalId=cmap[k];
       if(coalId&&nationalCoalitions.has(coalId))return;
-      const eligible=num(S.parties[k]?.senate||0)>=3 || v>=20;
+
+      const coalitionObj=coalId?coalitionFor(coalId):null;
+      const eligible=coalitionObj
+        ?window.SONDAGGI_LAW_20261008.listAllocationEligible(
+          num(S.parties[k]?.senate||0),
+          "senato",
+          true,
+          v
+        )
+        :window.SONDAGGI_LAW_20261008.listRegionallyEligibleForSenate(
+          num(S.parties[k]?.senate||0),
+          v
+        );
+
       if(eligible){
         units.push({
           id:"P:"+k,
