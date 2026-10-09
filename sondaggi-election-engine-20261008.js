@@ -389,6 +389,10 @@
     return {units,byCoalition,cmap};
   }
 
+  // Compatibilità interna: il motore hardening usa il nome descrittivo
+  // buildNationalUnits, mentre il modulo storico esponeva nationalUnits.
+  const buildNationalUnits=nationalUnits;
+
   function splitCoalitionNational(unit,seatCount,values){
     if(unit.type!=="coalition")return {[unit.members[0]]:seatCount};
     const items=(unit.members||[]).map(k=>({id:k,votes:values?.[k]||0}));
