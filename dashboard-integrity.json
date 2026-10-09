@@ -10,7 +10,7 @@
     "estero-eletti.js": "456020c5027f6745cccc8b3cefc5da90aca506a7",
     "supabase_schema.sql": "c286a57ae48b84401471ba6d2acb31386e8ec6fd",
     "sondaggi-link.js": "6e47d6241d8fbbead8116fb7825527f9eb179ccb",
-    "dashboard-runtime-integrity.js": "e5055adacf27573dc89c106ec6933792a1d334c7",
+    "dashboard-runtime-integrity.js": "a481d12f353222bfc24828aac2c9f433a27fc20e",
     ".github/workflows/pages.yml": "c3768b179b72ec4dbacf3d0adfa0a4575baeedae"
   },
   "mutable_modules": [
