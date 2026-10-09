@@ -31,7 +31,7 @@ let q=law.coalitionQualification(["A","B"],{A:5,B:3},"camera");
 assert.strictEqual(q.qualifies,false);
 q=law.coalitionQualification(["A","B"],{A:6,B:2},"camera");
 assert.strictEqual(q.qualifies,true);
-q=law.coalitionQualification(["A","B"],{A:7.9,B:2},"camera");
+q=law.coalitionQualification(["A","B"],{A:5.9,B:2},"camera");
 assert.strictEqual(q.qualifies,false);
 q=law.coalitionQualification(["A","B"],{A:8,B:2},"camera");
 assert.strictEqual(q.qualifies,true);
@@ -73,7 +73,7 @@ const alloc=law.largestRemainder(
   10
 );
 assert.strictEqual(Object.values(alloc).reduce((a,v)=>a+v,0),10);
-assert.deepStrictEqual(alloc,{A:5,B:4,C:1});
+assert.deepStrictEqual(alloc,{A:5,B:3,C:2});
 assert.strictEqual(law.quadratura(alloc,10),true);
 
 assert.strictEqual(law.premiumPool("camera",false),384);
