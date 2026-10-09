@@ -1,5 +1,4 @@
 name: Dashboard Master Audit
-# Master audit: data, geografia, preferenze e motore seggi
 
 on:
   push:
