@@ -2067,7 +2067,7 @@ function installSondaggiModule(){
       // i seggi eccedenti alla sua quota proporzionale (i seggi premio
       // restano 35) e si riassegnano negli stessi territori agli altri soggetti.
       const winnerTerritorial=specialPartyTotal("senato",winnerId,false);
-      let excess=Math.max(0,113-winnerTerritorial<winnerOrdinary+winnerPremium ? (winnerOrdinary+winnerPremium+winnerTerritorial-113) : 0);
+      let excess=Math.max(0,(winnerOrdinary+winnerPremium+winnerTerritorial)-113);
 
       if(excess>0){
         const removalSlots=[];
