@@ -195,32 +195,35 @@
 
   function premiumCandidate(chamberValues, senateValues, coalitions){
     const subjects=[];
-    const qualifiedMembers=new Set();
+    const qualifiedBoth=new Set();
 
     for(const co of coalitions||[]){
       const cam=coalitionScores(co.members||[],chamberValues,"camera");
       const sen=coalitionScores(co.members||[],senateValues,"senato");
-      if(cam.qualifies) (co.members||[]).forEach(k=>qualifiedMembers.add("camera:"+k));
-      if(sen.qualifies) (co.members||[]).forEach(k=>qualifiedMembers.add("senato:"+k));
-
-      if(!cam.qualifies || !sen.qualifies)continue;
-
-      subjects.push({
-        type:"coalition",
-        id:co.id,
-        members:[...(co.members||[])],
-        name:co.name,
-        camera:n(cam.premiumFigure),
-        senato:n(sen.premiumFigure)
-      });
+      if(cam.qualifies && sen.qualifies){
+        qualifiedBoth.add(co.id);
+        subjects.push({
+          type:"coalition",
+          id:co.id,
+          members:[...(co.members||[])],
+          name:co.name,
+          camera:n(cam.premiumFigure),
+          senato:n(sen.premiumFigure)
+        });
+      }
     }
 
-    // Una lista che appartiene a una coalizione qualificata in almeno una
-    // Camera non può essere contemporaneamente trattata come soggetto
-    // autonomo per il premio bicamerale.
+    // Una lista resta soggetto autonomo salvo quando appartiene a una
+    // coalizione che è qualificata come soggetto in entrambe le Camere.
+    const memberOfQualifiedBoth=new Set();
+    for(const co of coalitions||[]){
+      if(!qualifiedBoth.has(co.id))continue;
+      (co.members||[]).forEach(k=>memberOfQualifiedBoth.add(k));
+    }
+
     Object.keys(chamberValues||{}).forEach(k=>{
       if(k==="ALTRI")return;
-      if(qualifiedMembers.has("camera:"+k) || qualifiedMembers.has("senato:"+k))return;
+      if(memberOfQualifiedBoth.has(k))return;
       subjects.push({
         type:"list",
         id:k,
