@@ -884,9 +884,13 @@
       });
 
       const calc={};
+      const remByCirc={};
+      const remainderWinnersByCirc={};
       Object.entries(circum).forEach(([circId,circ])=>{
         const seats=bonus?circ.withPrizeSeats:circ.noPrizeSeats;
         calc[circId]={};
+        remByCirc[circId]={};
+        remainderWinnersByCirc[circId]=[];
         if(!seats)return;
         const scored=units.filter(u=>(finalNational.seats[u.id]||0)>0)
           .map(u=>{
@@ -901,7 +905,11 @@
           return {...x,base:Math.floor(exact),rest:exact-Math.floor(exact)};
         });
         let used=0;
-        provisional.forEach(x=>{calc[circId][x.id]=x.base;used+=x.base;});
+        provisional.forEach(x=>{
+          calc[circId][x.id]=x.base;
+          remByCirc[circId][x.id]=x.rest;
+          used+=x.base;
+        });
         const ranked=stableSorted(provisional,(a,b)=>
           b.rest-a.rest||b.figure-a.figure||tieOrder(a,b)
         );
@@ -909,10 +917,11 @@
           if(used>=seats)break;
           if((calc[circId][x.id]||0)>=(finalNational.seats[x.id]||0))continue;
           calc[circId][x.id]=(calc[circId][x.id]||0)+1;
+          remainderWinnersByCirc[circId].push(x.id);
           used++;
         }
       });
-      unitCirc={byCirc:calc,unitRemaindersByCirc:{},nationalTotals:{}};
+      unitCirc={byCirc:calc,unitRemaindersByCirc:remByCirc,remainderWinnersByCirc,nationalTotals:{}};
       units.forEach(u=>unitCirc.nationalTotals[u.id]=0);
       Object.values(calc).forEach(m=>Object.entries(m).forEach(([k,v])=>{
         unitCirc.nationalTotals[k]=(unitCirc.nationalTotals[k]||0)+v;
@@ -928,13 +937,23 @@
         if(!over.length||!under.length)break;
         let moved=false;
         for(const donor of over){
-          const circIds=Object.keys(calc).filter(c=>(calc[c]?.[donor.id]||0)>0);
-          for(const c of circIds){
-            const rec=under.slice().sort((a,b)=>{
-              const fa=calcCircUnitFigure(a,circData[c]),fb=calcCircUnitFigure(b,circData[c]);
-              return fb-fa||String(a.id).localeCompare(String(b.id),"it");
-            })[0];
-            if(!rec)continue;
+          const donorCircs=Object.keys(calc)
+            .filter(c=>(calc[c]?.[donor.id]||0)>0)
+            .sort((a,b)=>
+              (remByCirc[a]?.[donor.id]??-1)-
+              (remByCirc[b]?.[donor.id]??-1) ||
+              a.localeCompare(b,"it")
+            );
+          for(const c of donorCircs){
+            const receivers=under.slice().filter(u=>
+              (calc[c]?.[u.id]||0)<(finalNational.seats[u.id]||0)
+            ).sort((a,b)=>
+              (remByCirc[c]?.[b.id]??-1)-
+              (remByCirc[c]?.[a.id]??-1) ||
+              String(a.id).localeCompare(String(b.id),"it")
+            );
+            if(!receivers.length)continue;
+            const rec=receivers[0];
             calc[c][donor.id]--;
             calc[c][rec.id]=(calc[c][rec.id]||0)+1;
             unitCirc.nationalTotals[donor.id]--;
