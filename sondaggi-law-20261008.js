@@ -177,23 +177,16 @@
 
   function premiumCandidate(chamberValues, senateValues, coalitions){
     const subjects=[];
-
-    Object.keys(chamberValues||{}).forEach(k=>{
-      if(k==="ALTRI")return;
-      subjects.push({
-        type:"list",
-        id:k,
-        members:[k],
-        name:k,
-        camera:n(chamberValues[k]),
-        senato:n(senateValues?.[k])
-      });
-    });
+    const qualifiedMembers=new Set();
 
     for(const co of coalitions||[]){
       const cam=coalitionScores(co.members||[],chamberValues,"camera");
       const sen=coalitionScores(co.members||[],senateValues,"senato");
+      if(cam.qualifies) (co.members||[]).forEach(k=>qualifiedMembers.add("camera:"+k));
+      if(sen.qualifies) (co.members||[]).forEach(k=>qualifiedMembers.add("senato:"+k));
+
       if(!cam.qualifies || !sen.qualifies)continue;
+
       subjects.push({
         type:"coalition",
         id:co.id,
@@ -203,6 +196,22 @@
         senato:n(sen.premiumFigure)
       });
     }
+
+    // Una lista che appartiene a una coalizione qualificata in almeno una
+    // Camera non può essere contemporaneamente trattata come soggetto
+    // autonomo per il premio bicamerale.
+    Object.keys(chamberValues||{}).forEach(k=>{
+      if(k==="ALTRI")return;
+      if(qualifiedMembers.has("camera:"+k) || qualifiedMembers.has("senato:"+k))return;
+      subjects.push({
+        type:"list",
+        id:k,
+        members:[k],
+        name:k,
+        camera:n(chamberValues[k]),
+        senato:n(senateValues?.[k])
+      });
+    });
 
     if(!subjects.length)return null;
 
