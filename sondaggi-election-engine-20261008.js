@@ -323,7 +323,9 @@
       );
     },0);
 
-    const premiumFigure=admitted.reduce((a,k)=>{
+    // Per la cifra utile anche alla verifica del premio, la coalizione
+    // comprende le liste ammesse e l'eventuale lista ripescata 2-ter.
+    const premiumFigure=splitKeys.reduce((a,k)=>{
       return a+cleanPositive(values?.[k]);
     },0);
 
