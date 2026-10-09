@@ -492,7 +492,7 @@ function installSondaggiModule(){
   }
 
   function coalitionFigure(members,values,chamber,regionContext=null){
-    const all=[...(members||[])].filter(k=>values[k]!=null);
+    const all=[...(members||[])].filter(k=>values[k]!=null&&!AGGREGATE_POLL_PARTIES.has(k));
     const admitted=all.filter(k=>
       (values[k]||0)>=3 ||
       (chamber==="senato" && (regionContext?senate20Exception(k,regionContext):senate20ExceptionAny(k)))
@@ -564,6 +564,7 @@ function installSondaggiModule(){
 
     const coalitionIds=new Set(coalStats.map(c=>c.id));
     Object.keys(values).forEach(k=>{
+      if(AGGREGATE_POLL_PARTIES.has(k))return;
       if(cmap[k]&&coalitionIds.has(cmap[k]))return;
       const v=values[k]||0;
       const eligible=v>=3 ||
@@ -583,6 +584,7 @@ function installSondaggiModule(){
     return {units,admittedByCoalition,coalStats};
   }
   const POLL_VOTE_SCALE=1000000;
+  const AGGREGATE_POLL_PARTIES=new Set(["ALTRI"]);
 
   function pollVoteUnits(v){
     const n=Number(v)||0;
@@ -693,10 +695,14 @@ function installSondaggiModule(){
     const senPlan=allocationUnits(sen,"senato");
 
     const topCam=camPlan.units.slice().sort((a,b)=>
-      b.votes-a.votes||String(a.id).localeCompare(String(b.id),"it")
+      b.votes-a.votes||
+      pollStableLot(a.id)-pollStableLot(b.id)||
+      String(a.id).localeCompare(String(b.id),"it")
     )[0]||null;
     const topSen=senPlan.units.slice().sort((a,b)=>
-      b.votes-a.votes||String(a.id).localeCompare(String(b.id),"it")
+      b.votes-a.votes||
+      pollStableLot(a.id)-pollStableLot(b.id)||
+      String(a.id).localeCompare(String(b.id),"it")
     )[0]||null;
 
     if(!topCam||!topSen)return null;
