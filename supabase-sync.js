@@ -16,8 +16,9 @@ const H={
 */
 const SYNC_CURRENT_COMUNE_ALIASES = Object.freeze({
   "RONAGO":"Uggiate con Ronago",
-  "UGGIATETREVANO":"Uggiate con Ronago",
-  "ALBAREDOARNABOLDI":"Campospinoso Albaredo",
+  "UGGIATE-TREVANO":"Uggiate con Ronago",
+  "UGGIATE TREVANO":"Uggiate con Ronago",
+  "ALBAREDO ARNABOLDI":"Campospinoso Albaredo",
   "CAMPOSPINOSO":"Campospinoso Albaredo",
   "LIRIO":"Montalto Pavese",
   "BARDELLO":"Bardello con Malgesso e Bregano",
