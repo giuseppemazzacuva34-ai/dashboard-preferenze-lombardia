@@ -53,8 +53,8 @@ assert.strictEqual(totalMap(CAM,1)-totalMap(CAM,2),70,"Camera seggi premio");
 assert.strictEqual(totalMap(SEN,1),189,"Senato senza premio");
 assert.strictEqual(totalMap(SEN,2),154,"Senato con premio");
 assert.strictEqual(totalMap(SEN,1)-totalMap(SEN,2),35,"Senato seggi premio");
-assert.strictEqual(specialMap(CAM).length,8,"speciali Camera: 1 VdA + 7 TAA");
-assert.strictEqual(specialMap(SEN).length,7,"speciali Senato: 1 VdA + 6 TAA");
+assert.strictEqual(specialMap(CAM).length,2,"mappa Camera: 1 VdA + 1 voce TAA aggregata da 7 seggi");
+assert.strictEqual(specialMap(SEN).length,7,"mappa Senato: 1 VdA + 6 collegi TAA speciali");
 
 const parties={
   FdI:{name:"Fratelli d'Italia",camera:26.8,senate:26.8},
