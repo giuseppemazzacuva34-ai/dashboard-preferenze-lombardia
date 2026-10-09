@@ -20,6 +20,18 @@
     lastAudit:null
   };
 
+  function getGlobal(name){
+    try{
+      if(typeof window[name]!=="undefined") return window[name];
+    }catch(_){}
+    try{
+      if(name==="GEO" && typeof GEO!=="undefined") return GEO;
+      if(name==="RAW" && typeof RAW!=="undefined") return RAW;
+      if(name==="EURO_RAW" && typeof EURO_RAW!=="undefined") return EURO_RAW;
+    }catch(_){}
+    return undefined;
+  }
+
   function normalize(value){
     return String(value ?? "")
       .normalize("NFD")
@@ -64,28 +76,26 @@
   }
 
   async function sha256(value){
-    const text=stableSerialize(value);
-    if(window.crypto?.subtle && window.TextEncoder){
-      const bytes=new TextEncoder().encode(text);
+    const serialized=stableSerialize(value);
+    if(window.crypto?.subtle && typeof TextEncoder!=="undefined"){
+      const bytes=new TextEncoder().encode(serialized);
       const digest=await window.crypto.subtle.digest("SHA-256",bytes);
       return Array.from(new Uint8Array(digest))
         .map(b=>b.toString(16).padStart(2,"0"))
         .join("");
     }
-    /* Fallback non-cryptographic fingerprint: used only when Web Crypto is
-       unavailable. The Git integrity check remains authoritative. */
     let h1=0x811c9dc5,h2=0x01000193;
-    for(let i=0;i<text.length;i++){
-      const c=text.charCodeAt(i);
+    for(let i=0;i<serialized.length;i++){
+      const c=serialized.charCodeAt(i);
       h1^=c; h1=Math.imul(h1,0x01000193);
       h2^=c; h2=Math.imul(h2,0x85ebca6b);
     }
     return (h1>>>0).toString(16).padStart(8,"0")+"-"+
-           (h2>>>0).toString(16).padStart(8,"0")+"-"+text.length;
+           (h2>>>0).toString(16).padStart(8,"0")+"-"+serialized.length;
   }
 
   function geoAudit(){
-    const geo=window.GEO;
+    const geo=getGlobal("GEO");
     if(!Array.isArray(geo)){
       return {ok:false,reason:"GEO non disponibile",total:0,byProvince:{}};
     }
@@ -128,18 +138,18 @@
           "font:600 13px/1.35 system-ui,sans-serif",
           "box-shadow:0 8px 24px rgba(0,0,0,.18)"
         ].join(";");
-        document.body?.appendChild(banner);
+        if(document.body) document.body.appendChild(banner);
       }
-      banner.textContent="CONTROLLO INTEGRITÀ DATI: "+reason+
+      if(banner) banner.textContent="CONTROLLO INTEGRITÀ DATI: "+reason+
         ". Nessun dato è stato modificato automaticamente.";
     }catch(_){}
     console.error("[Dashboard Integrity]",reason);
   }
 
   async function capture(){
-    const geo=window.GEO;
-    const raw=window.RAW;
-    const euro=window.EURO_RAW;
+    const geo=getGlobal("GEO");
+    const raw=getGlobal("RAW");
+    const euro=getGlobal("EURO_RAW");
     if(!Array.isArray(geo) || !Array.isArray(raw) || !Array.isArray(euro)){
       return false;
     }
@@ -151,12 +161,11 @@
       return true;
     }
 
-    const baseline={
+    state.baseline={
       GEO:await sha256(geo),
       RAW:await sha256(raw),
       EURO_RAW:await sha256(euro)
     };
-    state.baseline=baseline;
     state.ready=true;
     state.ok=true;
     state.broken=false;
@@ -175,9 +184,9 @@
       }
 
       const current={
-        GEO:await sha256(window.GEO),
-        RAW:await sha256(window.RAW),
-        EURO_RAW:await sha256(window.EURO_RAW)
+        GEO:await sha256(getGlobal("GEO")),
+        RAW:await sha256(getGlobal("RAW")),
+        EURO_RAW:await sha256(getGlobal("EURO_RAW"))
       };
 
       for(const key of ["GEO","RAW","EURO_RAW"]){
@@ -204,8 +213,11 @@
       attempts++;
       if(await capture()){
         clearInterval(timer);
-        window.setTimeout(check,1500);
-        window.setInterval(check,5000);
+        window.setTimeout(check,2000);
+        /* Il controllo completo è volutamente leggero in frequenza:
+           la protezione principale contro modifiche al codice/dataset è
+           il controllo Git in CI. */
+        window.setInterval(check,30000);
       }else if(attempts>=120){
         clearInterval(timer);
         state.ok=false;
