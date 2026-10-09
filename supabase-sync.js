@@ -1404,6 +1404,7 @@ function installSondaggiModule(){
       parties:{},
       regionalSenate:{},
       regionalCustom:{},
+      specialSeats:specialSeatState(),
       meta:{legacyBridgeInitialized:false},
       collegeValues:{camera:{},senato:{}},
       coalitions:defaultCoalitions(),
@@ -1450,6 +1451,24 @@ function installSondaggiModule(){
       const savedCoalitions=Array.isArray(saved.coalitions)?saved.coalitions:null;
       base.coalitions=savedCoalitions?savedCoalitions:[];
       base.coalitionPresetVersion=Number(saved.coalitionPresetVersion)||0;
+
+      // Seggi fuori dal riparto nazionale: conserviamo solo valori interi validi
+      // e non permettiamo che una categoria superi il numero di seggi disponibile.
+      const savedSpecial=saved.specialSeats&&typeof saved.specialSeats==="object"?saved.specialSeats:null;
+      base.specialSeats=specialSeatState();
+      if(savedSpecial){
+        ["camera","senato"].forEach(ch=>{
+          SPECIAL_CATS.forEach(cat=>{
+            let remaining=Number(SPECIAL_SEATS[ch][cat]||0);
+            const src=savedSpecial[ch]?.[cat]&&typeof savedSpecial[ch][cat]==="object"?savedSpecial[ch][cat]:{};
+            Object.entries(src).forEach(([k,v])=>{
+              if(!POLLS.some(p=>p[0]===k)||remaining<=0)return;
+              const n=Math.max(0,Math.min(remaining,Math.floor(Number(v)||0)));
+              if(n>0){base.specialSeats[ch][cat][k]=n;remaining-=n;}
+            });
+          });
+        });
+      }
 
       // Migrazione una tantum delle vecchie configurazioni senza coalizioni.
       // Le coalizioni preimpostate restano poi completamente modificabili.
@@ -1763,9 +1782,17 @@ function installSondaggiModule(){
     catch(_){return false;}
   }
 
+  function senate20ExceptionAny(slug){
+    if(!slug)return false;
+    return SENATE_PROP_REGIONS.some(region=>senate20Exception(slug,region));
+  }
+
   function coalitionFigure(members,values,chamber,regionContext=null){
     const all=[...(members||[])];
-    const admitted=all.filter(k=>(values[k]||0)>=3 || (chamber==="senato"&&regionContext&&senate20Exception(k,regionContext)));
+    const admitted=all.filter(k=>
+      (values[k]||0)>=3 ||
+      (chamber==="senato" && (regionContext?senate20Exception(k,regionContext):senate20ExceptionAny(k)))
+    );
     const admittedTotal=admitted.reduce((sum,k)=>sum+(values[k]||0),0);
     const qualifies=admitted.length>0&&admittedTotal>=10;
     const nationalValues=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(chamber==="camera"?S.parties[k].camera:S.parties[k].senate)]));
@@ -1800,7 +1827,7 @@ function installSondaggiModule(){
     Object.keys(values).forEach(k=>{
       if(cmap[k]&&coalitionIds.has(cmap[k]))return;
       const v=values[k]||0;
-      const eligible=v>=3 || (chamber==="senato"&&senate20Exception(k,regionContext));
+      const eligible=v>=3 || (chamber==="senato" && (regionContext?senate20Exception(k,regionContext):senate20ExceptionAny(k)));
       if(eligible)units.push({id:"P:"+k,type:"list",members:[k],votes:v,name:k});
     });
 
@@ -1884,6 +1911,16 @@ function installSondaggiModule(){
     senato:{estero:4,valleDAosta:1,trentinoAltoAdige:6,total:11,proportional:189}
   };
 
+  const SPECIAL_CATS=["estero","valleDAosta","trentinoAltoAdige"];
+
+  function specialSeatState(){
+    const out={camera:{},senato:{}};
+    ["camera","senato"].forEach(ch=>{
+      SPECIAL_CATS.forEach(cat=>{out[ch][cat]={};});
+    });
+    return out;
+  }
+
   function senateRegionSeatInfo(region){
     const src=SEN_COLLEGI[region]||[];
     let total=0;
@@ -1942,7 +1979,7 @@ function installSondaggiModule(){
         const admitted=new Set(nu.members||[]);
         allMembers.forEach(k=>{if(regionalValues[k]>=20)admitted.add(k);});
         const splitMembers=[...admitted].filter(k=>allMembers.includes(k));
-        const figure=allMembers.filter(k=>(regionalValues[k]||0)>=1).reduce((sum,k)=>sum+regionalValues[k],0);
+        const figure=splitMembers.reduce((sum,k)=>sum+(regionalValues[k]||0),0);
         if(figure>0)units.push({id:nu.id,type:"coalition",coalitionId:nu.coalitionId,name:nu.name,members:splitMembers.length?splitMembers:(nu.members||[]),votes:figure});
         allMembers.forEach(k=>used.add(k));
       }else{
@@ -1981,48 +2018,62 @@ function installSondaggiModule(){
       const seats=usePrize?info.withPrize:info.total;
       const units=regionalSenateUnits(region,vals,nationalPlan);
       const detailed=hamiltonDetailed(units.map(u=>({id:u.id,votes:u.votes})),seats);
-      regionResults[region]={region,seats,totalRegionSeats:info.total,premiumSeats:usePrize?info.premium:0,units,unitSeats:{...detailed.seats},remainders:{...detailed.remainders},remainderWinners:new Set(detailed.remainderWinners)};
+      regionResults[region]={
+        region,seats,totalRegionSeats:info.total,premiumSeats:usePrize?info.premium:0,
+        units,unitSeats:{...detailed.seats},remainders:{...detailed.remainders},
+        remainderWinners:new Set(detailed.remainderWinners),premiumWinner:0,premiumResidual:usePrize?info.premium:0
+      };
     });
 
+    let winnerOrdinary=0;
+    let winnerPremium=0;
+
     if(usePrize&&winnerId){
-      let winnerOrdinary=SENATE_PROP_REGIONS.reduce((sum,r)=>sum+(regionResults[r].unitSeats[winnerId]||0),0);
-      let excess=Math.max(0,winnerOrdinary-78);
-      if(excess>0){
-        const candidates=[];
-        SENATE_PROP_REGIONS.forEach(region=>{
-          const rr=regionResults[region],count=rr.unitSeats[winnerId]||0;
-          for(let n=0;n<count;n++){
-            candidates.push({
-              region,
-              priority:(n===0&&rr.remainderWinners.has(winnerId))?0:1,
-              rest:rr.remainders[winnerId]||0,
-              ordinal:n
-            });
-          }
-        });
-        candidates.sort((a,b)=>a.priority-b.priority||a.rest-b.rest||a.region.localeCompare(b.region,"it"));
-        for(const cand of candidates){
-          if(excess<=0)break;
-          const rr=regionResults[cand.region];
-          if((rr.unitSeats[winnerId]||0)<=0)continue;
-          rr.unitSeats[winnerId]-=1;
-          const alternatives=rr.units.filter(u=>u.id!==winnerId);
-          if(alternatives.length){
-            const unused=alternatives.filter(u=>!rr.remainderWinners.has(u.id))
-              .sort((a,b)=>(rr.remainders[b.id]||0)-(rr.remainders[a.id]||0)||b.votes-a.votes||String(a.id).localeCompare(String(b.id),"it"));
-            const pool=unused.length?unused:alternatives.slice().sort((a,b)=>b.votes-a.votes||String(a.id).localeCompare(String(b.id),"it"));
-            const target=pool[0];
-            rr.unitSeats[target.id]=(rr.unitSeats[target.id]||0)+1;
-          }
-          excess--;
+      winnerOrdinary=SENATE_PROP_REGIONS.reduce((sum,r)=>sum+(regionResults[r].unitSeats[winnerId]||0),0);
+      const winnerTerritorial=specialPartyTotal("senato",winnerId,false);
+      const winnerPremium=Math.min(35,Math.max(0,113-winnerOrdinary-winnerTerritorial));
+
+      // I 35 seggi-premio sono distribuiti per regione. Se il tetto di 113
+      // non consente di attribuirli tutti al vincitore, scegliamo i posti del
+      // vincitore in base al quoziente regionale non utilizzato e ridistribuiamo
+      // i rimanenti negli stessi collegi regionali con metodo proporzionale.
+      const candidateSlots=[];
+      SENATE_PROP_REGIONS.forEach(region=>{
+        const rr=regionResults[region];
+        const unit=rr.units.find(u=>u.id===winnerId);
+        if(!unit||rr.premiumSeats<=0)return;
+        const ordinary=rr.unitSeats[winnerId]||0;
+        const score=(Number(unit.votes)||0)/(ordinary+1);
+        const rest=rr.remainders[winnerId]||0;
+        for(let n=0;n<rr.premiumSeats;n++){
+          candidateSlots.push({region,score,rest,votes:Number(unit.votes)||0,ordinal:n});
         }
-      }
+      });
+      candidateSlots.sort((a,b)=>
+        b.score-a.score||b.rest-a.rest||b.votes-a.votes||a.region.localeCompare(b.region,"it")||a.ordinal-b.ordinal
+      );
+      const byRegion={};
+      candidateSlots.slice(0,winnerPremium).forEach(x=>{byRegion[x.region]=(byRegion[x.region]||0)+1;});
+
+      SENATE_PROP_REGIONS.forEach(region=>{
+        const rr=regionResults[region],vals=senateRegionalValues(region);
+        const winCount=byRegion[region]||0;
+        rr.premiumWinner=winCount;
+        rr.premiumResidual=Math.max(0,rr.premiumSeats-winCount);
+        if(winCount){
+          const win=rr.units.find(u=>u.id===winnerId);
+          const split=splitRegionalUnit(win,winCount,vals);
+          Object.entries(split).forEach(([k,v])=>{});
+        }
+      });
+      winnerPremium=Object.values(byRegion).reduce((sum,v)=>sum+v,0);
     }
 
     const partySeats={},regionPartySeats={},regionUnitSeats={};
     SENATE_PROP_REGIONS.forEach(region=>{
       const rr=regionResults[region],vals=senateRegionalValues(region);
       regionPartySeats[region]={};regionUnitSeats[region]={};
+
       Object.entries(rr.unitSeats).forEach(([unitId,count])=>{
         const unit=rr.units.find(u=>u.id===unitId);
         if(!unit||!count)return;
@@ -2033,70 +2084,116 @@ function installSondaggiModule(){
           regionPartySeats[region][k]=(regionPartySeats[region][k]||0)+v;
         });
       });
-      if(usePrize&&winnerId&&rr.premiumSeats){
-        const win=rr.units.find(u=>u.id===winnerId);
-        if(win){
-          const split=splitRegionalUnit(win,rr.premiumSeats,vals);
+
+      if(usePrize&&winnerId){
+        const winCount=rr.premiumWinner||0;
+        if(winCount){
+          const win=rr.units.find(u=>u.id===winnerId);
+          const split=splitRegionalUnit(win,winCount,vals);
           Object.entries(split).forEach(([k,v])=>{
             partySeats[k]=(partySeats[k]||0)+v;
             regionPartySeats[region][k]=(regionPartySeats[region][k]||0)+v;
           });
         }
+
+        const residual=rr.premiumResidual||0;
+        if(residual){
+          const alternatives=rr.units.filter(u=>u.id!==winnerId);
+          const alloc=hamilton(alternatives.map(u=>({id:u.id,votes:u.votes})),residual);
+          alternatives.forEach(u=>{
+            const count=alloc[u.id]||0;
+            if(!count)return;
+            const split=splitRegionalUnit(u,count,vals);
+            Object.entries(split).forEach(([k,v])=>{
+              partySeats[k]=(partySeats[k]||0)+v;
+              regionPartySeats[region][k]=(regionPartySeats[region][k]||0)+v;
+            });
+          });
+        }
       }
     });
 
-    const winnerOrdinary=SENATE_PROP_REGIONS.reduce((sum,r)=>sum+(regionResults[r].unitSeats[winnerId]||0),0);
     const simulatedTotal=Object.values(partySeats).reduce((sum,v)=>sum+v,0);
-    return {seats:partySeats,regions:regionResults,regionPartySeats,regionUnitSeats,nationalPlan,complete:SENATE_PROP_REGIONS.every(r=>Object.keys(senateRegionalValues(r)).length===Object.keys(S.parties).length),regionCount:SENATE_PROP_REGIONS.length,customizedRegions:SENATE_PROP_REGIONS.filter(isRegionalCustom).length,ordinarySeats:usePrize?154:189,premiumSeats:usePrize?35:0,winnerOrdinary,simulatedTotal};
+    return {
+      seats:partySeats,regions:regionResults,regionPartySeats,regionUnitSeats,nationalPlan,
+      complete:SENATE_PROP_REGIONS.every(r=>Object.keys(senateRegionalValues(r)).length===Object.keys(S.parties).length),
+      regionCount:SENATE_PROP_REGIONS.length,
+      customizedRegions:SENATE_PROP_REGIONS.filter(isRegionalCustom).length,
+      ordinarySeats:usePrize?154:189,premiumSeats:usePrize?35:0,
+      winnerOrdinary,premiumWinnerSeats:usePrize?winnerPremium:0,
+      premiumRedistributed:usePrize?35-winnerPremium:0,simulatedTotal
+    };
+  }
+
+  function specialPartyTotal(chamber,slug,includeEstero=true){
+    if(!slug)return 0;
+    const cats=includeEstero?SPECIAL_CATS:SPECIAL_CATS.filter(x=>x!=="estero");
+    return cats.reduce((sum,cat)=>sum+Number(S.specialSeats?.[chamber]?.[cat]?.[slug]||0),0);
+  }
+
+  function specialAssigned(chamber,cat){
+    return Object.values(S.specialSeats?.[chamber]?.[cat]||{}).reduce((sum,v)=>sum+Number(v||0),0);
+  }
+
+  function specialUnassigned(chamber,cat){
+    return Math.max(0,Number(SPECIAL_SEATS[chamber]?.[cat]||0)-specialAssigned(chamber,cat));
+  }
+
+  function specialNonEsteroPartySeats(chamber,slug){
+    return specialPartyTotal(chamber,slug,false);
   }
 
   function nationalResults(){
     const camVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].camera)]));
+    const senVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
     const bonus=bonusTarget();
     const cam={seats:{},eligible:[],coalTotals:{}};
     const sen={seats:{},eligible:[],coalTotals:{}};
     const camPlan=allocationUnits(camVals,"camera");
 
-    function redistributeExcept(res,plan,values,seats){
-      const others=plan.units.filter(u=>u.id!==(bonus?.id||""));
-      const allocations=hamilton(others.map(u=>({id:u.id,votes:u.votes})),seats);
-      others.forEach(u=>{
-        const count=allocations[u.id]||0;if(!count)return;
-        if(u.type==="coalition"){
-          const split=splitCoalitionSeats(u,count,values);
-          Object.entries(split).forEach(([k,v])=>{res.seats[k]=(res.seats[k]||0)+v;});
-        }else{
-          const k=u.members[0];res.seats[k]=(res.seats[k]||0)+count;
-        }
-      });
+    function addUnitResult(res,unit,count,values,regionValues){
+      if(!unit||count<=0)return;
+      const split=regionValues?splitRegionalUnit(unit,count,regionValues):splitCoalitionSeats(unit,count,values);
+      Object.entries(split).forEach(([k,v])=>{res.seats[k]=(res.seats[k]||0)+v;});
     }
 
     if(!bonus){
-      Object.assign(cam,allocate(camVals,384,"camera"));
+      const camBase=allocate(camVals,384,"camera");
+      Object.assign(cam,camBase);
       Object.assign(sen,simulateSenateRegions(false));
-      cam.premiumSeats=0;cam.bonusSeats=0;
-      sen.premiumSeats=0;sen.bonusSeats=0;
+      cam.premiumSeats=0;cam.bonusSeats=0;cam.prizeWinnerSeats=0;
+      sen.premiumSeats=0;sen.bonusSeats=0;sen.prizeWinnerSeats=0;
     }else{
-      const winnerId=bonus.id;
-      const camWin=camPlan.units.find(u=>u.id===winnerId);
-      if(camWin){
-        const split=camWin.type==="coalition"?splitCoalitionSeats(camWin,150,camVals):{[camWin.members[0]]:150};
-        Object.entries(split).forEach(([k,v])=>{cam.seats[k]=(cam.seats[k]||0)+v;});
-      }
-      redistributeExcept(cam,camPlan,camVals,164);
-      if(camWin){
-        const premiumSplit=camWin.type==="coalition"?splitCoalitionSeats(camWin,70,camVals):{[camWin.members[0]]:70};
-        Object.entries(premiumSplit).forEach(([k,v])=>{cam.seats[k]=(cam.seats[k]||0)+v;});
-      }
-      cam.premiumSeats=70;cam.bonusSeats=70;
+      // Prima si assegna sempre il blocco ordinario ridotto a 314 Camera.
+      // Il premio viene poi attribuito fino al tetto di 220 seggi complessivi,
+      // includendo i seggi di Valle d'Aosta/TAA ma escludendo l'Estero.
+      const camBase=allocate(camVals,314,"camera");
+      cam.seats={...camBase.seats};
+      const camWin=camPlan.units.find(u=>u.id===bonus.id);
+      const camWinnerOrdinary=camWin?(camWin.members||[]).reduce((sum,k)=>sum+(camBase.seats[k]||0),0):0;
+      const camTerritorial=camWin?specialNonEsteroPartySeats("camera",camWin.members.length===1?camWin.members[0]:null):0;
+      const camWinnerTerritorial=camWin?camWin.members.reduce((sum,k)=>sum+specialNonEsteroPartySeats("camera",k),0):0;
+      const camPrize=Math.min(70,Math.max(0,220-camWinnerOrdinary-camWinnerTerritorial));
+      addUnitResult(cam,camWin,camPrize,camVals,null);
+
+      const residual=70-camPrize;
+      const others=camPlan.units.filter(u=>u.id!==bonus.id);
+      const residualAlloc=hamilton(others.map(u=>({id:u.id,votes:u.votes})),residual);
+      others.forEach(u=>addUnitResult(cam,u,residualAlloc[u.id]||0,camVals,null));
+
+      cam.premiumSeats=70;cam.bonusSeats=70;cam.prizeWinnerSeats=camPrize;
+      cam.prizeRedistributed=residual;cam.ordinarySeats=314;
+
       Object.assign(sen,simulateSenateRegions(true));
       sen.premiumSeats=35;sen.bonusSeats=35;
+      sen.prizeWinnerSeats=sen.premiumWinnerSeats||0;
+      sen.prizeRedistributed=sen.premiumRedistributed||0;
     }
 
     cam.eligible=camPlan.units.flatMap(u=>u.members);
     cam.units=camPlan.units;
     cam.coalTotals=Object.fromEntries(camPlan.coalStats.map(c=>[c.id,c.figure]));
-    const senPlan=allocationUnits(Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)])),"senato");
+    const senPlan=allocationUnits(senVals,"senato");
     sen.eligible=senPlan.units.flatMap(u=>u.members);
     sen.units=senPlan.units;
     sen.coalTotals=Object.fromEntries(senPlan.coalStats.map(c=>[c.id,c.figure]));
@@ -2126,6 +2223,18 @@ function installSondaggiModule(){
       S.collegeValues[S.chamber][S.college][slug]=num(value);
     }
     save();
+  }
+
+  function saveSpecialSeat(slug,chamber,cat,value){
+    if(!S.parties[slug]||!SPECIAL_CATS.includes(cat))return;
+    S.specialSeats[chamber]??=specialSeatState()[chamber];
+    S.specialSeats[chamber][cat]??={};
+    const cap=Number(SPECIAL_SEATS[chamber]?.[cat]||0);
+    const others=Object.entries(S.specialSeats[chamber][cat]).filter(([k])=>k!==slug).reduce((sum,[,v])=>sum+Number(v||0),0);
+    const wanted=Math.max(0,Math.floor(num(value)));
+    S.specialSeats[chamber][cat][slug]=Math.min(cap-others,wanted);
+    if(S.specialSeats[chamber][cat][slug]<=0)delete S.specialSeats[chamber][cat][slug];
+    save();render();
   }
 
   async function refreshYouTrend(){
@@ -2205,7 +2314,6 @@ function installSondaggiModule(){
       return S.coalitions.map(co=>{
         const members=new Set(co.members||[]);
         const seats=(Object.entries(res.seats||{}).filter(([k])=>members.has(k)).reduce((sum,[,v])=>sum+Number(v||0),0));
-        const vals=type==="camera"?S.parties: S.parties;
         const total=(co.members||[]).reduce((sum,k)=>{
           const src=type==="camera"?S.parties[k]?.camera:S.parties[k]?.senate;
           return sum+Number(src||0);
@@ -2216,6 +2324,43 @@ function installSondaggiModule(){
         .map(x=>'<tr><td><b>'+esc2(x.name)+'</b></td><td>'+x.total.toFixed(1).replace(".",",")+'%</td><td><b>'+fmt0(x.seats)+'</b></td></tr>')
         .join("")||'<tr><td colspan="3">Nessuna coalizione con seggi nello scenario.</td></tr>';
     }
+    function parliamentRows(res,chamber){
+      const totalSeats=chamber==="camera"?400:200;
+      const rows=partyKeys.map(k=>{
+        const p=S.parties[k];
+        const proportional=Number(res.seats?.[k]||0);
+        const territorial=specialPartyTotal(chamber,k,true);
+        return {k,name:p?.name||k,pct:Number(chamber==="camera"?p.camera:p.senate)||0,proportional,territorial,total:proportional+territorial};
+      }).filter(x=>x.total>0||x.pct>0)
+        .sort((a,b)=>b.total-a.total||b.pct-a.pct||a.name.localeCompare(b.name,"it"));
+      const assigned=rows.reduce((sum,x)=>sum+x.total,0);
+      const pending=Math.max(0,totalSeats-assigned);
+      return {
+        rows:rows.map(x=>'<tr><td><b>'+esc2(x.name)+'</b><small>'+esc2(x.k)+'</small></td><td>'+x.pct.toFixed(1).replace(".",",")+'%</td><td>'+fmt0(x.proportional)+'</td><td>'+fmt0(x.territorial)+'</td><td><b>'+fmt0(x.total)+'</b></td></tr>').join("")+
+          '<tr class="sg-pending-row"><td><b>Seggi da assegnare</b></td><td>—</td><td>—</td><td>—</td><td><b>'+fmt0(pending)+'</b></td></tr>',
+        assigned,pending,total:totalSeats
+      };
+    }
+
+    function specialEditor(chamber){
+      const cats=[
+        ["estero","Estero"],["valleDAosta","Valle d'Aosta"],["trentinoAltoAdige","Trentino-Alto Adige"]
+      ];
+      const assigned=Object.fromEntries(cats.map(([cat])=>[cat,specialAssigned(chamber,cat)]));
+      return '<div class="sg-special-editor"><div class="sg-card-title"><b>Seggi fuori dal riparto proporzionale</b><span>'+ (chamber==="camera"?"Camera · 16":"Senato · 11") +'</span></div>'+
+        '<div class="sg-note">Questi seggi non sono deducibili dal solo sondaggio nazionale. Inserisci qui gli eletti delle circoscrizioni territoriali/speciali. Estero non entra nel tetto di 220/113; Valle d\'Aosta e Trentino-Alto Adige sì.</div>'+
+        '<div class="sg-special-totals">'+cats.map(([cat,label])=>'<span><b>'+assigned[cat]+'/'+Number(SPECIAL_SEATS[chamber][cat]||0)+'</b><small>'+label+'</small></span>').join("")+'</div>'+
+        '<div class="sg-table-wrap"><table class="sg-table sg-special-table"><thead><tr><th>Partito</th>'+cats.map(([,label])=>'<th>'+label+'</th>').join("")+'<th>Totale</th></tr></thead><tbody>'+
+        partyKeys.map(k=>{
+          const name=esc2(S.parties[k]?.name||k);
+          const cells=cats.map(([cat])=>'<td><input data-special="'+esc2(k)+'" data-special-ch="'+chamber+'" data-special-cat="'+cat+'" type="number" min="0" step="1" value="'+Number(S.specialSeats?.[chamber]?.[cat]?.[k]||0)+'"></td>').join("");
+          const tot=specialPartyTotal(chamber,k,true);
+          return '<tr><td><b>'+name+'</b><small>'+esc2(k)+'</small></td>'+cells+'<td><b>'+fmt0(tot)+'</b></td></tr>';
+        }).join("")+
+        '</tbody></table></div></div>';
+    }
+
+
 
     const collegeAlloc=c?.special
       ? {seats:{},eligible:[]}
@@ -2240,7 +2385,23 @@ function installSondaggiModule(){
           '</div>'+
         '</div>'+
         '<div class="sg-results">'+
-          '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione seggi nazionale</b><span>scenario legge 8/10/2026</span></div><div class="sg-two"><div><h3>Camera · 400</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.cam,"camera")+'</tbody></table><div class="sg-coal-total"><div class="sg-card-title"><b>Totale coalizioni · Camera</b><span>seggi complessivi</span></div><table class="sg-table"><thead><tr><th>Coalizione</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+coalitionResultRows(national.cam,"camera")+'</tbody></table></div></div><div><h3>Senato · 200</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.sen,"senato")+'</tbody></table><div class="sg-coal-total"><div class="sg-card-title"><b>Totale coalizioni · Senato</b><span>seggi complessivi</span></div><table class="sg-table"><thead><tr><th>Coalizione</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+coalitionResultRows(national.sen,"senato")+'</tbody></table></div><div class="sg-note">'+(national.sen.complete?'✅ Riparto Senato calcolato regione per regione su '+national.sen.regionCount+' regioni proporzionali.':'⚠️ Dati regionali Senato incompleti: risultato provvisorio.')+(national.bonus?' · 35 seggi premio distribuiti regionalmente.':'')+'</div></div></div><div class="sg-special"><b>SEGGI SPECIALI ESCLUSI DAL RIPARTO PROPORZIONALE</b> · Camera ${SPECIAL_SEATS.camera.total} (Estero ${SPECIAL_SEATS.camera.estero}, Valle d&#39;Aosta ${SPECIAL_SEATS.camera.valleDAosta}, Trentino-Alto Adige ${SPECIAL_SEATS.camera.trentinoAltoAdige}) · Senato ${SPECIAL_SEATS.senato.total} (Estero ${SPECIAL_SEATS.senato.estero}, Valle d&#39;Aosta ${SPECIAL_SEATS.senato.valleDAosta}, Trentino-Alto Adige ${SPECIAL_SEATS.senato.trentinoAltoAdige})</div>'+(national.bonus?'<div class="sg-bonus">PREMIO ATTIVO · '+esc2(coalitionFor(national.bonus.id)?.name||national.bonus.members.map(k=>S.parties[k]?.name||k).join(" + "))+' · 70 Camera / 35 Senato</div>':'<div class="sg-note">Il premio non scatta: la stessa lista o coalizione deve essere prima e raggiungere almeno il 42% in entrambe le Camere.</div>')+'</div>'+
+          '<div class="sg-card"><div class="sg-card-title"><b>COMPOSIZIONE DEL PARLAMENTO</b><span>distribuzione complessiva dei seggi</span></div>'+
+            '<div class="sg-two">'+
+              '<div><h3>Camera dei deputati · 400</h3><div class="sg-parliament-kpi"><b>'+fmt0(201)+'</b><span>maggioranza assoluta</span><em>Seggi assegnati: '+fmt0(parliamentRows(national.cam,"camera").assigned)+' / 400 · da assegnare: '+fmt0(parliamentRows(national.cam,"camera").pending)+'</em></div>'+
+                '<table class="sg-table sg-parliament"><thead><tr><th>Partito</th><th>%</th><th>Proporz.</th><th>Fuori riparto</th><th>TOTALE</th></tr></thead><tbody>'+parliamentRows(national.cam,"camera").rows+'</tbody></table>'+
+                '<div class="sg-coal-total"><div class="sg-card-title"><b>Riepilogo coalizioni · Camera</b><span>solo seggi già assegnati</span></div><table class="sg-table"><thead><tr><th>Coalizione</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+coalitionResultRows(national.cam,"camera")+'</tbody></table></div>'+
+              '</div>'+
+              '<div><h3>Senato della Repubblica · 200</h3><div class="sg-parliament-kpi"><b>'+fmt0(101)+'</b><span>maggioranza assoluta</span><em>Seggi assegnati: '+fmt0(parliamentRows(national.sen,"senato").assigned)+' / 200 · da assegnare: '+fmt0(parliamentRows(national.sen,"senato").pending)+'</em></div>'+
+                '<table class="sg-table sg-parliament"><thead><tr><th>Partito</th><th>%</th><th>Proporz.</th><th>Fuori riparto</th><th>TOTALE</th></tr></thead><tbody>'+parliamentRows(national.sen,"senato").rows+'</tbody></table>'+
+                '<div class="sg-coal-total"><div class="sg-card-title"><b>Riepilogo coalizioni · Senato</b><span>solo seggi già assegnati</span></div><table class="sg-table"><thead><tr><th>Coalizione</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+coalitionResultRows(national.sen,"senato")+'</tbody></table></div>'+
+              '</div>'+
+            '</div>'+
+            '<div class="sg-note">'+(national.bonus?'✅ Premio attivo: Camera '+fmt0(national.cam.prizeWinnerSeats||0)+' seggi-premio al vincitore e '+fmt0(national.cam.prizeRedistributed||0)+' ridistribuiti; Senato '+fmt0(national.sen.prizeWinnerSeats||0)+' al vincitore e '+fmt0(national.sen.prizeRedistributed||0)+' agli altri.':'ℹ️ Nessun premio: i 384 seggi proporzionali della Camera e i 189 del Senato sono ripartiti senza i 70/35 seggi premio.')+'</div>'+
+          '</div>'+
+          '<div class="sg-card">'+specialEditor("camera")+specialEditor("senato")+'</div>'+
+          '<div class="sg-card"><div class="sg-card-title"><b>Riparto proporzionale dettagliato</b><span>prima dei seggi fuori riparto</span></div><div class="sg-two"><div><h3>Camera · 384</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.cam,"camera")+'</tbody></table></div><div><h3>Senato · 189</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.sen,"senato")+'</tbody></table><div class="sg-note">'+(national.sen.complete?'✅ Senato: riparto regione per regione su '+national.sen.regionCount+' regioni proporzionali.':'⚠️ Dati regionali Senato incompleti: risultato provvisorio.')+'</div></div></div></div>'+
+          (national.bonus?'<div class="sg-bonus">PREMIO ATTIVO · '+esc2(coalitionFor(national.bonus.id)?.name||national.bonus.members.map(k=>S.parties[k]?.name||k).join(" + "))+' · pool 70 Camera / 35 Senato</div>':'<div class="sg-note">Il premio non scatta: la stessa lista o coalizione deve essere prima e raggiungere almeno il 42% in entrambe le Camere.</div>')+
+        '</div>'+
           '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione nel collegio</b><span>'+esc2(c?.name||"")+' · '+fmt0(c?.seats||0)+' seggi</span></div><table class="sg-table"><thead><tr><th>Partito</th><th>% collegio</th><th>Seggi</th></tr></thead><tbody>'+collegeRows+'</tbody></table><div class="sg-note">Il collegio usa le percentuali locali che inserisci. Le assegnazioni nazionali della riforma restano nella simulazione sopra.</div></div>'+
         '</div>'+
         '<div class="sg-source">Partiti e valori iniziali: Supermedia YouTrend/Agi, rilevazione 1 ottobre 2026. Camera: 384 seggi proporzionali, oppure 314 nella base su cui opera il premio. Senato: 189 seggi proporzionali senza premio; con premio, 154 seggi ordinari + 35 seggi premio. Il riparto del Senato è ora calcolato regione per regione sulle '+SENATE_PROP_REGIONS.length+' regioni proporzionali, con deroga del 20% regionale e controllo del tetto di 113 seggi del vincitore. Valle d’Aosta e Trentino-Alto Adige sono gestiti come seggi speciali separati.</div>'+
@@ -2254,6 +2415,17 @@ function installSondaggiModule(){
       inp.addEventListener("change",()=>{
         saveValue(inp.getAttribute("data-sv"),inp.getAttribute("data-kind"),inp.value);
         render();
+      });
+    });
+
+    host.querySelectorAll("[data-special]").forEach(inp=>{
+      inp.addEventListener("change",()=>{
+        saveSpecialSeat(
+          inp.getAttribute("data-special"),
+          inp.getAttribute("data-special-ch"),
+          inp.getAttribute("data-special-cat"),
+          inp.value
+        );
       });
     });
     host.querySelectorAll("[data-region]").forEach(btn=>{
@@ -2352,6 +2524,7 @@ function installSondaggiModule(){
 .sg-results .sg-card:first-child{grid-column:1/-1}
 .sg-coal-total{margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.08)}
 .sg-coal-total .sg-card-title{margin-bottom:5px}
+.sg-parliament{min-width:720px}.sg-parliament th{text-align:right}.sg-parliament th:first-child{text-align:left}.sg-parliament td:not(:first-child){text-align:right}.sg-parliament td:first-child small{display:block;color:#6f8ca2;font-size:6px;margin-top:2px}.sg-pending-row td{background:#173249;color:#9eb5c5;border-top:1px solid #2d526e}.sg-parliament-kpi{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;align-items:center;background:#102b42;border:1px solid #254b67;border-radius:8px;padding:8px;margin:7px 0}.sg-parliament-kpi b{font-size:20px;color:#fff}.sg-parliament-kpi span{font-size:7px;text-transform:uppercase;font-weight:900;color:#7fa3bd}.sg-parliament-kpi em{grid-column:1/-1;font-size:7px;color:#9eb9ca;font-style:normal}.sg-special-editor{background:#0b1e31;border:1px solid #203d55;border-radius:10px;padding:11px;margin-top:0}.sg-special-editor+.sg-special-editor{margin-top:10px}.sg-special-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}.sg-special-totals span{display:block;background:#102a40;border:1px solid #274a64;border-radius:7px;padding:7px}.sg-special-totals b{display:block;color:#fff;font-size:11px}.sg-special-totals small{display:block;margin-top:2px;color:#7898ae;font-size:6px;text-transform:uppercase}.sg-special-table{min-width:840px}.sg-special-table input{width:54px;box-sizing:border-box;padding:6px 5px}.sg-special-table td,.sg-special-table th{text-align:center}.sg-special-table td:first-child,.sg-special-table th:first-child{text-align:left}.sg-special-table td:first-child small{display:block;color:#6f8ca2;font-size:6px;margin-top:2px}
 .sg-regional-status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-height:280px;overflow:auto;margin-top:8px}
 .sg-region-status{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;border:1px solid #23465f;background:#0a2135;color:#dcecf6;border-radius:8px;padding:7px 8px;cursor:pointer}
 .sg-region-status.active{border-color:#2187ff;box-shadow:0 0 0 1px #2187ff33 inset}
