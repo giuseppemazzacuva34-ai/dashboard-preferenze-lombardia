@@ -1301,13 +1301,6 @@ function installSondaggiModule(){
     "Lazio","Abruzzo","Molise","Campania","Puglia","Basilicata","Calabria","Sicilia","Sardegna"
   ];
 
-    const SPECIAL_SEATS={
-    camera:{estero:8,valleDAosta:1,trentinoAltoAdige:7,total:16,proportional:384},
-    senato:{estero:4,valleDAosta:1,trentinoAltoAdige:6,total:11,proportional:189}
-  };
-
-  const SPECIAL_CATS=["estero","valleDAosta","trentinoAltoAdige"];
-
   const CAM_COLLEGI={
     "Piemonte":["Piemonte 1 - P01|8|7","Piemonte 1 - P02|7|5","Piemonte 2 - P01|6|5","Piemonte 2 - P02|8|7"],
     "Valle d'Aosta":["Valle d'Aosta - U01|1|1|SPECIAL"],
@@ -1415,8 +1408,7 @@ function installSondaggiModule(){
       meta:{legacyBridgeInitialized:false},
       collegeValues:{camera:{},senato:{}},
       coalitions:defaultCoalitions(),
-      coalitionPresetVersion:COALITION_PRESET_VERSION,
-      candidates:{camera:{},senato:{}}
+      coalitionPresetVersion:COALITION_PRESET_VERSION
     };
     POLLS.forEach(p=>{
       s.parties[p[0]]={name:p[1],camera:p[2],senate:p[2]};
@@ -1455,9 +1447,6 @@ function installSondaggiModule(){
       base.collegeValues=saved.collegeValues&&typeof saved.collegeValues==="object"?saved.collegeValues:{camera:{},senato:{}};
       if(!base.collegeValues.camera)base.collegeValues.camera={};
       if(!base.collegeValues.senato)base.collegeValues.senato={};
-      base.candidates=saved.candidates&&typeof saved.candidates==="object"?saved.candidates:{camera:{},senato:{}};
-      if(!base.candidates.camera)base.candidates.camera={};
-      if(!base.candidates.senato)base.candidates.senato={};
 
       const savedCoalitions=Array.isArray(saved.coalitions)?saved.coalitions:null;
       base.coalitions=savedCoalitions?savedCoalitions:[];
@@ -1917,7 +1906,12 @@ function installSondaggiModule(){
     return best;
   }
 
+  const SPECIAL_SEATS={
+    camera:{estero:8,valleDAosta:1,trentinoAltoAdige:7,total:16,proportional:384},
+    senato:{estero:4,valleDAosta:1,trentinoAltoAdige:6,total:11,proportional:189}
+  };
 
+  const SPECIAL_CATS=["estero","valleDAosta","trentinoAltoAdige"];
 
   function specialSeatState(){
     const out={camera:{},senato:{}};
@@ -2330,51 +2324,6 @@ function installSondaggiModule(){
     return {cam,sen,bonus,special:{camera:{...SPECIAL_SEATS.camera},senato:{...SPECIAL_SEATS.senato}}};
   }
 
-  function candidateStore(chamber,collegeName,partySlug){
-    S.candidates??={camera:{},senato:{}};
-    S.candidates[chamber]??={};
-    S.candidates[chamber][collegeName]??={};
-    S.candidates[chamber][collegeName][partySlug]??={capolista:"",others:[]};
-    const x=S.candidates[chamber][collegeName][partySlug];
-    x.others=Array.isArray(x.others)?x.others:[];
-    while(x.others.length<6)x.others.push({nome:"",sesso:"",preferenze:0});
-    if(x.others.length>6)x.others=x.others.slice(0,6);
-    return x;
-  }
-  function candidateOccurrences(chamber,partySlug,name,excludeCollege){
-    const clean=String(name||"").trim().toLowerCase();if(!clean)return 0;let count=0;
-    Object.keys(S.candidates?.[chamber]||{}).forEach(collegeName=>{
-      if(collegeName===excludeCollege)return;
-      const x=S.candidates?.[chamber]?.[collegeName]?.[partySlug];if(!x)return;
-      const names=[x.capolista||"",...(x.others||[]).map(z=>z.nome||"")].map(v=>String(v).trim().toLowerCase()).filter(Boolean);
-      if(names.includes(clean))count++;
-    });return count;
-  }
-  function validateCandidateName(chamber,collegeName,partySlug,oldName,newName){
-    const clean=String(newName||"").trim();if(!clean)return true;
-    const oldClean=String(oldName||"").trim().toLowerCase();if(clean.toLowerCase()===oldClean)return true;
-    const x=candidateStore(chamber,collegeName,partySlug);
-    const names=[x.capolista||"",...(x.others||[]).map(z=>z.nome||"")].map(v=>String(v).trim().toLowerCase()).filter(Boolean);
-    if(names.includes(clean.toLowerCase())){alert("Candidato non salvato: lo stesso candidato è già presente nello stesso collegio e con lo stesso contrassegno.");return false;}
-    if(candidateOccurrences(chamber,partySlug,clean,collegeName)>=5){alert("Candidato non salvato: lo stesso candidato può essere inserito con lo stesso contrassegno in massimo cinque collegi plurinominali.");return false;}
-    return true;
-  }
-  function candidateCollegeValues(chamber,collegeName){
-    const bucket=(S.collegeValues[chamber]??{})[collegeName]??{},region=chamber==="senato"?senateRegionalValues(S.region):{};
-    return Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(bucket[k]??(chamber==="camera"?S.parties[k].camera:(region[k]??S.parties[k].senate)))]));
-  }
-  function candidateEditorHtml(chamber,college,partySlug){
-    const x=candidateStore(chamber,college.name,partySlug),cvals=candidateCollegeValues(chamber,college.name);
-    const seats=college.special?0:(allocate(cvals,college.seats,chamber,chamber==="senato"?S.region:null).seats?.[partySlug]||0);
-    const partyOptions=Object.keys(S.parties).map(k=>'<option value="'+esc2(k)+'" '+(k===partySlug?"selected":"")+'>'+esc2(S.parties[k]?.name||k)+'</option>').join("");
-    const rows=(x.others||[]).map((z,i)=>'<div class="sg-candidate-row"><div class="sg-candidate-index">'+(i+2)+'</div><div class="sg-candidate-main"><input data-candidate-name data-party="'+esc2(partySlug)+'" data-index="'+i+'" data-old="'+esc2(z.nome||"")+'" type="text" value="'+esc2(z.nome||"")+'" placeholder="Nome e cognome"><div class="sg-candidate-sub"><select data-candidate-sex data-party="'+esc2(partySlug)+'" data-index="'+i+'"><option value=""></option><option value="F" '+(String(z.sesso||"").toUpperCase()==="F"?"selected":"")+'>F</option><option value="M" '+(String(z.sesso||"").toUpperCase()==="M"?"selected":"")+'>M</option></select><input data-candidate-pref data-party="'+esc2(partySlug)+'" data-index="'+i+'" type="number" min="0" step="1" value="'+Math.max(0,Math.floor(Number(z.preferenze)||0))+'" placeholder="Preferenze"></div></div></div>').join("");
-    const elected=[];if(String(x.capolista||"").trim()&&seats>0)elected.push(String(x.capolista).trim());
-    const pref=(x.others||[]).map((z,i)=>({name:String(z.nome||"").trim(),pref:Math.max(0,Math.floor(Number(z.preferenze)||0)),i})).filter(z=>z.name).sort((a,b)=>b.pref-a.pref||a.i-b.i);
-    pref.slice(0,Math.max(0,seats-elected.length)).forEach(z=>elected.push(z.name));
-    const filled=[x.capolista,...(x.others||[]).map(z=>z.nome)].filter(v=>String(v||"").trim()).length;
-    return '<div class="sg-card sg-candidate-card"><div class="sg-card-title"><b>CAPOLISTA E CANDIDATI</b><span>'+esc2(college.name)+' · '+esc2(S.parties[partySlug]?.name||partySlug)+'</span></div><div class="sg-note">7 candidati complessivi: capolista + 6. Fino a 3 preferenze per candidati diversi dal capolista; lo stesso candidato può essere presente con lo stesso contrassegno in massimo 5 collegi.</div><div class="sg-candidate-controls"><label>Lista / partito</label><select id="sgCandidateParty">'+partyOptions+'</select></div><div class="sg-candidate-row sg-cap-row"><div class="sg-candidate-index">1</div><div class="sg-candidate-main"><label>Capolista</label><input id="sgCapolista" data-candidate-cap data-party="'+esc2(partySlug)+'" data-old="'+esc2(x.capolista||"")+'" type="text" value="'+esc2(x.capolista||"")+'" placeholder="Nome e cognome del capolista"></div></div><div class="sg-candidate-list">'+rows+'</div><div class="sg-candidate-summary"><b>Controllo</b><span>'+filled+'/7 nominativi compilati · '+seats+' seggi stimati alla lista · '+(elected.length?('eletti simulati: '+elected.join(" · ")):"nessun eletto simulato")+'</span></div></div>';
-  }
-
   function saveValue(slug,kind,value){
     if(!S.parties[slug])return;
     if(kind==="camera")S.parties[slug].camera=num(value);
@@ -2584,40 +2533,6 @@ function installSondaggiModule(){
         '<div class="sg-source">Partiti e valori iniziali: Supermedia YouTrend/Agi, rilevazione 1 ottobre 2026. Camera: 384 seggi proporzionali, oppure 314 nella base su cui opera il premio. Senato: 189 seggi proporzionali senza premio; con premio, 154 seggi ordinari + 35 seggi premio. Il riparto del Senato è ora calcolato regione per regione sulle '+SENATE_PROP_REGIONS.length+' regioni proporzionali, con deroga del 20% regionale e controllo del tetto di 113 seggi del vincitore. Valle d’Aosta e Trentino-Alto Adige sono gestiti come seggi speciali separati.</div>'+
       '</div>';
 
-    const regionCollegeList=collegesFor(S.chamber,S.region);
-    const quickCard='<div class="sg-card sg-region-colleges"><div class="sg-card-title"><b>COLLEGI DELLA REGIONE · '+esc2(S.region)+'</b><span>'+regionCollegeList.length+' collegi</span></div><div class="sg-college-grid">'+regionCollegeList.map(x=>'<button type="button" class="sg-college-btn '+(x.name===S.college?"active":"")+'" data-college-quick="'+esc2(x.name)+'"><b>'+esc2(x.name)+'</b><small>'+x.seats+' seggi nello scenario corrente</small></button>').join("")+'</div></div>';
-    host.querySelector(".sg-controls")?.insertAdjacentHTML("afterend",quickCard);
-    host.querySelectorAll("[data-college-quick]").forEach(btn=>btn.addEventListener("click",()=>{S.college=btn.getAttribute("data-college-quick")||S.college;save();render();}));
-    S.meta=S.meta&&typeof S.meta==="object"?S.meta:{};
-    const candidateParty=Object.keys(S.parties).includes(S.meta.candidateParty)?S.meta.candidateParty:(Object.keys(S.parties)[0]||"");
-    const candidateCard=c&&candidateParty?candidateEditorHtml(S.chamber,c,candidateParty):"";
-    const sourceEl=host.querySelector(".sg-source");
-    if(candidateCard){
-      const wrap=document.createElement("div");wrap.innerHTML=candidateCard;const node=wrap.firstElementChild;
-      if(node&&sourceEl&&sourceEl.parentElement)sourceEl.parentElement.insertBefore(node,sourceEl);else if(node)host.querySelector(".sg-wrap")?.appendChild(node);
-    }
-    const cp=document.getElementById("sgCandidateParty");
-    if(cp)cp.addEventListener("change",()=>{S.meta.candidateParty=cp.value;save();render();});
-    const cap=document.getElementById("sgCapolista");
-    if(cap)cap.addEventListener("change",()=>{
-      const party=cap.getAttribute("data-party")||candidateParty,old=cap.getAttribute("data-old")||"",value=cap.value.trim();
-      if(!validateCandidateName(S.chamber,S.college,party,old,value)){cap.value=old;return;}
-      candidateStore(S.chamber,S.college,party).capolista=value;save();render();
-    });
-    host.querySelectorAll("[data-candidate-name]").forEach(inp=>inp.addEventListener("change",()=>{
-      const party=inp.getAttribute("data-party")||candidateParty,idx=Math.max(0,Number(inp.getAttribute("data-index"))||0),old=inp.getAttribute("data-old")||"",value=inp.value.trim();
-      if(!validateCandidateName(S.chamber,S.college,party,old,value)){inp.value=old;return;}
-      candidateStore(S.chamber,S.college,party).others[idx].nome=value;save();render();
-    }));
-    host.querySelectorAll("[data-candidate-sex]").forEach(inp=>inp.addEventListener("change",()=>{
-      const party=inp.getAttribute("data-party")||candidateParty,idx=Math.max(0,Number(inp.getAttribute("data-index"))||0);
-      candidateStore(S.chamber,S.college,party).others[idx].sesso=String(inp.value||"").toUpperCase().slice(0,1);save();render();
-    }));
-    host.querySelectorAll("[data-candidate-pref]").forEach(inp=>inp.addEventListener("change",()=>{
-      const party=inp.getAttribute("data-party")||candidateParty,idx=Math.max(0,Number(inp.getAttribute("data-index"))||0);
-      candidateStore(S.chamber,S.college,party).others[idx].preferenze=Math.max(0,Math.floor(Number(inp.value)||0));save();render();
-    }));
-
     document.getElementById("sgChamber").value=S.chamber;
     document.getElementById("sgRegion").value=S.region;
     document.getElementById("sgCollege").value=S.college;
@@ -2745,10 +2660,7 @@ function installSondaggiModule(){
 .sg-source{margin-top:8px;font-size:7px;color:#66859d;line-height:1.4}
 @media(max-width:1000px){.sg-layout,.sg-results{grid-template-columns:1fr}.sg-map-card{max-width:none}.sg-map img{height:360px}.sg-controls{grid-template-columns:1fr 1fr}.sg-controls>div:last-child{grid-column:1/-1}}
 @media(max-width:820px){.sg-regional-status{grid-template-columns:1fr 1fr;max-height:330px}.sg-head{display:block}.sg-head h1{font-size:22px}.sg-head .sg-btn{width:100%;margin-top:9px}.sg-map img{height:330px}.sg-regions{grid-template-columns:1fr 1fr}.sg-table{min-width:820px}.sg-table input{width:72px}.sg-members{grid-template-columns:1fr 1fr}.sg-controls{grid-template-columns:1fr}.sg-controls>div:last-child{grid-column:auto}.sg-actions{display:grid;grid-template-columns:1fr 1fr}.sg-two{grid-template-columns:1fr}.sg-results{display:block}.sg-results .sg-card{margin-bottom:10px}}`;
-  style.textContent += ".sg-college-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sg-college-btn{width:100%;text-align:left;border:1px solid #274968;background:#102a42;color:#fff;border-radius:10px;padding:9px;cursor:pointer}.sg-college-btn.active{border-color:#f0c541;background:#173d60}.sg-college-btn b{display:block;font-size:11px}.sg-college-btn small{display:block;color:#91aec7;margin-top:3px;font-size:9px}.sg-candidate-controls{display:grid;grid-template-columns:160px minmax(0,1fr);gap:8px;align-items:center;margin:10px 0}.sg-candidate-row{display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #1e3d59}.sg-candidate-index{font-weight:900;color:#7fa6d0;text-align:center}.sg-candidate-main label{display:block;font-size:9px;color:#91aec7;margin-bottom:4px;text-transform:uppercase}.sg-candidate-main input,.sg-candidate-main select{width:100%;box-sizing:border-box}.sg-candidate-sub{display:grid;grid-template-columns:80px minmax(0,140px);gap:7px;margin-top:6px}.sg-candidate-summary{display:flex;justify-content:space-between;gap:10px;padding:9px 0 0;font-size:10px}@media(max-width:820px){.sg-college-grid{grid-template-columns:1fr}.sg-candidate-controls{grid-template-columns:1fr}.sg-candidate-summary{display:block}.sg-candidate-summary span{display:block;margin-top:4px}}";const activeOnlyStyle=document.createElement("style");activeOnlyStyle.id="sondaggi-active-only-v3";activeOnlyStyle.textContent="#sg7Open,#sg7,#sg7.open{display:none!important}";document.head.appendChild(activeOnlyStyle);document.getElementById("sg7Open")?.remove();document.getElementById("sg7")?.remove();
   document.head.appendChild(style);
-
-  window.addEventListener("sondaggi-data-sync",()=>setTimeout(()=>{document.getElementById("sg7Open")?.remove();document.getElementById("sg7")?.remove();},0));
 
   document.addEventListener("click",ev=>{
     if(ev.target?.closest?.("#sideSondaggi")){
