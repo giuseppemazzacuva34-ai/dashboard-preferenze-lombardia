@@ -10,6 +10,253 @@ const H={
   Authorization:"Bearer "+SUPA_KEY,
   "Content-Type":"application/json"
 };
+
+const AUTH_STORAGE_KEY="dashboard_supabase_session_v1";
+let AUTH_SESSION=null;
+let AUTH_IS_ADMIN=false;
+let AUTH_CHECKED=false;
+let AUTH_BUSY=false;
+
+function authLoad(){
+  try{
+    const raw=localStorage.getItem(AUTH_STORAGE_KEY);
+    AUTH_SESSION=raw?JSON.parse(raw):null;
+  }catch(_){AUTH_SESSION=null;}
+}
+
+function authSave(){
+  try{
+    if(AUTH_SESSION)localStorage.setItem(AUTH_STORAGE_KEY,JSON.stringify(AUTH_SESSION));
+    else localStorage.removeItem(AUTH_STORAGE_KEY);
+  }catch(_){}
+}
+
+function authAccessToken(){
+  return AUTH_SESSION?.access_token||"";
+}
+
+async function authRefresh(){
+  const refreshToken=AUTH_SESSION?.refresh_token;
+  if(!refreshToken)return false;
+  try{
+    const r=await fetch(SUPA_URL+"/auth/v1/token?grant_type=refresh_token",{
+      method:"POST",
+      headers:{apikey:SUPA_KEY,"Content-Type":"application/json"},
+      body:JSON.stringify({refresh_token:refreshToken})
+    });
+    if(!r.ok){ AUTH_SESSION=null; AUTH_IS_ADMIN=false; AUTH_CHECKED=false; authSave(); return false; }
+    const next=await r.json();
+    AUTH_SESSION={...AUTH_SESSION,...next};
+    authSave();
+    AUTH_CHECKED=false;
+    return true;
+  }catch(err){
+    console.error("Supabase auth refresh",err);
+    return false;
+  }
+}
+
+async function authEnsureFresh(){
+  if(!AUTH_SESSION?.access_token)return false;
+  const expiresAt=Number(AUTH_SESSION.expires_at||0)*1000;
+  if(expiresAt && Date.now()>expiresAt-60000){
+    return authRefresh();
+  }
+  return true;
+}
+
+async function authIsAdmin(){
+  if(!AUTH_SESSION?.access_token)return false;
+  if(AUTH_CHECKED)return AUTH_IS_ADMIN;
+  await authEnsureFresh();
+  if(!AUTH_SESSION?.user?.id)return false;
+  try{
+    const id=encodeURIComponent(AUTH_SESSION.user.id);
+    const r=await fetch(SUPA_URL+"/rest/v1/dashboard_admins?select=user_id&user_id=eq."+id,{
+      method:"GET",
+      headers:{apikey:SUPA_KEY,Authorization:"Bearer "+AUTH_SESSION.access_token}
+    });
+    if(!r.ok){AUTH_IS_ADMIN=false;AUTH_CHECKED=true;return false;}
+    const rows=await r.json();
+    AUTH_IS_ADMIN=Array.isArray(rows)&&rows.length>0;
+    AUTH_CHECKED=true;
+    return AUTH_IS_ADMIN;
+  }catch(err){
+    console.error("Supabase admin check",err);
+    AUTH_IS_ADMIN=false;
+    AUTH_CHECKED=true;
+    return false;
+  }
+}
+
+function authStatusText(){
+  if(!AUTH_SESSION?.access_token)return "Accesso pubblico · sola lettura";
+  if(AUTH_IS_ADMIN)return "Amministratore autenticato";
+  if(AUTH_CHECKED)return "Account autenticato · nessun permesso amministratore";
+  return "Account autenticato · verifica permessi…";
+}
+
+function authRenderUI(){
+  const box=document.getElementById("dashboard-auth-box");
+  if(!box)return;
+  const status=box.querySelector(".dashboard-auth-status");
+  const btn=box.querySelector(".dashboard-auth-btn");
+  if(status)status.textContent=authStatusText();
+  if(btn){
+    btn.textContent=AUTH_SESSION?.access_token?"ESCI":"ACCESSO ADMIN";
+    btn.disabled=AUTH_BUSY;
+  }
+  box.classList.toggle("is-admin",!!AUTH_IS_ADMIN);
+  box.classList.toggle("is-auth",!!AUTH_SESSION?.access_token);
+}
+
+function authShow(message=""){
+  if(document.getElementById("dashboard-auth-modal"))return;
+  const msg=String(message||"");
+  const wrap=document.createElement("div");
+  wrap.id="dashboard-auth-modal";
+  wrap.innerHTML=
+    '<div class="dashboard-auth-backdrop">'+
+      '<div class="dashboard-auth-card" role="dialog" aria-modal="true" aria-label="Accesso amministratore">'+
+        '<div class="dashboard-auth-head">'+
+          '<div><div class="dashboard-auth-eyebrow">DASHBOARD</div><h3>Accesso amministratore</h3><p>La dashboard resta consultabile pubblicamente. Per modificare correnti e ticket devi accedere con un account autorizzato.</p></div>'+
+          '<button type="button" class="dashboard-auth-close" data-auth-close>×</button>'+
+        '</div>'+
+        (msg?'<div class="dashboard-auth-message">'+esc2(msg)+'</div>':'')+
+        '<form id="dashboard-auth-form" autocomplete="on">'+
+          '<label>Email<input name="email" type="email" autocomplete="username" required></label>'+
+          '<label>Password<input name="password" type="password" autocomplete="current-password" required></label>'+
+          '<button type="submit" class="dashboard-auth-submit">ACCEDI</button>'+
+        '</form>'+
+        '<div class="dashboard-auth-help">Usa le credenziali dell’account Supabase già autorizzato.</div>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(wrap);
+  wrap.querySelector("[data-auth-close]")?.addEventListener("click",()=>wrap.remove());
+  wrap.querySelector(".dashboard-auth-backdrop")?.addEventListener("click",e=>{if(e.target===e.currentTarget)wrap.remove();});
+  wrap.querySelector("#dashboard-auth-form")?.addEventListener("submit",async e=>{
+    e.preventDefault();
+    if(AUTH_BUSY)return;
+    const form=e.currentTarget;
+    const email=String(form.elements.email?.value||"").trim();
+    const password=String(form.elements.password?.value||"");
+    const submit=form.querySelector(".dashboard-auth-submit");
+    AUTH_BUSY=true;
+    if(submit){submit.disabled=true;submit.textContent="ACCESSO…";}
+    try{
+      const r=await fetch(SUPA_URL+"/auth/v1/token?grant_type=password",{
+        method:"POST",
+        headers:{apikey:SUPA_KEY,"Content-Type":"application/json"},
+        body:JSON.stringify({email,password})
+      });
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok||!data.access_token){
+        throw new Error(data?.msg||data?.error_description||"Credenziali non valide.");
+      }
+      AUTH_SESSION={
+        ...data,
+        expires_at:data.expires_at || Math.floor(Date.now()/1000)+Number(data.expires_in||3600)
+      };
+      AUTH_IS_ADMIN=false;
+      AUTH_CHECKED=false;
+      authSave();
+      await authIsAdmin();
+      authRenderUI();
+      wrap.remove();
+      if(AUTH_IS_ADMIN){
+        alert("Accesso amministratore effettuato.");
+        try{await loadShared();}catch(_){}
+      }else{
+        authShow("Accesso riuscito, ma questo account non è nella lista degli amministratori.");
+      }
+    }catch(err){
+      const msgBox=form.parentElement.querySelector(".dashboard-auth-message");
+      if(msgBox)msgBox.textContent=String(err?.message||"Errore di accesso.");
+      else{
+        const node=document.createElement("div");
+        node.className="dashboard-auth-message";
+        node.textContent=String(err?.message||"Errore di accesso.");
+        form.parentElement.insertBefore(node,form);
+      }
+    }finally{
+      AUTH_BUSY=false;
+      authRenderUI();
+      if(submit){submit.disabled=false;submit.textContent="ACCEDI";}
+    }
+  });
+  wrap.querySelector('input[name="email"]')?.focus();
+}
+
+async function authLogout(){
+  const token=AUTH_SESSION?.access_token;
+  AUTH_BUSY=true;
+  try{
+    if(token){
+      await fetch(SUPA_URL+"/auth/v1/logout",{
+        method:"POST",
+        headers:{apikey:SUPA_KEY,Authorization:"Bearer "+token}
+      }).catch(()=>{});
+    }
+  }finally{
+    AUTH_SESSION=null;
+    AUTH_IS_ADMIN=false;
+    AUTH_CHECKED=false;
+    AUTH_BUSY=false;
+    authSave();
+    authRenderUI();
+  }
+}
+
+function authInjectUI(){
+  if(document.getElementById("dashboard-auth-box"))return;
+  const box=document.createElement("div");
+  box.id="dashboard-auth-box";
+  box.innerHTML='<span class="dashboard-auth-status"></span><button type="button" class="dashboard-auth-btn"></button>';
+  document.body.appendChild(box);
+  box.querySelector(".dashboard-auth-btn")?.addEventListener("click",async()=>{
+    if(AUTH_SESSION?.access_token)await authLogout();
+    else authShow();
+  });
+  authRenderUI();
+}
+
+(function installAuthStyles(){
+  if(document.getElementById("dashboard-auth-styles"))return;
+  const st=document.createElement("style");
+  st.id="dashboard-auth-styles";
+  st.textContent=
+    "#dashboard-auth-box{position:fixed;right:16px;top:12px;z-index:9998;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:12px;background:rgba(6,20,34,.92);border:1px solid #24465e;box-shadow:0 8px 24px rgba(0,0,0,.22);backdrop-filter:blur(8px)}"+
+    "#dashboard-auth-box .dashboard-auth-status{font-size:8px;font-weight:800;color:#91a9bb;white-space:nowrap}"+
+    "#dashboard-auth-box.is-admin .dashboard-auth-status{color:#79d7a8}"+
+    "#dashboard-auth-box .dashboard-auth-btn{border:1px solid #35617b;background:#102e47;color:#fff;border-radius:8px;padding:7px 10px;font-size:8px;font-weight:900;cursor:pointer}"+
+    "#dashboard-auth-box .dashboard-auth-btn:hover{filter:brightness(1.1)}"+
+    "#dashboard-auth-box .dashboard-auth-btn:disabled{opacity:.6;cursor:default}"+
+    "#dashboard-auth-modal{position:fixed;inset:0;z-index:10000}"+
+    "#dashboard-auth-modal .dashboard-auth-backdrop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.62)}"+
+    "#dashboard-auth-modal .dashboard-auth-card{width:min(430px,100%);box-sizing:border-box;background:#0b2137;color:#edf7fb;border:1px solid #2b536c;border-radius:16px;padding:18px;box-shadow:0 24px 70px rgba(0,0,0,.45)}"+
+    ".dashboard-auth-head{display:flex;gap:12px;justify-content:space-between;align-items:flex-start}"+
+    ".dashboard-auth-eyebrow{font-size:8px;font-weight:900;letter-spacing:.12em;color:#6f9ab3}"+
+    ".dashboard-auth-card h3{margin:4px 0 5px;font-size:19px;color:#fff}"+
+    ".dashboard-auth-card p{margin:0;font-size:9px;line-height:1.5;color:#9eb3c1}"+
+    ".dashboard-auth-close{border:0;background:transparent;color:#9eb3c1;font-size:24px;cursor:pointer;line-height:1}"+
+    ".dashboard-auth-message{margin:12px 0 0;padding:9px 10px;border-radius:9px;background:#3a1f2a;border:1px solid #6f3c4c;color:#ffd8e1;font-size:9px;line-height:1.4}"+
+    "#dashboard-auth-form{display:grid;gap:10px;margin-top:14px}"+
+    "#dashboard-auth-form label{display:grid;gap:5px;font-size:8px;font-weight:900;text-transform:uppercase;color:#85a3b8}"+
+    "#dashboard-auth-form input{width:100%;box-sizing:border-box;border:1px solid #2c526a;background:#091827;color:#fff;border-radius:9px;padding:10px;font-size:11px;outline:none}"+
+    "#dashboard-auth-form input:focus{border-color:#5e9ac0;box-shadow:0 0 0 2px #2a6e9d33}"+
+    ".dashboard-auth-submit{border:0;border-radius:9px;padding:11px;background:#e2b54f;color:#0a1926;font-weight:1000;font-size:9px;cursor:pointer}"+
+    ".dashboard-auth-help{margin-top:10px;font-size:8px;line-height:1.4;color:#7f99ab}"+
+    "@media(max-width:600px){#dashboard-auth-box{right:8px;left:8px;top:8px;justify-content:space-between}#dashboard-auth-box .dashboard-auth-status{overflow:hidden;text-overflow:ellipsis}#dashboard-auth-modal .dashboard-auth-backdrop{padding:10px}}";
+  document.head.appendChild(st);
+})();
+
+authLoad();
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",()=>{authInjectUI();authIsAdmin().then(authRenderUI);},{once:true});
+}else{
+  authInjectUI();
+  authIsAdmin().then(authRenderUI);
+}
 /* ===== GEO CURRENT LOMBARDIA 2026 =====
    Geografia corrente: 1.501 comuni, con 12 province.
    I dataset elettorali storici possono usare denominazioni precedenti alle fusioni.
@@ -143,12 +390,48 @@ function repairHomeRuntime(){
   }catch(err){console.error("Repair Home runtime",err);}
 }
 
-async function api(path,options){
-  const r=await fetch(SUPA_URL+"/rest/v1/"+path,{
+async function api(path,options={}){
+  const method=String(options.method||"GET").toUpperCase();
+  await authEnsureFresh();
+
+  const headers={...H,...(options.headers||{})};
+  const token=authAccessToken();
+  if(token)headers.Authorization="Bearer "+token;
+
+  if(!["GET","HEAD","OPTIONS"].includes(method)){
+    const ok=await authIsAdmin();
+    if(!ok){
+      authShow(AUTH_SESSION?.access_token
+        ?"Account autenticato ma senza permesso amministratore."
+        :"Accedi per modificare questo contenuto.");
+      throw new Error("Supabase 403 admin required");
+    }
+  }
+
+  const run=()=>fetch(SUPA_URL+"/rest/v1/"+path,{
     ...options,
-    headers:{...H,...(options&&options.headers||{})}
+    headers
   });
-  if(!r.ok) throw new Error("Supabase "+r.status+" "+await r.text());
+
+  let r=await run();
+
+  if(r.status===401 && AUTH_SESSION?.refresh_token){
+    const refreshed=await authRefresh();
+    if(refreshed){
+      headers.Authorization="Bearer "+authAccessToken();
+      r=await fetch(SUPA_URL+"/rest/v1/"+path,{...options,headers});
+    }
+  }
+
+  if(!r.ok){
+    const detail=await r.text();
+    if((r.status===401||r.status===403)&&!["GET","HEAD","OPTIONS"].includes(method)){
+      authShow(r.status===403
+        ?"Accesso negato: l'account non ha i permessi per modificare la dashboard."
+        :"Sessione scaduta: effettua di nuovo l'accesso.");
+    }
+    throw new Error("Supabase "+r.status+" "+detail);
+  }
   return r;
 }
 
