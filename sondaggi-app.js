@@ -537,10 +537,12 @@ function installSondaggiModule(){
     const units=[];
     const admittedByCoalition=new Map();
     const coalStats=[];
+    const qualifiedCoalitions=new Set();
 
     S.coalitions.forEach(co=>{
-      const allMembers=(co.members||[]).filter(k=>values[k]!=null);
+      const allMembers=(co.members||[]).filter(k=>values[k]!=null && !AGGREGATE_POLL_PARTIES.has(k));
       if(!allMembers.length)return;
+
       const stats=coalitionFigure(allMembers,values,chamber,regionContext);
       if(!stats.qualifies)return;
 
@@ -548,6 +550,7 @@ function installSondaggiModule(){
       const rip=stats.ripCandidate;
       if(rip&&!admitted.includes(rip))admitted.push(rip);
 
+      qualifiedCoalitions.add(co.id);
       admittedByCoalition.set(co.id,admitted);
       units.push({
         id:"C:"+co.id,
@@ -567,23 +570,48 @@ function installSondaggiModule(){
       });
     });
 
-    const coalitionIds=new Set(coalStats.map(c=>c.id));
     Object.keys(values).forEach(k=>{
       if(AGGREGATE_POLL_PARTIES.has(k))return;
-      if(cmap[k]&&coalitionIds.has(cmap[k]))return;
-      const v=values[k]||0;
-      const eligible=v>=3 ||
-        (chamber==="senato" && (regionContext?senate20Exception(k,regionContext):senate20ExceptionAny(k)));
-      if(eligible){
-        units.push({
-          id:"P:"+k,
-          type:"list",
-          members:[k],
-          allMembers:[k],
-          votes:v,
-          name:k
-        });
+
+      const coalId=cmap[k];
+      const inQualifiedCoalition=coalId&&qualifiedCoalitions.has(coalId);
+      if(inQualifiedCoalition)return;
+
+      const regionalValue=regionContext?Number(values[k]||0):undefined;
+      const nationalValue=num(S.parties[k]?.[chamber==="camera"?"camera":"senate"]);
+
+      let eligible=false;
+      if(coalId){
+        // Coalizione sotto l'8%: la lista collegata accede al riparto
+        // già dal 2%, secondo il testo approvato.
+        eligible=window.SONDAGGI_LAW_20261008.listAllocationEligible(
+          nationalValue,
+          chamber,
+          true,
+          regionalValue
+        );
+      }else{
+        eligible=chamber==="senato"
+          ?window.SONDAGGI_LAW_20261008.listRegionallyEligibleForSenate(
+            nationalValue,
+            regionalValue
+          )
+          :window.SONDAGGI_LAW_20261008.listNationallyEligible(nationalValue);
       }
+
+      if(!eligible)return;
+
+      const v=Number(values[k]||0);
+      if(v<=0)return;
+
+      units.push({
+        id:"P:"+k,
+        type:"list",
+        members:[k],
+        allMembers:[k],
+        votes:v,
+        name:k
+      });
     });
 
     return {units,admittedByCoalition,coalStats};
