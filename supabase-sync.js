@@ -2519,24 +2519,6 @@ function installSondaggiModule(){
     return specialPartyTotal(chamber,slug,false);
   }
 
-  function specialPartyTotal(chamber,slug,includeEstero=true){
-    if(!slug)return 0;
-    const cats=includeEstero?SPECIAL_CATS:SPECIAL_CATS.filter(x=>x!=="estero");
-    return cats.reduce((sum,cat)=>sum+Number(S.specialSeats?.[chamber]?.[cat]?.[slug]||0),0);
-  }
-
-  function specialAssigned(chamber,cat){
-    return Object.values(S.specialSeats?.[chamber]?.[cat]||{}).reduce((sum,v)=>sum+Number(v||0),0);
-  }
-
-  function specialUnassigned(chamber,cat){
-    return Math.max(0,Number(SPECIAL_SEATS[chamber]?.[cat]||0)-specialAssigned(chamber,cat));
-  }
-
-  function specialNonEsteroPartySeats(chamber,slug){
-    return specialPartyTotal(chamber,slug,false);
-  }
-
   function cameraCircoscrizioni(bonusActive){
     const out={};
     Object.entries(CAM_COLLEGI).forEach(([region,items])=>{
