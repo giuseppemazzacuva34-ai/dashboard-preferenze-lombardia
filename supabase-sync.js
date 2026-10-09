@@ -2175,6 +2175,7 @@ function installSondaggiModule(){
       }
     });
 
+    winnerOrdinary=SENATE_PROP_REGIONS.reduce((sum,r)=>sum+(regionResults[r].unitSeats[winnerId]||0),0);
     const premiumRedistributed=usePrize
       ?SENATE_PROP_REGIONS.reduce((sum,r)=>sum+(regionResults[r].premiumResidual||0),0)
       :0;
