@@ -366,17 +366,16 @@
     });
 
     /*
-     * Le liste appartenenti a una coalizione non qualificata accedono dal 2%;
-     * le liste non collegate restano soggette al 3%. Le liste di una
-     * coalizione qualificata sono già rappresentate dall'unità coalizione.
+     * Le liste appartenenti a una coalizione non qualificata restano soggette
+     * alla soglia nazionale del 3%; la lista sotto soglia ammessa è solo il
+     * ripescaggio 2-ter della coalizione qualificata. Le liste della coalizione
+     * qualificata sono già rappresentate dall'unità coalizione.
      */
     Object.keys(values||{}).forEach(k=>{
       if(k==="ALTRI"||covered.has(k))return;
       const v=cleanPositive(values?.[k]);
       const coId=cmap[k];
-      const threshold=coId
-        ?law.rules.national.thresholdMemberForCoalitionQualification
-        :law.rules.national.thresholdList;
+      const threshold=law.rules.national.thresholdList;
       if(v<threshold)return;
       units.push({
         id:"P:"+k,
