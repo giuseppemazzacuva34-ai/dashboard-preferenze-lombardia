@@ -1924,52 +1924,96 @@ function installSondaggiModule(){
   }
 
   function coalitionFigure(members,values,chamber,regionContext=null){
-    const all=[...(members||[])];
+    const all=[...(members||[])].filter(k=>values[k]!=null);
     const admitted=all.filter(k=>
       (values[k]||0)>=3 ||
       (chamber==="senato" && (regionContext?senate20Exception(k,regionContext):senate20ExceptionAny(k)))
     );
-    const admittedTotal=admitted.reduce((sum,k)=>sum+(values[k]||0),0);
-    const qualifies=admitted.length>0&&admittedTotal>=10;
-    const nationalValues=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(chamber==="camera"?S.parties[k].camera:S.parties[k].senate)]));
-    const below=all.filter(k=>!admitted.includes(k)).sort((a,b)=>(nationalValues[b]||0)-(nationalValues[a]||0)||String(a).localeCompare(String(b),"it"));
-    const ripCandidate=qualifies?(below[0]||null):null;
-    const total=admittedTotal+(ripCandidate?(values[ripCandidate]||0):0);
-    return {total,admitted,ripCandidate,qualifies};
-  }
+    const nationalValues=Object.fromEntries(Object.keys(S.parties).map(k=>[
+      k,num(chamber==="camera"?S.parties[k].camera:S.parties[k].senate)
+    ]));
 
+    // Testo definitivo approvato l'8 ottobre 2026:
+    // Camera: per il riparto della coalizione contano le liste ammesse
+    // e la lista sotto soglia individuata dal meccanismo 2-ter.
+    // Senato: il terzo periodo dell'art. 16-bis, comma 1, lettera c),
+    // che escludeva le liste sotto soglia, è stato soppresso.
+    const qualifies=admitted.length>0 && (
+      chamber==="senato"
+        ? all.reduce((sum,k)=>sum+(Number(values[k])||0),0)>=10
+        : admitted.reduce((sum,k)=>sum+(Number(values[k])||0),0)>=10
+    );
+
+    const below=all.filter(k=>!admitted.includes(k)).sort((a,b)=>
+      (nationalValues[b]||0)-(nationalValues[a]||0) ||
+      String(a).localeCompare(String(b),"it")
+    );
+    const ripCandidate=qualifies?(below[0]||null):null;
+
+    let total=0;
+    if(chamber==="senato"){
+      total=all.reduce((sum,k)=>sum+(Number(values[k])||0),0);
+    }else{
+      total=admitted.reduce((sum,k)=>sum+(Number(values[k])||0),0);
+      if(ripCandidate)total+=(Number(values[ripCandidate])||0);
+    }
+    return {total,admitted,ripCandidate,qualifies,allMembers:all};
+  }
   function allocationUnits(values,chamber,regionContext=null){
     const cmap=coalitionMap();
     const units=[];
     const admittedByCoalition=new Map();
     const coalStats=[];
 
-    S.coalitions.forEach(c=>{
-      const members=(c.members||[]).filter(k=>values[k]!=null);
-      if(!members.length)return;
-      const stats=coalitionFigure(members,values,chamber,regionContext);
+    S.coalitions.forEach(co=>{
+      const allMembers=(co.members||[]).filter(k=>values[k]!=null);
+      if(!allMembers.length)return;
+      const stats=coalitionFigure(allMembers,values,chamber,regionContext);
       if(!stats.qualifies)return;
 
       const admitted=[...stats.admitted];
       const rip=stats.ripCandidate;
       if(rip&&!admitted.includes(rip))admitted.push(rip);
 
-      admittedByCoalition.set(c.id,admitted);
-      units.push({id:"C:"+c.id,type:"coalition",coalitionId:c.id,members:admitted,ripCandidate:rip||null,votes:stats.total,name:c.name});
-      coalStats.push({id:c.id,members,figure:stats.total,admitted});
+      admittedByCoalition.set(co.id,admitted);
+      units.push({
+        id:"C:"+co.id,
+        type:"coalition",
+        coalitionId:co.id,
+        members:admitted,
+        allMembers:[...allMembers],
+        ripCandidate:rip||null,
+        votes:stats.total,
+        name:co.name
+      });
+      coalStats.push({
+        id:co.id,
+        members:allMembers,
+        figure:stats.total,
+        admitted
+      });
     });
 
     const coalitionIds=new Set(coalStats.map(c=>c.id));
     Object.keys(values).forEach(k=>{
       if(cmap[k]&&coalitionIds.has(cmap[k]))return;
       const v=values[k]||0;
-      const eligible=v>=3 || (chamber==="senato" && (regionContext?senate20Exception(k,regionContext):senate20ExceptionAny(k)));
-      if(eligible)units.push({id:"P:"+k,type:"list",members:[k],votes:v,name:k});
+      const eligible=v>=3 ||
+        (chamber==="senato" && (regionContext?senate20Exception(k,regionContext):senate20ExceptionAny(k)));
+      if(eligible){
+        units.push({
+          id:"P:"+k,
+          type:"list",
+          members:[k],
+          allMembers:[k],
+          votes:v,
+          name:k
+        });
+      }
     });
 
     return {units,admittedByCoalition,coalStats};
   }
-
   function hamilton(items,seats){
     const clean=(items||[]).filter(x=>(Number(x.votes)||0)>0);
     const out={};
@@ -2025,23 +2069,20 @@ function installSondaggiModule(){
     const sen=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
     const camPlan=allocationUnits(cam,"camera");
     const senPlan=allocationUnits(sen,"senato");
-    const allIds=[...new Set(camPlan.units.map(u=>u.id).concat(senPlan.units.map(u=>u.id)))];
-    const cm=new Map(camPlan.units.map(u=>[u.id,u]));
-    const sm=new Map(senPlan.units.map(u=>[u.id,u]));
-    const candidates=allIds.map(id=>{
-      const c=cm.get(id),s=sm.get(id);
-      if(!c||!s)return null;
-      return {...c,cam:c.votes,sen:s.votes,members:c.members};
-    }).filter(Boolean).filter(b=>b.cam>=42&&b.sen>=42);
-    if(!candidates.length)return null;
-    candidates.sort((a,b)=>Math.min(b.cam,b.sen)-Math.min(a.cam,a.sen)||Math.max(b.cam,b.sen)-Math.max(a.cam,a.sen)||String(a.id).localeCompare(String(b.id),"it"));
-    const best=candidates[0];
-    const topCam=Math.max(...camPlan.units.map(u=>u.votes),0);
-    const topSen=Math.max(...senPlan.units.map(u=>u.votes),0);
-    if(best.cam<topCam||best.sen<topSen)return null;
-    return best;
-  }
 
+    const topCam=camPlan.units.slice().sort((a,b)=>
+      b.votes-a.votes||String(a.id).localeCompare(String(b.id),"it")
+    )[0]||null;
+    const topSen=senPlan.units.slice().sort((a,b)=>
+      b.votes-a.votes||String(a.id).localeCompare(String(b.id),"it")
+    )[0]||null;
+
+    if(!topCam||!topSen)return null;
+    if(topCam.id!==topSen.id)return null;
+    if(num(topCam.votes)<42 || num(topSen.votes)<42)return null;
+
+    return {...topCam,cam:topCam.votes,sen:topSen.votes};
+  }
   const SPECIAL_SEATS={
     camera:{estero:8,valleDAosta:1,trentinoAltoAdige:7,total:16,proportional:384},
     senato:{estero:4,valleDAosta:1,trentinoAltoAdige:6,total:11,proportional:189}
@@ -2082,51 +2123,74 @@ function installSondaggiModule(){
     return !!S.regionalCustom?.[region];
   }
 
-  function hamiltonDetailed(items,seats){
+  function hamiltonDetailed(items,seats,nationalTieValues={}){
     const clean=(items||[]).filter(x=>(Number(x.votes)||0)>0);
     const out={},remainders={},remainderWinners=new Set();
     if(!clean.length||seats<=0)return {seats:out,remainders,remainderWinners,total:0,quota:0};
     const total=clean.reduce((sum,x)=>sum+(Number(x.votes)||0),0);
     if(total<=0)return {seats:out,remainders,remainderWinners,total,quota:0};
+
     const quota=total/seats;
     clean.forEach(x=>{
       const exact=(Number(x.votes)||0)/quota;
       out[x.id]=Math.floor(exact);
       remainders[x.id]=exact-Math.floor(exact);
     });
+
     const used=Object.values(out).reduce((sum,v)=>sum+v,0);
-    clean.map(x=>({id:x.id,rest:remainders[x.id]||0,votes:Number(x.votes)||0}))
-      .sort((a,b)=>b.rest-a.rest||b.votes-a.votes||String(a.id).localeCompare(String(b.id),"it"))
+    clean.map(x=>({
+      id:x.id,
+      rest:remainders[x.id]||0,
+      national:Number(nationalTieValues?.[x.id]||x.votes||0),
+      votes:Number(x.votes)||0
+    }))
+      .sort((a,b)=>
+        b.rest-a.rest ||
+        b.national-a.national ||
+        b.votes-a.votes ||
+        String(a.id).localeCompare(String(b.id),"it")
+      )
       .slice(0,Math.max(0,seats-used))
-      .forEach(x=>{out[x.id]=(out[x.id]||0)+1;remainderWinners.add(x.id);});
+      .forEach(x=>{
+        out[x.id]=(out[x.id]||0)+1;
+        remainderWinners.add(x.id);
+      });
+
     return {seats:out,remainders,remainderWinners,total,quota};
   }
-
   function regionalSenateUnits(region,regionalValues,nationalPlan){
     const units=[];
-    const nationalCoalitions=new Set(nationalPlan.units.filter(u=>u.type==="coalition").map(u=>u.coalitionId));
+    const nationalCoalitions=new Set(
+      nationalPlan.units.filter(u=>u.type==="coalition").map(u=>u.coalitionId)
+    );
     const used=new Set();
-    const cmap=coalitionMap();
 
     nationalPlan.units.forEach(nu=>{
       if(nu.type==="coalition"){
-        const coalition=coalitionFor(nu.coalitionId);
-        const allMembers=(coalition?.members||[]).filter(k=>regionalValues[k]!=null);
+        const allMembers=(nu.allMembers||nu.members||[]).filter(k=>regionalValues[k]!=null);
+        const admittedSet=new Set();
 
-        const admitted=new Set();
         allMembers.forEach(k=>{
           const nationalValue=num(S.parties[k]?.senate||0);
-          if(nationalValue>=3 || regionalValues[k]>=20)admitted.add(k);
+          if(nationalValue>=3 || regionalValues[k]>=20)admittedSet.add(k);
         });
-        if(nu.ripCandidate&&allMembers.includes(nu.ripCandidate))admitted.add(nu.ripCandidate);
+        if(nu.ripCandidate&&allMembers.includes(nu.ripCandidate))admittedSet.add(nu.ripCandidate);
 
-        const splitMembers=[...admitted].filter(k=>allMembers.includes(k));
-        const figure=splitMembers.reduce((sum,k)=>sum+(regionalValues[k]||0),0);
+        const splitMembers=[...admittedSet];
+        // Nel testo definitivo del Senato la cifra elettorale regionale
+        // della coalizione non esclude più le liste sotto soglia.
+        const figure=allMembers.reduce((sum,k)=>sum+(Number(regionalValues[k])||0),0);
 
         if(figure>0){
           units.push({
-            id:nu.id,type:"coalition",coalitionId:nu.coalitionId,name:nu.name,
-            members:splitMembers,votes:figure
+            id:nu.id,
+            type:"coalition",
+            coalitionId:nu.coalitionId,
+            name:nu.name,
+            members:splitMembers,
+            allMembers,
+            ripCandidate:nu.ripCandidate||null,
+            votes:figure
           });
         }
         allMembers.forEach(k=>used.add(k));
@@ -2134,20 +2198,41 @@ function installSondaggiModule(){
         const k=nu.members?.[0],v=regionalValues[k]||0;
         const nationalValue=num(S.parties[k]?.senate||0);
         if(k&&v>0&&(nationalValue>=3||v>=20)){
-          units.push({id:nu.id,type:"list",members:[k],votes:v,name:nu.name});
+          units.push({
+            id:nu.id,
+            type:"list",
+            members:[k],
+            allMembers:[k],
+            votes:v,
+            name:nu.name
+          });
           used.add(k);
         }
       }
     });
 
+    // Una lista esterna a una coalizione qualificata può concorrere
+    // autonomamente se supera la soglia nazionale o quella regionale del 20%.
+    const cmap=coalitionMap();
     Object.keys(regionalValues).forEach(k=>{
       const v=regionalValues[k]||0;
-      if(v<20||used.has(k))return;
+      if(v<0.000001||used.has(k))return;
       const coalId=cmap[k];
       if(coalId&&nationalCoalitions.has(coalId))return;
-      units.push({id:"P:"+k,type:"list",members:[k],votes:v,name:k});
-      used.add(k);
+      const eligible=num(S.parties[k]?.senate||0)>=3 || v>=20;
+      if(eligible){
+        units.push({
+          id:"P:"+k,
+          type:"list",
+          members:[k],
+          allMembers:[k],
+          votes:v,
+          name:k
+        });
+        used.add(k);
+      }
     });
+
     return units;
   }
   function splitRegionalUnit(unit,count,regionalValues){
@@ -2157,10 +2242,15 @@ function installSondaggiModule(){
   }
 
   function simulateSenateRegions(usePrize){
-    const nationalValues=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
+    const nationalValues=Object.fromEntries(
+      Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)])
+    );
     const nationalPlan=allocationUnits(nationalValues,"senato");
     const bonus=bonusTarget();
     const winnerId=bonus?.id||null;
+    const nationalTieValues=Object.fromEntries(
+      nationalPlan.units.map(u=>[u.id,Number(u.votes)||0])
+    );
     const regionResults={};
 
     SENATE_PROP_REGIONS.forEach(region=>{
@@ -2168,111 +2258,165 @@ function installSondaggiModule(){
       const info=senateRegionSeatInfo(region);
       const seats=usePrize?info.withPrize:info.total;
       const units=regionalSenateUnits(region,vals,nationalPlan);
-      const detailed=hamiltonDetailed(units.map(u=>({id:u.id,votes:u.votes})),seats);
+      const detailed=hamiltonDetailed(
+        units.map(u=>({id:u.id,votes:u.votes})),
+        seats,
+        nationalTieValues
+      );
+      const totalRegionVotes=Object.values(vals).reduce(
+        (sum,v)=>sum+(Number(v)||0),0
+      );
+
       regionResults[region]={
-        region,seats,totalRegionSeats:info.total,premiumSeats:usePrize?info.premium:0,
-        units,unitSeats:{...detailed.seats},remainders:{...detailed.remainders},
+        region,
+        seats,
+        totalRegionSeats:info.total,
+        premiumSeats:usePrize?info.premium:0,
+        units,
+        unitSeats:{...detailed.seats},
+        remainders:{...detailed.remainders},
         remainderWinners:new Set(detailed.remainderWinners),
-        premiumWinner:0,premiumResidual:usePrize?info.premium:0
+        regionalTotalVotes:totalRegionVotes,
+        premiumWinner:usePrize?info.premium:0,
+        premiumResidual:0
       };
     });
 
     const winnerUnit=winnerId
       ?(nationalPlan.units.find(u=>u.id===winnerId)||null)
       :null;
-    const winnerTerritorial=winnerUnit
-      ?winnerUnit.members.reduce((sum,k)=>sum+specialNonEsteroPartySeats("senato",k),0)
-      :(winnerId?specialNonEsteroPartySeats("senato",winnerId):0);
+    const winnerTerritorial=winnerId
+      ?specialNonEsteroPartySeats("senato",winnerId)
+      :0;
 
-    let winnerOrdinary=SENATE_PROP_REGIONS.reduce((sum,r)=>sum+(regionResults[r].unitSeats[winnerId]||0),0);
-    let winnerPremium=0;
+    let winnerOrdinary=SENATE_PROP_REGIONS.reduce(
+      (sum,r)=>sum+(regionResults[r].unitSeats[winnerId]||0),0
+    );
+    const winnerPremium=usePrize?35:0;
     let ordinaryRedistributed=0;
 
     if(usePrize&&winnerId){
-      // I 35 seggi-premio sono collocati nelle regioni in cui l'unità vincente
-      // è presente. La graduatoria è deterministica e usa forza regionale,
-      // quota ordinaria e resto di Hamilton.
-      const candidateSlots=[];
+      // I 35 seggi-premio sono distribuiti alle regioni nei quantitativi
+      // stabiliti dalla legge: non sono oggetto di graduatoria.
       SENATE_PROP_REGIONS.forEach(region=>{
+        const rr=regionResults[region];
+        rr.premiumWinner=rr.premiumSeats;
+        rr.premiumResidual=0;
+      });
+
+      // 78 seggi ordinari massimi del vincitore + 35 di premio = 113.
+      // VDA e Trentino-Alto Adige rientrano nel tetto; Estero è escluso.
+      let excess=Math.max(0,winnerOrdinary+winnerTerritorial-78);
+      const removedRegions=new Set();
+
+      const assignCompensation=(region)=>{
+        if(excess<=0)return false;
+        const rr=regionResults[region];
+        if((rr.unitSeats[winnerId]||0)<=0)return false;
+
+        rr.unitSeats[winnerId]-=1;
+        ordinaryRedistributed++;
+        excess--;
+        removedRegions.add(region);
+
+        const alternatives=rr.units.filter(
+          u=>u.id!==winnerId&&(Number(u.votes)||0)>0
+        );
+        if(!alternatives.length)return true;
+
+        const unused=alternatives
+          .filter(u=>!rr.remainderWinners.has(u.id))
+          .sort((a,b)=>
+            (rr.remainders[b.id]||0)-(rr.remainders[a.id]||0) ||
+            (nationalTieValues[b.id]||0)-(nationalTieValues[a.id]||0) ||
+            (b.votes||0)-(a.votes||0) ||
+            String(a.id).localeCompare(String(b.id),"it")
+          );
+
+        let chosen=unused[0]||null;
+        if(!chosen){
+          chosen=alternatives.slice().sort((a,b)=>
+            (b.votes||0)-(a.votes||0) ||
+            (nationalTieValues[b.id]||0)-(nationalTieValues[a.id]||0) ||
+            String(a.id).localeCompare(String(b.id),"it")
+          )[0]||null;
+        }
+
+        if(chosen){
+          rr.unitSeats[chosen.id]=(rr.unitSeats[chosen.id]||0)+1;
+          rr.remainderWinners.add(chosen.id);
+        }
+        return true;
+      };
+
+      // Primo passaggio: un solo seggio per regione, in ordine crescente
+      // dei resti non utilizzati del vincitore.
+      const firstPass=SENATE_PROP_REGIONS.map(region=>{
         const rr=regionResults[region];
         const unit=rr.units.find(u=>u.id===winnerId);
-        if(!unit||rr.premiumSeats<=0)return;
-        const ordinary=rr.unitSeats[winnerId]||0;
-        const score=(Number(unit.votes)||0)/(ordinary+1);
-        const rest=rr.remainders[winnerId]||0;
-        for(let n=0;n<rr.premiumSeats;n++){
-          candidateSlots.push({region,score,rest,votes:Number(unit.votes)||0,ordinal:n});
-        }
-      });
-      candidateSlots.sort((a,b)=>
-        b.score-a.score||b.rest-a.rest||b.votes-a.votes||a.region.localeCompare(b.region,"it")||a.ordinal-b.ordinal
-      );
-
-      const winnerSlots=Math.min(35,candidateSlots.length);
-      const byRegion={};
-      candidateSlots.slice(0,winnerSlots).forEach(x=>{byRegion[x.region]=(byRegion[x.region]||0)+1;});
-      winnerPremium=Object.values(byRegion).reduce((sum,v)=>sum+v,0);
-
-      SENATE_PROP_REGIONS.forEach(region=>{
-        const rr=regionResults[region];
-        rr.premiumWinner=byRegion[region]||0;
-        rr.premiumResidual=Math.max(0,rr.premiumSeats-rr.premiumWinner);
-      });
-
-      // Tetto complessivo di 113: per il vincitore contiamo anche i seggi
-      // speciali non-estero già assegnati ai suoi membri.
-      let excess=Math.max(0,(winnerOrdinary+winnerPremium+winnerTerritorial)-113);
-
-      if(excess>0){
-        // Togliamo i seggi ordinari eccedenti e poi li riassegniamo
-        // nello stesso territorio con Hamilton, così la somma regionale
-        // resta invariata.
-        const removalSlots=[];
-        SENATE_PROP_REGIONS.forEach(region=>{
-          const rr=regionResults[region];
-          const count=rr.unitSeats[winnerId]||0;
-          const rest=rr.remainders[winnerId]||0;
-          const unit=rr.units.find(u=>u.id===winnerId);
-          const votes=Number(unit?.votes||0);
-          for(let n=0;n<count;n++) removalSlots.push({region,rest,votes,ordinal:n});
-        });
-        removalSlots.sort((a,b)=>
-          a.rest-b.rest||a.votes-b.votes||a.region.localeCompare(b.region,"it")||a.ordinal-b.ordinal
+        return {
+          region,
+          rest:rr.remainders[winnerId]??-1,
+          votes:unit?.votes||0,
+          seats:rr.unitSeats[winnerId]||0
+        };
+      })
+        .filter(x=>x.rest>=0&&x.seats>0)
+        .sort((a,b)=>
+          a.rest-b.rest ||
+          a.votes-b.votes ||
+          a.region.localeCompare(b.region,"it")
         );
 
-        const removedByRegion={};
-        for(const slot of removalSlots){
-          if(excess<=0)break;
-          const rr=regionResults[slot.region];
-          if((rr.unitSeats[winnerId]||0)<=0)continue;
-          rr.unitSeats[winnerId]-=1;
-          removedByRegion[slot.region]=(removedByRegion[slot.region]||0)+1;
-          excess--;
-          ordinaryRedistributed++;
-        }
+      for(const slot of firstPass){
+        if(excess<=0)break;
+        assignCompensation(slot.region);
+      }
 
-        Object.entries(removedByRegion).forEach(([region,removed])=>{
-          const rr=regionResults[region];
-          const alternatives=rr.units.filter(u=>u.id!==winnerId);
-          if(!alternatives.length)return;
-          const alloc=hamilton(alternatives.map(u=>({id:u.id,votes:u.votes})),removed);
-          alternatives.forEach(u=>{
-            const count=alloc[u.id]||0;
-            if(count)rr.unitSeats[u.id]=(rr.unitSeats[u.id]||0)+count;
-          });
-        });
+      // Secondo passaggio: ancora un seggio per regione, ordinando per
+      // percentuale regionale del vincitore, dalla più bassa alla più alta.
+      // Sono escluse le regioni già toccate e quelle in cui resterebbe un solo
+      // seggio al vincitore. Se necessario, il processo riparte sui territori
+      // ancora disponibili.
+      while(excess>0){
+        const candidates=SENATE_PROP_REGIONS
+          .filter(region=>!removedRegions.has(region))
+          .map(region=>{
+            const rr=regionResults[region];
+            const unit=rr.units.find(u=>u.id===winnerId);
+            const count=rr.unitSeats[winnerId]||0;
+            const pct=rr.regionalTotalVotes>0
+              ?((unit?.votes||0)/rr.regionalTotalVotes)*100
+              :0;
+            return {region,count,pct};
+          })
+          .filter(x=>x.count>1)
+          .sort((a,b)=>
+            a.pct-b.pct ||
+            a.region.localeCompare(b.region,"it")
+          );
+
+        if(!candidates.length)break;
+        for(const slot of candidates){
+          if(excess<=0)break;
+          assignCompensation(slot.region);
+        }
       }
     }
 
     const partySeats={},ordinaryPartySeats={},prizePartySeats={},regionPartySeats={},regionUnitSeats={};
+
     SENATE_PROP_REGIONS.forEach(region=>{
-      const rr=regionResults[region],vals=senateRegionalValues(region);
-      regionPartySeats[region]={};regionUnitSeats[region]={};
+      const rr=regionResults[region];
+      const vals=senateRegionalValues(region);
+      regionPartySeats[region]={};
+      regionUnitSeats[region]={};
 
       Object.entries(rr.unitSeats).forEach(([unitId,count])=>{
         const unit=rr.units.find(u=>u.id===unitId);
         if(!unit||!count)return;
         regionUnitSeats[region][unitId]=count;
+
         const split=splitRegionalUnit(unit,count,vals);
         Object.entries(split).forEach(([k,v])=>{
           partySeats[k]=(partySeats[k]||0)+v;
@@ -2284,52 +2428,67 @@ function installSondaggiModule(){
       if(usePrize&&winnerId){
         const winCount=rr.premiumWinner||0;
         if(winCount){
-          const win=rr.units.find(u=>u.id===winnerId);
-          const split=splitRegionalUnit(win,winCount,vals);
-          Object.entries(split).forEach(([k,v])=>{
-            partySeats[k]=(partySeats[k]||0)+v;
-            prizePartySeats[k]=(prizePartySeats[k]||0)+v;
-            regionPartySeats[region][k]=(regionPartySeats[region][k]||0)+v;
-          });
-        }
-
-        const residual=rr.premiumResidual||0;
-        if(residual){
-          const alternatives=rr.units.filter(u=>u.id!==winnerId);
-          const alloc=hamilton(alternatives.map(u=>({id:u.id,votes:u.votes})),residual);
-          alternatives.forEach(u=>{
-            const count=alloc[u.id]||0;
-            if(!count)return;
-            const split=splitRegionalUnit(u,count,vals);
+          const win=rr.units.find(u=>u.id===winnerId)||winnerUnit;
+          if(win){
+            const localMembers=(win.members||[]).filter(k=>vals[k]!=null);
+            const localTotal=localMembers.reduce(
+              (sum,k)=>sum+(Number(vals[k])||0),0
+            );
+            let split={};
+            if(localTotal>0){
+              split=splitRegionalUnit(
+                {...win,members:localMembers},
+                winCount,
+                vals
+              );
+            }else{
+              split=splitRegionalUnit(
+                win,
+                winCount,
+                nationalValues
+              );
+            }
             Object.entries(split).forEach(([k,v])=>{
               partySeats[k]=(partySeats[k]||0)+v;
               prizePartySeats[k]=(prizePartySeats[k]||0)+v;
               regionPartySeats[region][k]=(regionPartySeats[region][k]||0)+v;
             });
-          });
+          }
         }
       }
     });
 
-    winnerOrdinary=SENATE_PROP_REGIONS.reduce((sum,r)=>sum+(regionResults[r].unitSeats[winnerId]||0),0);
-    const premiumRedistributed=usePrize
-      ?SENATE_PROP_REGIONS.reduce((sum,r)=>sum+(regionResults[r].premiumResidual||0),0)
-      :0;
-    const simulatedTotal=Object.values(partySeats).reduce((sum,v)=>sum+v,0);
+    winnerOrdinary=SENATE_PROP_REGIONS.reduce(
+      (sum,r)=>sum+(regionResults[r].unitSeats[winnerId]||0),0
+    );
+
+    const simulatedTotal=Object.values(partySeats).reduce(
+      (sum,v)=>sum+v,0
+    );
+
     return {
-      seats:partySeats,ordinarySeatsByParty:ordinaryPartySeats,prizeSeatsByParty:prizePartySeats,
-      regions:regionResults,regionPartySeats,regionUnitSeats,nationalPlan,
-      complete:SENATE_PROP_REGIONS.every(r=>Object.keys(senateRegionalValues(r)).length===Object.keys(S.parties).length),
+      seats:partySeats,
+      ordinarySeatsByParty:ordinaryPartySeats,
+      prizeSeatsByParty:prizePartySeats,
+      regions:regionResults,
+      regionPartySeats,
+      regionUnitSeats,
+      nationalPlan,
+      complete:SENATE_PROP_REGIONS.every(
+        r=>Object.keys(senateRegionalValues(r)).length===Object.keys(S.parties).length
+      ),
       regionCount:SENATE_PROP_REGIONS.length,
       customizedRegions:SENATE_PROP_REGIONS.filter(isRegionalCustom).length,
-      ordinarySeats:usePrize?154:189,premiumSeats:usePrize?35:0,
-      winnerOrdinary,winnerPremiumSeats:usePrize?winnerPremium:0,
+      ordinarySeats:usePrize?154:189,
+      premiumSeats:usePrize?35:0,
+      winnerOrdinary,
+      winnerPremiumSeats:usePrize?winnerPremium:0,
       premiumWinnerSeats:usePrize?winnerPremium:0,
-      premiumRedistributed,
-      ordinaryRedistributed,simulatedTotal
+      premiumRedistributed:0,
+      ordinaryRedistributed,
+      simulatedTotal
     };
   }
-
   function specialPartyTotal(chamber,slug,includeEstero=true){
     if(!slug)return 0;
     const cats=includeEstero?SPECIAL_CATS:SPECIAL_CATS.filter(x=>x!=="estero");
@@ -2366,100 +2525,345 @@ function installSondaggiModule(){
     return specialPartyTotal(chamber,slug,false);
   }
 
+  function cameraCircoscrizioni(bonusActive){
+    const out={};
+    Object.entries(CAM_COLLEGI).forEach(([region,items])=>{
+      (items||[]).forEach(raw=>{
+        const parts=String(raw).split("|");
+        const name=parts[0];
+        const special=String(parts[3]||"").toUpperCase()==="SPECIAL";
+        if(special)return;
+
+        const circ=name.replace(/\s-\sP\d+$/,"");
+        out[circ]??={
+          name:circ,
+          region,
+          noBonusSeats:0,
+          bonusSeats:0,
+          prizeSeats:0,
+          colleges:[]
+        };
+        const noBonus=Number(parts[1])||0;
+        const bonus=Number(parts[2]??parts[1])||0;
+        out[circ].noBonusSeats+=noBonus;
+        out[circ].bonusSeats+=bonus;
+        out[circ].prizeSeats+=Math.max(0,noBonus-bonus);
+        out[circ].colleges.push({
+          name,
+          noBonusSeats:noBonus,
+          bonusSeats:bonus
+        });
+      });
+    });
+    return out;
+  }
+
+  function cameraCircFigure(circ,slug,bonusActive){
+    const rec=cameraCircoscrizioni(bonusActive)[circ];
+    if(!rec)return 0;
+    return rec.colleges.reduce((sum,col)=>{
+      const seats=bonusActive?col.bonusSeats:col.noBonusSeats;
+      const bucket=S.collegeValues?.camera?.[col.name]||{};
+      const pct=num(bucket[slug]??S.parties[slug]?.camera??0);
+      return sum+pct*seats;
+    },0);
+  }
+
+  function cameraUnitCircFigure(circ,unit,bonusActive){
+    if(!unit)return 0;
+    return (unit.members||[]).reduce(
+      (sum,k)=>sum+cameraCircFigure(circ,k,bonusActive),0
+    );
+  }
+
+  function distributeCameraCircoscrizioni(plan,targetByUnit,bonusActive,winnerId){
+    const circs=cameraCircoscrizioni(bonusActive);
+    const units=plan.units.filter(
+      u=>(Number(targetByUnit[u.id])||0)>0
+    );
+    const totalSeats=Object.values(circs).reduce(
+      (sum,r)=>sum+Number(bonusActive?r.bonusSeats:r.noBonusSeats),0
+    );
+    const nationalFigures=Object.fromEntries(
+      plan.units.map(u=>[u.id,Number(u.votes)||0])
+    );
+    const byCirc={},remainderByCirc={};
+
+    const winnerTarget=winnerId?Number(targetByUnit[winnerId]||0):0;
+    const winnerQuota=winnerId&&winnerTarget>0
+      ?Number(nationalFigures[winnerId]||0)/winnerTarget
+      :0;
+
+    const otherUnits=units.filter(u=>u.id!==winnerId);
+    const otherSeats=otherUnits.reduce(
+      (sum,u)=>sum+Number(targetByUnit[u.id]||0),0
+    );
+    const otherFigure=otherUnits.reduce(
+      (sum,u)=>sum+Number(nationalFigures[u.id]||0),0
+    );
+    const minorityQuota=otherSeats>0?otherFigure/otherSeats:0;
+
+    Object.entries(circs).forEach(([circ,rec])=>{
+      const seats=Number(bonusActive?rec.bonusSeats:rec.noBonusSeats)||0;
+      byCirc[circ]={};
+      remainderByCirc[circ]={};
+      if(!seats)return;
+
+      const scored=units.map(u=>{
+        const figure=cameraUnitCircFigure(circ,u,bonusActive);
+        const quota=u.id===winnerId?winnerQuota:minorityQuota;
+        const index=quota>0
+          ?Math.floor((figure/quota)*1e6)/1e6
+          :0;
+        const exact=index*seats;
+        const base=Math.floor(exact);
+        return {
+          id:u.id,
+          base,
+          rest:exact-base,
+          figure
+        };
+      });
+
+      const used=scored.reduce((sum,x)=>sum+x.base,0);
+      scored.forEach(x=>{
+        byCirc[circ][x.id]=x.base;
+        remainderByCirc[circ][x.id]=x.rest;
+      });
+
+      scored.sort((a,b)=>
+        b.rest-a.rest ||
+        (nationalFigures[b.id]||0)-(nationalFigures[a.id]||0) ||
+        (b.figure||0)-(a.figure||0) ||
+        String(a.id).localeCompare(String(b.id),"it")
+      )
+        .slice(0,Math.max(0,seats-used))
+        .forEach(x=>{
+          byCirc[circ][x.id]=(byCirc[circ][x.id]||0)+1;
+        });
+    });
+
+    const nationalTotals=Object.fromEntries(units.map(u=>[u.id,0]));
+    Object.values(byCirc).forEach(m=>{
+      Object.entries(m).forEach(([id,v])=>{
+        nationalTotals[id]=(nationalTotals[id]||0)+Number(v||0);
+      });
+    });
+
+    // Compensazione: si spostano seggi dentro la stessa circoscrizione
+    // da un'unità sovra-assegnata a una sotto-assegnata, in modo da
+    // ristabilire esattamente i totali nazionali.
+    const maxLoops=Math.max(1000,totalSeats*units.length*2);
+    let loops=0;
+    while(loops<maxLoops){
+      loops++;
+      const over=units.filter(u=>
+        nationalTotals[u.id]>Number(targetByUnit[u.id]||0)
+      );
+      const under=units.filter(u=>
+        nationalTotals[u.id]<Number(targetByUnit[u.id]||0)
+      );
+      if(!over.length||!under.length)break;
+
+      let moved=false;
+      const donorList=over.slice().sort((a,b)=>
+        (nationalTotals[b.id]-Number(targetByUnit[b.id]||0))-
+        (nationalTotals[a.id]-Number(targetByUnit[a.id]||0)) ||
+        String(a.id).localeCompare(String(b.id),"it")
+      );
+
+      for(const donor of donorList){
+        const donorCircs=Object.keys(byCirc)
+          .filter(circ=>Number(byCirc[circ]?.[donor.id]||0)>0)
+          .sort((a,b)=>
+            (remainderByCirc[a]?.[donor.id]||0)-
+            (remainderByCirc[b]?.[donor.id]||0) ||
+            a.localeCompare(b,"it")
+          );
+        if(!donorCircs.length)continue;
+
+        const circ=donorCircs[0];
+        const receiver=under.slice().sort((a,b)=>
+          (remainderByCirc[circ]?.[b.id]||0)-
+          (remainderByCirc[circ]?.[a.id]||0) ||
+          (nationalFigures[b.id]||0)-(nationalFigures[a.id]||0) ||
+          String(a.id).localeCompare(String(b.id),"it")
+        )[0];
+        if(!receiver)continue;
+
+        byCirc[circ][donor.id]-=1;
+        byCirc[circ][receiver.id]=(byCirc[circ][receiver.id]||0)+1;
+        nationalTotals[donor.id]--;
+        nationalTotals[receiver.id]++;
+        moved=true;
+        break;
+      }
+
+      if(!moved)break;
+    }
+
+    return {
+      byCirc,
+      remainderByCirc,
+      nationalTotals,
+      totalSeats,
+      circoscrizioni:Object.keys(circs).length
+    };
+  }
   function nationalResults(){
-    const camVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].camera)]));
-    const senVals=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
+    const camVals=Object.fromEntries(
+      Object.keys(S.parties).map(k=>[k,num(S.parties[k].camera)])
+    );
+    const senVals=Object.fromEntries(
+      Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)])
+    );
     const bonus=bonusTarget();
-    const cam={seats:{},ordinarySeatsByParty:{},prizeSeatsByParty:{},eligible:[],coalTotals:{}};
-    const sen={seats:{},ordinarySeatsByParty:{},prizeSeatsByParty:{},eligible:[],coalTotals:{}};
+
+    const cam={
+      seats:{},
+      ordinarySeatsByParty:{},
+      prizeSeatsByParty:{},
+      eligible:[],
+      coalTotals:{}
+    };
+    const sen={
+      seats:{},
+      ordinarySeatsByParty:{},
+      prizeSeatsByParty:{},
+      eligible:[],
+      coalTotals:{}
+    };
+
     const camPlan=allocationUnits(camVals,"camera");
 
-    function addSeatMap(target,source){
-      Object.entries(source||{}).forEach(([k,v])=>{if(v)target[k]=(target[k]||0)+v;});
-    }
-
-    function addUnitResult(res,unit,count,values,regionValues,kind){
-      if(!unit||count<=0)return;
-      const split=regionValues?splitRegionalUnit(unit,count,regionValues):splitCoalitionSeats(unit,count,values);
-      Object.entries(split).forEach(([k,v])=>{
-        res.seats[k]=(res.seats[k]||0)+v;
-        const bucket=kind==="prize"?res.prizeSeatsByParty:res.ordinarySeatsByParty;
-        bucket[k]=(bucket[k]||0)+v;
-      });
-    }
+    let camTargetByUnit={};
+    let camPrizeByUnit={};
 
     if(!bonus){
-      const camBase=allocate(camVals,384,"camera");
-      Object.assign(cam,camBase);
-      cam.ordinarySeatsByParty={...camBase.seats};
-      cam.prizeSeatsByParty={};
-      Object.assign(sen,simulateSenateRegions(false));
-      sen.ordinarySeatsByParty={...sen.ordinarySeatsByParty};
-      sen.prizeSeatsByParty={...sen.prizeSeatsByParty};
-      cam.premiumSeats=0;cam.bonusSeats=0;cam.prizeWinnerSeats=0;cam.ordinarySeats=384;
-      sen.premiumSeats=0;sen.bonusSeats=0;sen.prizeWinnerSeats=0;
+      camTargetByUnit=hamilton(
+        camPlan.units.map(u=>({id:u.id,votes:u.votes})),
+        384
+      );
     }else{
-      // Il premio è fisso: prima si ripartiscono 314 seggi ordinari e poi
-      // 70 seggi-premio. Se il vincitore supera il tetto di 220, l'eccedenza
-      // viene sottratta dalla sua quota proporzionale, non dal premio.
-      const camBase=allocate(camVals,314,"camera");
-      cam.seats={...camBase.seats};
-      cam.ordinarySeatsByParty={...camBase.seats};
+      const base=hamilton(
+        camPlan.units.map(u=>({id:u.id,votes:u.votes})),
+        314
+      );
+      const winnerUnit=camPlan.units.find(u=>u.id===bonus.id)||null;
+      const winnerSpecial=winnerUnit
+        ?(winnerUnit.members||[]).reduce(
+          (sum,k)=>sum+specialNonEsteroPartySeats("camera",k),0
+        )
+        :0;
+      const baseWinner=Number(base[bonus.id]||0);
 
-      const camWin=camPlan.units.find(u=>u.id===bonus.id);
-      const winnerOrdinary=camWin?(camWin.members||[]).reduce((sum,k)=>sum+(camBase.seats[k]||0),0):0;
-      const winnerTerritorial=camWin?(camWin.members||[]).reduce((sum,k)=>sum+specialNonEsteroPartySeats("camera",k),0):0;
+      // Senza superamento del tetto: 314 ordinari + 70 premio.
+      const overflow=Math.max(0,baseWinner+winnerSpecial-150);
 
-      // Distribuzione del premio fisso di 70 all'unità vincente.
-      if(camWin)addUnitResult(cam,camWin,70,camVals,null,"prize");
+      if(overflow>0&&winnerUnit){
+        const winnerTarget=Math.max(0,150-winnerSpecial);
+        camTargetByUnit[bonus.id]=winnerTarget;
 
-      const excess=Math.max(0,winnerOrdinary+70+winnerTerritorial-220);
-      if(excess>0&&camWin){
-        const removable=(camWin.members||[]).map(k=>({k,seats:cam.ordinarySeatsByParty[k]||0})).filter(x=>x.seats>0)
-          .sort((a,b)=>b.seats-a.seats||String(a.k).localeCompare(String(b.k),"it"));
-        let left=excess;
-        for(const item of removable){
-          while(item.seats>0&&left>0){
-            cam.ordinarySeatsByParty[item.k]-=1;
-            item.seats--;left--;
-          }
-          if(left<=0)break;
-        }
-        // Le eccedenze sottratte al vincitore tornano nel riparto ordinario
-        // e vengono assegnate agli altri soggetti secondo Hamilton.
         const others=camPlan.units.filter(u=>u.id!==bonus.id);
-        const redis=hamilton(others.map(u=>({id:u.id,votes:u.votes})),excess);
-        others.forEach(u=>{
-          const count=redis[u.id]||0;
-          if(!count)return;
-          const split=u.type==="coalition"?splitCoalitionSeats(u,count,camVals):{[u.members[0]]:count};
-          Object.entries(split).forEach(([k,v])=>{cam.ordinarySeatsByParty[k]=(cam.ordinarySeatsByParty[k]||0)+v;});
-        });
-        cam.ordinaryRedistributed=excess;
-      }else cam.ordinaryRedistributed=0;
+        const otherTargetSeats=Math.max(0,314-winnerTarget);
+        const otherAlloc=hamilton(
+          others.map(u=>({id:u.id,votes:u.votes})),
+          otherTargetSeats
+        );
+        Object.assign(camTargetByUnit,otherAlloc);
+        cam.ordinaryRedistributed=overflow;
+      }else{
+        camTargetByUnit=base;
+        cam.ordinaryRedistributed=0;
+      }
 
-      cam.seats={};
-      addSeatMap(cam.seats,cam.ordinarySeatsByParty);
-      addSeatMap(cam.seats,cam.prizeSeatsByParty);
-      cam.premiumSeats=70;cam.bonusSeats=70;cam.prizeWinnerSeats=70;cam.prizeRedistributed=0;cam.ordinarySeats=314;
-
-      Object.assign(sen,simulateSenateRegions(true));
-      sen.premiumSeats=35;sen.bonusSeats=35;
-      sen.prizeWinnerSeats=sen.premiumWinnerSeats||0;
-      sen.prizeRedistributed=sen.premiumRedistributed||0;
-      sen.ordinarySeats=154;
+      camPrizeByUnit[bonus.id]=70;
     }
+
+    const camCirc=distributeCameraCircoscrizioni(
+      camPlan,
+      camTargetByUnit,
+      !!bonus,
+      bonus?.id||null
+    );
+
+    camPlan.units.forEach(u=>{
+      const count=Number(camTargetByUnit[u.id]||0);
+      if(count>0){
+        const split=u.type==="coalition"
+          ?splitCoalitionSeats(u,count,camVals)
+          :{[u.members[0]]:count};
+        Object.entries(split).forEach(([k,v])=>{
+          cam.ordinarySeatsByParty[k]=(cam.ordinarySeatsByParty[k]||0)+v;
+        });
+      }
+    });
+
+    if(bonus){
+      const winnerUnit=camPlan.units.find(u=>u.id===bonus.id)||null;
+      if(winnerUnit){
+        const split=winnerUnit.type==="coalition"
+          ?splitCoalitionSeats(winnerUnit,70,camVals)
+          :{[winnerUnit.members[0]]:70};
+        Object.entries(split).forEach(([k,v])=>{
+          cam.prizeSeatsByParty[k]=(cam.prizeSeatsByParty[k]||0)+v;
+        });
+      }
+    }
+
+    Object.assign(cam.seats,cam.ordinarySeatsByParty);
+    Object.entries(cam.prizeSeatsByParty).forEach(([k,v])=>{
+      cam.seats[k]=(cam.seats[k]||0)+v;
+    });
+
+    cam.premiumSeats=bonus?70:0;
+    cam.bonusSeats=bonus?70:0;
+    cam.prizeWinnerSeats=bonus?70:0;
+    cam.prizeRedistributed=0;
+    cam.ordinarySeats=bonus?314:384;
+    cam.circResults=camCirc;
 
     cam.eligible=camPlan.units.flatMap(u=>u.members);
     cam.units=camPlan.units;
-    cam.coalTotals=Object.fromEntries(camPlan.coalStats.map(c=>[c.id,c.figure]));
+    cam.coalTotals=Object.fromEntries(
+      camPlan.coalStats.map(c=>[c.id,c.figure])
+    );
+
     const senPlan=allocationUnits(senVals,"senato");
+    Object.assign(
+      sen,
+      simulateSenateRegions(!!bonus)
+    );
     sen.eligible=senPlan.units.flatMap(u=>u.members);
     sen.units=senPlan.units;
-    sen.coalTotals=Object.fromEntries(senPlan.coalStats.map(c=>[c.id,c.figure]));
-    return {cam,sen,bonus,special:{camera:{...SPECIAL_SEATS.camera},senato:{...SPECIAL_SEATS.senato}}};
-  }
+    sen.coalTotals=Object.fromEntries(
+      senPlan.coalStats.map(c=>[c.id,c.figure])
+    );
 
+    if(!bonus){
+      sen.premiumSeats=0;
+      sen.bonusSeats=0;
+      sen.prizeWinnerSeats=0;
+      sen.prizeRedistributed=0;
+      sen.ordinarySeats=189;
+    }else{
+      sen.premiumSeats=35;
+      sen.bonusSeats=35;
+      sen.prizeWinnerSeats=35;
+      sen.prizeRedistributed=0;
+      sen.ordinarySeats=154;
+    }
+
+    return {
+      cam,
+      sen,
+      bonus,
+      special:{
+        camera:{...SPECIAL_SEATS.camera},
+        senato:{...SPECIAL_SEATS.senato}
+      }
+    };
+  }
   function saveValue(slug,kind,value){
     if(!S.parties[slug])return;
     if(kind==="camera")S.parties[slug].camera=num(value);
