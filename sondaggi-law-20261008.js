@@ -22,8 +22,8 @@
     }),
     national: Object.freeze({
       thresholdList: 3,
-      thresholdCoalition: 8,
-      thresholdMemberForCoalitionQualification: 2,
+      thresholdCoalition: 10,
+      thresholdMemberForCoalitionQualification: 3,
       regionalSenateException: 20,
       premiumThreshold: 42
     }),
