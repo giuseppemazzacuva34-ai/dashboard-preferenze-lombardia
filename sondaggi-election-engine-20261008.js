@@ -63,6 +63,10 @@
     return (keys||Object.keys(obj||{})).reduce((a,k)=>a+cleanPositive(obj?.[k]),0);
   }
 
+  function sumSeats(map){
+    return sumObject(map,Object.keys(map||{}));
+  }
+
   function parseCollegeMap(rawMap){
     const out=[];
     Object.entries(rawMap||{}).forEach(([region,items])=>{
@@ -947,7 +951,7 @@
       k=>units.find(u=>u.id===k)?.votes||0
     );
 
-    const winnerUnit=premium?nationalUnitById(units,subjectUnitId(premium)):null;
+    const winnerUnit=premium?nationalUnitById(units,nationalUnitIdForSubject(premium)):null;
     let final=initial;
     let capTriggered=false;
     let specialWinner=0;
@@ -967,9 +971,9 @@
         const others=units.filter(u=>u.id!==winnerUnit.id);
         const minoritySeats=Math.max(0,314-ordinaryWinnerCap);
         const majorityQ=ordinaryWinnerCap>0
-          ?Math.floor(micro(winnerUnit.votes)/ordinaryWinnerCap):0;
+          ?Math.floor(scaled(winnerUnit.votes)/ordinaryWinnerCap):0;
         const minorityQ=minoritySeats>0
-          ?Math.floor(others.reduce((a,u)=>a+micro(u.votes),0)/minoritySeats):0;
+          ?Math.floor(others.reduce((a,u)=>a+scaled(u.votes),0)/minoritySeats):0;
         const minAlloc=quotientAllocate(
           others.map(u=>({id:u.id,votes:u.votes})),
           minoritySeats,
@@ -1454,7 +1458,7 @@
     });
 
     const winner=premium||null;
-    const winnerUnitId=subjectUnitId(winner);
+    const winnerUnitId=nationalUnitIdForSubject(winner);
     const winnerSpecial=winner
       ?senateSpecialSeats(specialSeats,winner)
       :0;
