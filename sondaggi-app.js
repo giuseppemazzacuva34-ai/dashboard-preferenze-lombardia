@@ -6,6 +6,23 @@ function esc(v){
 }
 
 function installSondaggiModule(){
+  if(!window.SONDAGGI_LAW_20261008){
+    const id="sondaggi-law-20261008";
+    let s=document.getElementById(id);
+    if(!s){
+      s=document.createElement("script");
+      s.id=id;
+      s.src="sondaggi-law-20261008.js?v=20261009-legal";
+      s.async=false;
+      s.addEventListener("load",()=>installSondaggiModule(),{once:true});
+      s.addEventListener("error",()=>console.error("Sondaggi: impossibile caricare il motore della legge elettorale 2026."),{once:true});
+      (document.head||document.documentElement).appendChild(s);
+    }else if(!s.dataset.sondaggiRetry){
+      s.dataset.sondaggiRetry="1";
+      s.addEventListener("load",()=>installSondaggiModule(),{once:true});
+    }
+    return;
+  }
   const KEY="lombardia_sondaggi_2026";
 
   const REGIONS=[
@@ -492,40 +509,28 @@ function installSondaggiModule(){
   }
 
   function coalitionFigure(members,values,chamber,regionContext=null){
-    const all=[...(members||[])].filter(k=>values[k]!=null&&!AGGREGATE_POLL_PARTIES.has(k));
-    const admitted=all.filter(k=>
-      (values[k]||0)>=3 ||
-      (chamber==="senato" && (regionContext?senate20Exception(k,regionContext):senate20ExceptionAny(k)))
-    );
     const nationalValues=Object.fromEntries(Object.keys(S.parties).map(k=>[
       k,num(chamber==="camera"?S.parties[k].camera:S.parties[k].senate)
     ]));
+    const regionalValues=chamber==="senato" && regionContext
+      ?Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(values[k])]))
+      :null;
+    const sourceValues=chamber==="senato"&&regionContext?nationalValues:values;
 
-    // Testo definitivo approvato l'8 ottobre 2026:
-    // Camera: per il riparto della coalizione contano le liste ammesse
-    // e la lista sotto soglia individuata dal meccanismo 2-ter.
-    // Senato: il terzo periodo dell'art. 16-bis, comma 1, lettera c),
-    // che escludeva le liste sotto soglia, è stato soppresso.
-    const qualifies=admitted.length>0 && (
-      chamber==="senato"
-        ? all.reduce((sum,k)=>sum+(Number(values[k])||0),0)>=10
-        : admitted.reduce((sum,k)=>sum+(Number(values[k])||0),0)>=10
-    );
+    const stats=window.SONDAGGI_LAW_20261008?.coalitionScores
+      ?window.SONDAGGI_LAW_20261008.coalitionScores(
+        members,sourceValues,chamber,regionalValues
+      )
+      :{qualifies:false,allMembers:[...(members||[])],admitted:[],ripCandidate:null,allocationFigure:0,premiumFigure:0};
 
-    const below=all.filter(k=>!admitted.includes(k)).sort((a,b)=>
-      (nationalValues[b]||0)-(nationalValues[a]||0) ||
-      String(a).localeCompare(String(b),"it")
-    );
-    const ripCandidate=qualifies?(below[0]||null):null;
-
-    let total=0;
-    if(chamber==="senato"){
-      total=all.reduce((sum,k)=>sum+(Number(values[k])||0),0);
-    }else{
-      total=admitted.reduce((sum,k)=>sum+(Number(values[k])||0),0);
-      if(ripCandidate)total+=(Number(values[ripCandidate])||0);
-    }
-    return {total,admitted,ripCandidate,qualifies,allMembers:all};
+    return {
+      total:Number(stats.allocationFigure)||0,
+      premiumTotal:Number(stats.premiumFigure)||0,
+      admitted:[...(stats.admitted||[])],
+      ripCandidate:stats.ripCandidate||null,
+      qualifies:!!stats.qualifies,
+      allMembers:[...(stats.allMembers||members||[])]
+    };
   }
   function allocationUnits(values,chamber,regionContext=null){
     const cmap=coalitionMap();
@@ -691,25 +696,18 @@ function installSondaggiModule(){
   function bonusTarget(){
     const cam=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].camera)]));
     const sen=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
-    const camPlan=allocationUnits(cam,"camera");
-    const senPlan=allocationUnits(sen,"senato");
-
-    const topCam=camPlan.units.slice().sort((a,b)=>
-      b.votes-a.votes||
-      pollStableLot(a.id)-pollStableLot(b.id)||
-      String(a.id).localeCompare(String(b.id),"it")
-    )[0]||null;
-    const topSen=senPlan.units.slice().sort((a,b)=>
-      b.votes-a.votes||
-      pollStableLot(a.id)-pollStableLot(b.id)||
-      String(a.id).localeCompare(String(b.id),"it")
-    )[0]||null;
-
-    if(!topCam||!topSen)return null;
-    if(topCam.id!==topSen.id)return null;
-    if(num(topCam.votes)<42 || num(topSen.votes)<42)return null;
-
-    return {...topCam,cam:topCam.votes,sen:topSen.votes};
+    const law=window.SONDAGGI_LAW_20261008;
+    if(!law?.premiumCandidate)return null;
+    const winner=law.premiumCandidate(cam,sen,S.coalitions);
+    if(!winner)return null;
+    return {
+      id:winner.id,
+      type:winner.type,
+      members:[...(winner.members||[winner.id])],
+      name:winner.name,
+      cam:Number(winner.camera)||0,
+      sen:Number(winner.senato)||0
+    };
   }
   function specialSeatState(){
     const out={camera:{},senato:{}};
@@ -803,9 +801,11 @@ function installSondaggiModule(){
         if(nu.ripCandidate&&allMembers.includes(nu.ripCandidate))admittedSet.add(nu.ripCandidate);
 
         const splitMembers=[...admittedSet];
-        // Nel testo definitivo del Senato la cifra elettorale regionale
-        // della coalizione non esclude più le liste sotto soglia.
-        const figure=allMembers.reduce((sum,k)=>sum+(Number(regionalValues[k])||0),0);
+        // La cifra regionale della coalizione comprende le liste ammesse
+        // e, per ogni coalizione qualificata, la lista 2-ter recuperata.
+        const figure=splitMembers.reduce(
+          (sum,k)=>sum+(Number(regionalValues[k])||0),0
+        );
 
         if(figure>0){
           units.push({
@@ -1840,7 +1840,7 @@ function installSondaggiModule(){
     host.innerHTML=
       '<div class="sg-wrap">'+
         '<div class="sg-head"><div><div class="sg-kicker">SONDAGGI ELETTORALI</div><h1>Simulatore nazionale e per collegio</h1><p>Inserisci le percentuali nazionali e quelle del territorio selezionato, costruisci le coalizioni e verifica l&#39;effetto sul riparto dei seggi.</p></div><button class="sg-btn primary" id="sondaggiRefreshYT">AGGIORNA DA YOUTREND</button></div>'+
-        '<div class="sg-law">LEGGE ELETTORALE · TESTO APPROVATO 8 OTTOBRE 2026 · sistema proporzionale su collegi plurinominali · soglie 3% liste / 10% coalizioni · premio di 70 seggi alla Camera e 35 al Senato con soglia 42% nella stessa lista/coalizione in entrambe le Camere. Testo approvato definitivamente, non ancora pubblicato.</div>'+
+        '<div class="sg-law">LEGGE ELETTORALE · TESTO APPROVATO DEFINITIVAMENTE 8 OTTOBRE 2026 · sistema proporzionale su collegi plurinominali, con collegi uninominali speciali nelle circoscrizioni previste dalla legge · soglia 3% liste · soglia 8% coalizioni con almeno una lista al 2% · deroga del 20% regionale al Senato · premio 70 Camera / 35 Senato se lo stesso soggetto è primo in entrambe le Camere e raggiunge il 42% in entrambe. Testo definitivamente approvato, in attesa di pubblicazione.</div>'+
         '<div class="sg-layout">'+
           '<div class="sg-map-card"><div class="sg-card-title"><b>Italia</b><span>'+esc2(S.region)+'</span></div><div class="sg-map"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Italy_map_with_regions.svg" alt="Mappa d’Italia divisa in regioni"><div class="sg-map-caption">La mappa mostra la divisione regionale; usa i pulsanti per selezionare la regione e caricare i relativi collegi.</div></div><div class="sg-regions">'+REGIONS.map(x=>'<button type="button" data-region="'+esc2(x)+'" class="'+(x===S.region?"active":"")+'">'+esc2(x)+'</button>').join("")+'</div></div>'+
           '<div class="sg-main">'+
@@ -1873,7 +1873,7 @@ function installSondaggiModule(){
         '</div>'+
           '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione nel collegio</b><span>'+esc2(c?.name||"")+' · '+fmt0(c?.seats||0)+' seggi</span></div><table class="sg-table"><thead><tr><th>Partito</th><th>% collegio</th><th>Seggi</th></tr></thead><tbody>'+collegeRows+'</tbody></table><div class="sg-note">Il collegio usa le percentuali locali che inserisci. Le assegnazioni nazionali della riforma restano nella simulazione sopra.</div></div>'+
         '</div>'+
-        '<div class="sg-source">Partiti e valori iniziali: Supermedia YouTrend/Agi, rilevazione 1 ottobre 2026. Camera: 384 seggi proporzionali, oppure 314 nella base su cui opera il premio. Senato: 189 seggi proporzionali senza premio; con premio, 154 seggi ordinari + 35 seggi premio. Il riparto del Senato è ora calcolato regione per regione sulle '+SENATE_PROP_REGIONS.length+' regioni proporzionali, con deroga del 20% regionale e controllo del tetto di 113 seggi del vincitore. Valle d’Aosta e Trentino-Alto Adige sono gestiti come seggi speciali separati.</div>'+
+        '<div class="sg-source">Partiti e valori iniziali: Supermedia YouTrend/Agi, rilevazione 1 ottobre 2026. Regole del simulatore: testo elettorale approvato definitivamente l’8 ottobre 2026. Camera: 384 seggi proporzionali senza premio; 314 seggi ordinari + 70 di premio quando ricorrono le condizioni di legge. Senato: 189 seggi proporzionali senza premio; 154 ordinari + 35 di premio con premio. Il Senato è ripartito regione per regione nelle 18 regioni proporzionali, con deroga del 20% regionale. Valle d’Aosta e Trentino-Alto Adige/Südtirol sono trattati separatamente secondo la disciplina speciale.</div>'+
       '</div>';
 
     document.getElementById("sgChamber").value=S.chamber;

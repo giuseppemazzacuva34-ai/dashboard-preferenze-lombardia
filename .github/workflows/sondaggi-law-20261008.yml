@@ -1,0 +1,37 @@
+name: Sondaggi - legge elettorale 2026
+
+on:
+  push:
+    paths:
+      - "sondaggi-app.js"
+      - "sondaggi-law-20261008.js"
+      - "sondaggi-link.js"
+      - "scripts/test_sondaggi_law_20261008.js"
+      - ".github/workflows/sondaggi-law-20261008.yml"
+  pull_request:
+    paths:
+      - "sondaggi-app.js"
+      - "sondaggi-law-20261008.js"
+      - "sondaggi-link.js"
+      - "scripts/test_sondaggi_law_20261008.js"
+      - ".github/workflows/sondaggi-law-20261008.yml"
+  workflow_dispatch:
+
+jobs:
+  legal-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Syntax check
+        run: |
+          node --check sondaggi-law-20261008.js
+          node --check sondaggi-app.js
+          node --check sondaggi-link.js
+          node --check scripts/test_sondaggi_law_20261008.js
+      - name: Test legge elettorale
+        run: node scripts/test_sondaggi_law_20261008.js
