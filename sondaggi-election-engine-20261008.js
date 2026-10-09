@@ -793,7 +793,7 @@
     units.forEach(u=>{nationalTotals[u.id]=0;});
 
     Object.entries(circum||{}).forEach(([circId,circ])=>{
-      const seats=Math.floor(pos(ordinarySeats(circ)));
+      const seats=Math.floor(cleanPositive(ordinarySeats(circ)));
       byCirc[circId]={};
       remainders[circId]={};
       remainderWinnersByCirc[circId]=[];
@@ -801,8 +801,8 @@
 
       const scored=units.filter(u=>(nationalTargets[u.id]||0)>0)
         .map(u=>{
-          const target=Math.max(1,Math.floor(pos(nationalTargets[u.id])));
-          const q=pos(u.votes)/target;
+          const target=Math.max(1,Math.floor(cleanPositive(nationalTargets[u.id])));
+          const q=cleanPositive(u.votes)/target;
           const figure=calcCircUnitFigure(u,circData[circId]);
           const index=q>0?trunc6(figure/q):0;
           return {id:u.id,figure,index,target};
@@ -855,7 +855,7 @@
 
     Object.values(byCirc).forEach(m=>{
       Object.entries(m).forEach(([id,v])=>{
-        nationalTotals[id]=(nationalTotals[id]||0)+Math.floor(pos(v));
+        nationalTotals[id]=(nationalTotals[id]||0)+Math.floor(cleanPositive(v));
       });
     });
 
@@ -955,8 +955,8 @@
 
     if(premium&&winnerUnit){
       specialWinner=(winnerUnit.members||[]).reduce((a,k)=>
-        a+pos(specialSeats?.camera?.valleDAosta?.[k])+
-        pos(specialSeats?.camera?.trentinoAltoAdige?.[k]),0
+        a+cleanPositive(specialSeats?.camera?.valleDAosta?.[k])+
+        cleanPositive(specialSeats?.camera?.trentinoAltoAdige?.[k]),0
       );
       const totalWinner=(initial.seats[winnerUnit.id]||0)+70+specialWinner;
       if(totalWinner>law.rules.camera.winnerCapExcludingEstero){
@@ -1032,7 +1032,7 @@
       splitRemainders[circId]={};
       Object.entries(unitMap||{}).forEach(([unitId,count])=>{
         const unit=nationalUnitById(units,unitId);
-        const nSeats=Math.floor(pos(count));
+        const nSeats=Math.floor(cleanPositive(count));
         if(!unit||!nSeats)return;
         if(unit.type==="list"){
           const k=unit.members[0];
@@ -1044,7 +1044,7 @@
               votes:calcCircListFigures(circData[circId],k)
             })),
             nSeats,
-            k=>pos(nationalValues[k])
+            k=>cleanPositive(nationalValues[k])
           );
           Object.entries(split.seats).forEach(([k,v])=>{
             listByCirc[circId][k]=(listByCirc[circId][k]||0)+v;
@@ -1062,13 +1062,13 @@
       const detail={};
       Object.keys(listMap||{}).forEach(k=>{assigned[k]=0;remByList[k]=[];});
       circ.colleges.slice().sort((a,b)=>a.name.localeCompare(b.name,"it")).forEach(col=>{
-        const seats=Math.floor(pos(premium?col.withPrizeSeats:col.noPrizeSeats));
+        const seats=Math.floor(cleanPositive(premium?col.withPrizeSeats:col.noPrizeSeats));
         if(!seats)return;
         const rows=Object.keys(remaining).filter(k=>(remaining[k]||0)>0).map(k=>({
           id:k,
-          figure:pos(circData[circId]?.figures?.[col.name]?.[k]),
+          figure:cleanPositive(circData[circId]?.figures?.[col.name]?.[k]),
           circFigure:calcCircListFigures(circData[circId],k),
-          cap:Math.floor(pos(remaining[k]))
+          cap:Math.floor(cleanPositive(remaining[k]))
         })).filter(x=>x.figure>0);
         if(!rows.length)return;
 
@@ -1105,7 +1105,7 @@
           remByList[k].push({
             college:col.name,
             rest:rem[k]||0,
-            figure:pos(circData[circId]?.figures?.[col.name]?.[k])
+            figure:cleanPositive(circData[circId]?.figures?.[col.name]?.[k])
           });
         });
       });
@@ -1118,8 +1118,8 @@
        */
       let guard=0;
       while(guard++<10000){
-        const over=Object.keys(listMap).filter(k=>(assigned[k]||0)>Math.floor(pos(listMap[k])));
-        const under=Object.keys(listMap).filter(k=>(assigned[k]||0)<Math.floor(pos(listMap[k])));
+        const over=Object.keys(listMap).filter(k=>(assigned[k]||0)>Math.floor(cleanPositive(listMap[k])));
+        const under=Object.keys(listMap).filter(k=>(assigned[k]||0)<Math.floor(cleanPositive(listMap[k])));
         if(!over.length||!under.length)break;
 
         let moved=false;
@@ -1152,7 +1152,7 @@
       }
 
       const bad=Object.keys(listMap).filter(k=>
-        (assigned[k]||0)!==Math.floor(pos(listMap[k]))
+        (assigned[k]||0)!==Math.floor(cleanPositive(listMap[k]))
       );
       if(bad.length)warnings.push(
         "Camera "+circId+": chiusura collegi non completata per "+bad.join(",")
@@ -1181,13 +1181,13 @@
 
     const ordinaryByParty={};
     Object.values(listByCirc).forEach(m=>Object.entries(m).forEach(([k,v])=>{
-      if(k!=="__group")ordinaryByParty[k]=(ordinaryByParty[k]||0)+Math.floor(pos(v));
+      if(k!=="__group")ordinaryByParty[k]=(ordinaryByParty[k]||0)+Math.floor(cleanPositive(v));
     }));
 
     const prizeByCirc={},prizeByParty={},prizeCollegeByList={},prizeCollegeDetail={};
     if(premium&&winnerUnit){
       Object.entries(circum).forEach(([circId,circ])=>{
-        const n=Math.floor(pos(circ.prizeSeats));
+        const n=Math.floor(cleanPositive(circ.prizeSeats));
         if(!n)return;
         const members=winnerUnit.members||[winnerUnit.id];
         const split=winnerUnit.type==="coalition"
@@ -1197,7 +1197,7 @@
                 votes:calcCircListFigures(circData[circId],k)
               })),
               n,
-              k=>pos(nationalValues[k])
+              k=>cleanPositive(nationalValues[k])
             )
           :{seats:{[members[0]]:n},remainders:{}};
         prizeByCirc[circId]=split.seats;
@@ -1205,7 +1205,7 @@
           prizeByParty[k]=(prizeByParty[k]||0)+v;
           const cols=circ.colleges.filter(col=>col.prizeSeats>0).map(col=>({
             id:col.name,
-            figure:pos(circData[circId]?.figures?.[col.name]?.[k]),
+            figure:cleanPositive(circData[circId]?.figures?.[col.name]?.[k]),
             cap:col.prizeSeats
           }));
           const total=cols.reduce((a,x)=>a+x.figure,0);
@@ -1430,7 +1430,7 @@
       const rows=parseCollegeMap({[region]:senateMap[region]||[]});
       const colleges=rows.filter(x=>!x.special);
       const totalNoPrize=colleges.reduce((a,x)=>a+x.noPrizeSeats,0);
-      const prizeSeatsRegion=Math.floor(pos(senatePremiumByRegion[region]||0));
+      const prizeSeatsRegion=Math.floor(cleanPositive(senatePremiumByRegion[region]||0));
       const ordinarySeats=premium ?
         colleges.reduce((a,x)=>a+x.withPrizeSeats,0) : totalNoPrize;
       const regionalValues=regionalValuesByRegion[region]||
@@ -1518,7 +1518,7 @@
       const splitByUnit={};
       Object.entries(rr.targets).forEach(([unitId,count])=>{
         const unit=nationalUnitById(rr.units,unitId);
-        const nSeats=Math.floor(pos(count));
+        const nSeats=Math.floor(cleanPositive(count));
         if(!unit||!nSeats)return;
         if(unit.type==="list"){
           splitByUnit[unitId]={[unit.members[0]]:nSeats};
@@ -1526,16 +1526,16 @@
           splitByUnit[unitId]=quotientAllocate(
             unit.members.map(k=>({
               id:k,
-              votes:pos(rr.regionalValues[k])
+              votes:cleanPositive(rr.regionalValues[k])
             })),
             nSeats,
-            k=>pos(nationalValues[k])
+            k=>cleanPositive(nationalValues[k])
           ).seats;
         }
         Object.values(splitByUnit[unitId]).forEach((v,idx)=>{
           const keys=Object.keys(splitByUnit[unitId]);
           const k=keys[idx];
-          listTargets[k]=(listTargets[k]||0)+Math.floor(pos(v));
+          listTargets[k]=(listTargets[k]||0)+Math.floor(cleanPositive(v));
         });
       });
       return {splitByUnit,listTargets};
@@ -1548,12 +1548,12 @@
         Object.keys(listTargets).forEach(k=>{
           const explicit=collegeValues?.[rr.region]?.[col.name]?.[k] ??
             collegeValues?.[col.name]?.[k];
-          const weight=pos(
+          const weight=cleanPositive(
             collegeWeights?.[rr.region]?.[col.name] ??
             collegeWeights?.[col.name] ??
             col.noPrizeSeats
           );
-          const base=explicit==null?pos(rr.regionalValues[k]):pos(explicit);
+          const base=explicit==null?cleanPositive(rr.regionalValues[k]):cleanPositive(explicit);
           out[col.name][k]=base*weight;
         });
       });
@@ -1570,12 +1570,12 @@
       });
 
       rr.colleges.slice().sort((a,b)=>a.name.localeCompare(b.name,"it")).forEach(col=>{
-        const seats=Math.floor(pos(premium?col.withPrizeSeats:col.noPrizeSeats));
+        const seats=Math.floor(cleanPositive(premium?col.withPrizeSeats:col.noPrizeSeats));
         if(!seats)return;
         const rows=Object.keys(remaining).filter(k=>(remaining[k]||0)>0).map(k=>({
-          id:k,figure:pos(data[col.name]?.[k]),
-          regionalFigure:Object.values(data).reduce((a,r)=>a+pos(r?.[k]),0),
-          cap:Math.floor(pos(remaining[k]))
+          id:k,figure:cleanPositive(data[col.name]?.[k]),
+          regionalFigure:Object.values(data).reduce((a,r)=>a+cleanPositive(r?.[k]),0),
+          cap:Math.floor(cleanPositive(remaining[k]))
         })).filter(x=>x.figure>0);
         if(!rows.length)return;
 
@@ -1608,8 +1608,8 @@
 
       let guard=0;
       while(guard++<10000){
-        const over=Object.keys(listTargets).filter(k=>(assigned[k]||0)>Math.floor(pos(listTargets[k])));
-        const under=Object.keys(listTargets).filter(k=>(assigned[k]||0)<Math.floor(pos(listTargets[k])));
+        const over=Object.keys(listTargets).filter(k=>(assigned[k]||0)>Math.floor(cleanPositive(listTargets[k])));
+        const under=Object.keys(listTargets).filter(k=>(assigned[k]||0)<Math.floor(cleanPositive(listTargets[k])));
         if(!over.length||!under.length)break;
         let moved=false;
 
@@ -1637,7 +1637,7 @@
       }
 
       const bad=Object.keys(listTargets).filter(k=>
-        (assigned[k]||0)!==Math.floor(pos(listTargets[k]))
+        (assigned[k]||0)!==Math.floor(cleanPositive(listTargets[k]))
       );
       if(bad.length)warnings.push(
         "Senato "+rr.region+": chiusura collegi non completata per "+bad.join(",")
@@ -1665,14 +1665,14 @@
 
       const groupTargets={
         majority:Object.keys(listTargets).filter(k=>groupByList[k]==="majority")
-          .reduce((a,k)=>a+Math.floor(pos(listTargets[k])),0),
+          .reduce((a,k)=>a+Math.floor(cleanPositive(listTargets[k])),0),
         minority:Object.keys(listTargets).filter(k=>groupByList[k]==="minority")
-          .reduce((a,k)=>a+Math.floor(pos(listTargets[k])),0)
+          .reduce((a,k)=>a+Math.floor(cleanPositive(listTargets[k])),0)
       };
 
       const groupFigure=group=>{
         return Object.keys(listTargets).filter(k=>groupByList[k]===group)
-          .reduce((a,k)=>a+Object.values(data).reduce((s,row)=>s+pos(row?.[k]),0),0);
+          .reduce((a,k)=>a+Object.values(data).reduce((s,row)=>s+cleanPositive(row?.[k]),0),0);
       };
       const qMaj=groupTargets.majority>0?Math.floor(groupFigure("majority")/groupTargets.majority):0;
       const qMin=groupTargets.minority>0?Math.floor(groupFigure("minority")/groupTargets.minority):0;
@@ -1680,12 +1680,12 @@
       const remainingGroups={...groupTargets};
       const rawGroupByCollege={};
       rr.colleges.slice().sort((a,b)=>a.name.localeCompare(b.name,"it")).forEach(col=>{
-        const seats=Math.floor(pos(col.noPrizeSeats));
+        const seats=Math.floor(cleanPositive(col.noPrizeSeats));
         if(!seats)return;
         const mf=["majority","minority"].map(g=>({
           g,
           figure:Object.keys(listTargets).filter(k=>groupByList[k]===g)
-            .reduce((a,k)=>a+pos(data[col.name]?.[k]),0),
+            .reduce((a,k)=>a+cleanPositive(data[col.name]?.[k]),0),
           q:g==="majority"?qMaj:qMin
         }));
         const idx=mf.map(x=>({
@@ -1728,9 +1728,9 @@
           if(!nSeats)continue;
           const lists=Object.keys(listTargets).filter(k=>groupByList[k]===group);
           const split=quotientAllocate(
-            lists.map(k=>({id:k,votes:pos(data[college]?.[k])})),
+            lists.map(k=>({id:k,votes:cleanPositive(data[college]?.[k])})),
             nSeats,
-            k=>Object.values(data).reduce((a,row)=>a+pos(row?.[k]),0)
+            k=>Object.values(data).reduce((a,row)=>a+cleanPositive(row?.[k]),0)
           );
           Object.entries(split.seats).forEach(([k,v])=>{
             byList[k]??={};
@@ -1745,7 +1745,7 @@
     function prizeColleges(rr,data){
       const out={},detail={};
       if(!premium||!winner)return {byList:out,detail};
-      const nSeats=Math.floor(pos(rr.prizeSeats));
+      const nSeats=Math.floor(cleanPositive(rr.prizeSeats));
       if(!nSeats)return {byList:out,detail};
 
       const members=winner.members||[winner.id];
@@ -1753,15 +1753,15 @@
         ?quotientAllocate(
           members.map(k=>({
             id:k,
-            votes:Object.values(data).reduce((a,row)=>a+pos(row?.[k]),0)
+            votes:Object.values(data).reduce((a,row)=>a+cleanPositive(row?.[k]),0)
           })),
           nSeats,
-          k=>pos(nationalValues[k])
+          k=>cleanPositive(nationalValues[k])
         )
         :{seats:{[members[0]]:nSeats}};
       Object.entries(split.seats||{}).forEach(([k,target])=>{
         const cols=rr.colleges.filter(c=>c.prizeSeats>0).map(c=>({
-          id:c.name,figure:pos(data[c.name]?.[k]),cap:c.prizeSeats
+          id:c.name,figure:cleanPositive(data[c.name]?.[k]),cap:c.prizeSeats
         }));
         const total=cols.reduce((a,x)=>a+x.figure,0);
         const alloc={},rem={};
@@ -1803,8 +1803,8 @@
 
       const regionParty={};
       Object.entries(split.listTargets).forEach(([k,v])=>{
-        ordinaryByParty[k]=(ordinaryByParty[k]||0)+Math.floor(pos(v));
-        regionParty[k]=(regionParty[k]||0)+Math.floor(pos(v));
+        ordinaryByParty[k]=(ordinaryByParty[k]||0)+Math.floor(cleanPositive(v));
+        regionParty[k]=(regionParty[k]||0)+Math.floor(cleanPositive(v));
       });
       regionPartySeats[region]=regionParty;
       regionUnitSeats[region]={...rr.targets};
