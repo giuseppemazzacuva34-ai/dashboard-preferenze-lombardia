@@ -1023,11 +1023,9 @@
       ", ordinari con premio="+mapCheck.withPremium+
       ", premio="+mapCheck.prize
     );
-    if(sumSeats(ordinaryCirc.byCirc)!==384-errors.length*0){
-      const territorialSeats=sumSeats(ordinaryCirc.byCirc);
-      if(territorialSeats!==ordinaryTarget)
-        errors.push("Riparto territoriale Camera: "+territorialSeats+" != "+ordinaryTarget);
-    }
+    const territorialSeats=sumSeats(ordinaryCirc.nationalTotals);
+    if(territorialSeats!==ordinaryTarget)
+      errors.push("Riparto territoriale Camera: "+territorialSeats+" != "+ordinaryTarget);
 
     const listByCirc={};
     const splitRemainders={};
