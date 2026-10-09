@@ -37,8 +37,7 @@ q=law.coalitionQualification(["A","B"],{A:8,B:2},"camera");
 assert.strictEqual(q.qualifies,true);
 
 let cs=law.coalitionScores(["A","B","C"],{A:5,B:2.5,C:0.5},"camera");
-assert.strictEqual(cs.qualifies,false); // total 8 but no 3rd? qualification uses 8 + member >=2, so actually true
-assert.strictEqual(cs.allocationFigure,0);
+assert.strictEqual(cs.qualifies,true);
 
 cs=law.coalitionScores(["A","B","C"],{A:5,B:2.5,C:0.5},"camera");
 assert.strictEqual(cs.qualifies,true);
