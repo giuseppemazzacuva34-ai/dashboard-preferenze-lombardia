@@ -1976,6 +1976,14 @@ function installSondaggiModule(){
   setTimeout(ensureNav,100);
   setTimeout(ensureNav,800);
   setInterval(ensureNav,2000);
+
+  // Avvio autonomo della pagina dedicata: il pannello deve essere renderizzato
+  // anche senza la sidebar della dashboard principale.
+  try{ render(); }catch(err){
+    console.error("Avvio Sondaggi dedicati",err);
+    const host=document.getElementById("tab-sondaggi");
+    if(host)host.innerHTML='<div style="padding:24px;color:#ffb4b4;background:#321522;border:1px solid #7a3044;border-radius:10px"><b>Errore caricamento Sondaggi</b><div style="margin-top:8px;font-size:12px">'+esc2(err?.message||err)+'</div></div>';
+  }
 }
 
 installSondaggiModule();
