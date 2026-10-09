@@ -152,16 +152,16 @@ Object.entries(r.sen.regions||{}).forEach(([region,rr])=>{
   });
 });
 
+const capVals={...prizeVals};
+capVals.FdI=55; capVals.LEGA=4; capVals.FI=6; capVals.NM=1;
 const capRegionalValues={};
 Object.keys(regionalValuesByRegion).forEach(region=>{
   capRegionalValues[region]={...capVals};
 });
-const capVals={...prizeVals};
-capVals.FdI=55; capVals.LEGA=4; capVals.FI=6; capVals.NM=1;
 const capRun=run(capVals,{...capVals},{
   camera:{estero:{},valleDAosta:{FdI:1},trentinoAltoAdige:{FdI:7}},
   senato:{estero:{},valleDAosta:{FdI:1},trentinoAltoAdige:{FdI:6}}
-});
+},capRegionalValues);
 assert(capRun.bonus,"Scenario cap: premio attivo");
 assert(capRun.cam.capTriggered,"Scenario cap Camera non attivato");
 assert.strictEqual(capRun.cam.winnerOrdinary,142,"Camera: cap ordinario con 8 seggi speciali");
