@@ -251,12 +251,43 @@ function authInjectUI(){
 })();
 
 authLoad();
-if(document.readyState==="loading"){
-  document.addEventListener("DOMContentLoaded",()=>{authInjectUI();authIsAdmin().then(authRenderUI);},{once:true});
-}else{
-  authInjectUI();
-  authIsAdmin().then(authRenderUI);
+
+async function authRequireAdmin(){
+  const ok=await authIsAdmin();
+  if(!ok){
+    authShow(AUTH_SESSION?.access_token
+      ?"Account autenticato ma senza permesso amministratore."
+      :"Accedi per modificare questo contenuto.");
+  }
+  authRenderUI();
+  return ok;
 }
+
+(function installWriteGuards(){
+  const guarded=["saveCorrente","saveTickets","addTicketInline","removeTicket"];
+  const install=()=>{
+    guarded.forEach(name=>{
+      try{
+        const original=window[name];
+        if(typeof original!=="function" || original.__dashboardAdminGuard)return;
+        const wrapped=async function(...args){
+          if(!(await authRequireAdmin()))return false;
+          return original.apply(this,args);
+        };
+        wrapped.__dashboardAdminGuard=true;
+        window[name]=wrapped;
+      }catch(err){console.error("Admin write guard "+name,err);}
+    });
+  };
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",install,{once:true});
+  }else{
+    install();
+  }
+  setTimeout(install,50);
+  setTimeout(install,300);
+  setTimeout(install,1000);
+})();
 /* ===== GEO CURRENT LOMBARDIA 2026 =====
    Geografia corrente: 1.501 comuni, con 12 province.
    I dataset elettorali storici possono usare denominazioni precedenti alle fusioni.
