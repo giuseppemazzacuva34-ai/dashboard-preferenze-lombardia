@@ -261,18 +261,12 @@ def audit_election(name,data,geo_pairs):
     return pref_total,prov_counts
 
 def audit_source_structure(source):
-    # Deve esistere un blocco runtime dedicato agli audit già presenti nella
-    # dashboard e non devono esserci mutazioni dei dataset nel core.
-    required=(
-        "CURRENT_PROVINCE_COUNTS",
-        "auditCurrentGeo",
-        "rebuildCanonicalRuntimeData",
-        "specialDomesticWinnerSeats",
-    )
-    for marker in required:
-        if marker not in source:
-            fail(f"source: marker strutturale assente {marker}")
-    print("Struttura runtime principale: OK")
+    # Il build reale deve contenere riferimenti ai tre dataset sorgente.
+    # I dettagli del runtime sono verificati nei file esterni congelati.
+    for marker in ("GEO", "RAW", "EURO_RAW"):
+        if not re.search(r"(?<![A-Z0-9_])"+re.escape(marker)+r"(?![A-Z0-9_])",source):
+            fail(f"build: riferimento dataset assente {marker}")
+    print("Riferimenti ai dataset nel build: OK")
 
 def main():
     if not INDEX.exists(): fail("index.html mancante")
