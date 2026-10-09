@@ -2307,8 +2307,6 @@ function installSondaggiModule(){
       // 78 seggi ordinari massimi del vincitore + 35 di premio = 113.
       // VDA e Trentino-Alto Adige rientrano nel tetto; Estero è escluso.
       let excess=Math.max(0,winnerOrdinary+winnerTerritorial-78);
-      const removedRegions=new Set();
-
       const assignCompensation=(region)=>{
         if(excess<=0)return false;
         const rr=regionResults[region];
@@ -2317,7 +2315,6 @@ function installSondaggiModule(){
         rr.unitSeats[winnerId]-=1;
         ordinaryRedistributed++;
         excess--;
-        removedRegions.add(region);
 
         const alternatives=rr.units.filter(
           u=>u.id!==winnerId&&(Number(u.votes)||0)>0
@@ -2379,8 +2376,12 @@ function installSondaggiModule(){
       // seggio al vincitore. Se necessario, il processo riparte sui territori
       // ancora disponibili.
       while(excess>0){
+        // Il secondo meccanismo procede per tornate: in ogni tornata
+        // un seggio per regione, partendo dalla percentuale regionale
+        // più bassa. Le regioni possono quindi essere selezionate di nuovo
+        // nella tornata successiva, purché al vincitore resti più di un seggio.
+        const roundUsed=new Set();
         const candidates=SENATE_PROP_REGIONS
-          .filter(region=>!removedRegions.has(region))
           .map(region=>{
             const rr=regionResults[region];
             const unit=rr.units.find(u=>u.id===winnerId);
@@ -2399,8 +2400,12 @@ function installSondaggiModule(){
         if(!candidates.length)break;
         for(const slot of candidates){
           if(excess<=0)break;
-          assignCompensation(slot.region);
+          if(roundUsed.has(slot.region))continue;
+          const rr=regionResults[slot.region];
+          if((rr.unitSeats[winnerId]||0)<=1)continue;
+          if(assignCompensation(slot.region))roundUsed.add(slot.region);
         }
+        if(!roundUsed.size)break;
       }
     }
 
