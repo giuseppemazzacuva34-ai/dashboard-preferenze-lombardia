@@ -2201,6 +2201,22 @@ function installSondaggiModule(){
       ).join("")||'<tr><td colspan="3">Nessun partito supera le soglie con i valori inseriti.</td></tr>';
     }
 
+    function coalitionResultRows(res,type){
+      return S.coalitions.map(co=>{
+        const members=new Set(co.members||[]);
+        const seats=(Object.entries(res.seats||{}).filter(([k])=>members.has(k)).reduce((sum,[,v])=>sum+Number(v||0),0));
+        const vals=type==="camera"?S.parties: S.parties;
+        const total=(co.members||[]).reduce((sum,k)=>{
+          const src=type==="camera"?S.parties[k]?.camera:S.parties[k]?.senate;
+          return sum+Number(src||0);
+        },0);
+        return {name:co.name,seats,total};
+      }).filter(x=>x.seats>0||x.total>0)
+        .sort((a,b)=>b.seats-a.seats||b.total-a.total||a.name.localeCompare(b.name,"it"))
+        .map(x=>'<tr><td><b>'+esc2(x.name)+'</b></td><td>'+x.total.toFixed(1).replace(".",",")+'%</td><td><b>'+fmt0(x.seats)+'</b></td></tr>')
+        .join("")||'<tr><td colspan="3">Nessuna coalizione con seggi nello scenario.</td></tr>';
+    }
+
     const collegeAlloc=c?.special
       ? {seats:{},eligible:[]}
       : allocate(cVals,c?.seats||0,S.chamber==="camera"?"camera":"senato",S.chamber==="senato"?S.region:null);
@@ -2224,7 +2240,7 @@ function installSondaggiModule(){
           '</div>'+
         '</div>'+
         '<div class="sg-results">'+
-          '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione seggi nazionale</b><span>scenario legge 8/10/2026</span></div><div class="sg-two"><div><h3>Camera · 400</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.cam,"camera")+'</tbody></table></div><div><h3>Senato · 200</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.sen,"senato")+'</tbody></table><div class="sg-note">'+(national.sen.complete?'✅ Riparto Senato calcolato regione per regione su '+national.sen.regionCount+' regioni proporzionali.':'⚠️ Dati regionali Senato incompleti: risultato provvisorio.')+(national.bonus?' · 35 seggi premio distribuiti regionalmente.':'')+'</div></div></div><div class="sg-special"><b>SEGGI SPECIALI ESCLUSI DAL RIPARTO PROPORZIONALE</b> · Camera ${SPECIAL_SEATS.camera.total} (Estero ${SPECIAL_SEATS.camera.estero}, Valle d&#39;Aosta ${SPECIAL_SEATS.camera.valleDAosta}, Trentino-Alto Adige ${SPECIAL_SEATS.camera.trentinoAltoAdige}) · Senato ${SPECIAL_SEATS.senato.total} (Estero ${SPECIAL_SEATS.senato.estero}, Valle d&#39;Aosta ${SPECIAL_SEATS.senato.valleDAosta}, Trentino-Alto Adige ${SPECIAL_SEATS.senato.trentinoAltoAdige})</div>'+(national.bonus?'<div class="sg-bonus">PREMIO ATTIVO · '+esc2(coalitionFor(national.bonus.id)?.name||national.bonus.members.map(k=>S.parties[k]?.name||k).join(" + "))+' · 70 Camera / 35 Senato</div>':'<div class="sg-note">Il premio non scatta: la stessa lista o coalizione deve essere prima e raggiungere almeno il 42% in entrambe le Camere.</div>')+'</div>'+
+          '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione seggi nazionale</b><span>scenario legge 8/10/2026</span></div><div class="sg-two"><div><h3>Camera · 400</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.cam,"camera")+'</tbody></table><div class="sg-coal-total"><div class="sg-card-title"><b>Totale coalizioni · Camera</b><span>seggi complessivi</span></div><table class="sg-table"><thead><tr><th>Coalizione</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+coalitionResultRows(national.cam,"camera")+'</tbody></table></div></div><div><h3>Senato · 200</h3><table class="sg-table"><thead><tr><th>Partito</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+resultRows(national.sen,"senato")+'</tbody></table><div class="sg-coal-total"><div class="sg-card-title"><b>Totale coalizioni · Senato</b><span>seggi complessivi</span></div><table class="sg-table"><thead><tr><th>Coalizione</th><th>%</th><th>Seggi</th></tr></thead><tbody>'+coalitionResultRows(national.sen,"senato")+'</tbody></table></div><div class="sg-note">'+(national.sen.complete?'✅ Riparto Senato calcolato regione per regione su '+national.sen.regionCount+' regioni proporzionali.':'⚠️ Dati regionali Senato incompleti: risultato provvisorio.')+(national.bonus?' · 35 seggi premio distribuiti regionalmente.':'')+'</div></div></div><div class="sg-special"><b>SEGGI SPECIALI ESCLUSI DAL RIPARTO PROPORZIONALE</b> · Camera ${SPECIAL_SEATS.camera.total} (Estero ${SPECIAL_SEATS.camera.estero}, Valle d&#39;Aosta ${SPECIAL_SEATS.camera.valleDAosta}, Trentino-Alto Adige ${SPECIAL_SEATS.camera.trentinoAltoAdige}) · Senato ${SPECIAL_SEATS.senato.total} (Estero ${SPECIAL_SEATS.senato.estero}, Valle d&#39;Aosta ${SPECIAL_SEATS.senato.valleDAosta}, Trentino-Alto Adige ${SPECIAL_SEATS.senato.trentinoAltoAdige})</div>'+(national.bonus?'<div class="sg-bonus">PREMIO ATTIVO · '+esc2(coalitionFor(national.bonus.id)?.name||national.bonus.members.map(k=>S.parties[k]?.name||k).join(" + "))+' · 70 Camera / 35 Senato</div>':'<div class="sg-note">Il premio non scatta: la stessa lista o coalizione deve essere prima e raggiungere almeno il 42% in entrambe le Camere.</div>')+'</div>'+
           '<div class="sg-card"><div class="sg-card-title"><b>Distribuzione nel collegio</b><span>'+esc2(c?.name||"")+' · '+fmt0(c?.seats||0)+' seggi</span></div><table class="sg-table"><thead><tr><th>Partito</th><th>% collegio</th><th>Seggi</th></tr></thead><tbody>'+collegeRows+'</tbody></table><div class="sg-note">Il collegio usa le percentuali locali che inserisci. Le assegnazioni nazionali della riforma restano nella simulazione sopra.</div></div>'+
         '</div>'+
         '<div class="sg-source">Partiti e valori iniziali: Supermedia YouTrend/Agi, rilevazione 1 ottobre 2026. Camera: 384 seggi proporzionali, oppure 314 nella base su cui opera il premio. Senato: 189 seggi proporzionali senza premio; con premio, 154 seggi ordinari + 35 seggi premio. Il riparto del Senato è ora calcolato regione per regione sulle '+SENATE_PROP_REGIONS.length+' regioni proporzionali, con deroga del 20% regionale e controllo del tetto di 113 seggi del vincitore. Valle d’Aosta e Trentino-Alto Adige sono gestiti come seggi speciali separati.</div>'+
@@ -2334,6 +2350,8 @@ function installSondaggiModule(){
 .sg-bonus{background:#174b35;border:1px solid #2a7651;color:#dff7e8;font-weight:800}
 .sg-results{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .sg-results .sg-card:first-child{grid-column:1/-1}
+.sg-coal-total{margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.08)}
+.sg-coal-total .sg-card-title{margin-bottom:5px}
 .sg-regional-status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-height:280px;overflow:auto;margin-top:8px}
 .sg-region-status{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;border:1px solid #23465f;background:#0a2135;color:#dcecf6;border-radius:8px;padding:7px 8px;cursor:pointer}
 .sg-region-status.active{border-color:#2187ff;box-shadow:0 0 0 1px #2187ff33 inset}
