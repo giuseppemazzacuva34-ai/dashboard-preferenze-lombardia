@@ -100,6 +100,8 @@ function run(camVals=Object.fromEntries(Object.entries(parties).map(([k,v])=>[k,
 let r=run();
 assert.strictEqual(r.bonus,null,"Nessun premio nello scenario base");
 assert.strictEqual(Object.values(r.cam.ordinarySeatsByParty).reduce((a,v)=>a+v,0),384);
+const lawRip=law.coalitionScores(["A","B"],{A:7.5,B:2.5},"camera");
+assert.strictEqual(lawRip.premiumFigure,10,"Cifra premio: incluso ripescaggio 2-ter");
 assert.strictEqual(Object.values(r.sen.ordinarySeatsByParty).reduce((a,v)=>a+v,0),189);
 assert.strictEqual(r.cam.simulatedTotal,384);
 assert.strictEqual(r.sen.simulatedTotal,189);
