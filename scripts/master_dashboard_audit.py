@@ -226,8 +226,9 @@ def main():
 
     print("REGIONALI vs EUROPEE totali preferenze:",raw_total,euro_total)
 
-    # Sanity check sui moduli di previsione: devono essere presenti gli elementi
-    # necessari per premio, Camera, Senato e seggi speciali.
+    # Sanity check sui moduli di previsione: il motore è separato dal
+    # grande build storico e deve contenere i componenti già verificati.
+    sond= (ROOT/"sondaggi-app.js").read_text(encoding="utf-8")
     for marker in (
         "winnerOrdinaryCap",
         "ordinarySeats",
@@ -236,7 +237,7 @@ def main():
         "allocateNationalToCircs",
         "specialDomesticWinnerSeats",
     ):
-        if marker not in source:
+        if marker not in sond:
             fail(f"motore Sondaggi: marker mancante {marker}")
     print("Motore seggi/scenari: struttura presente")
 
