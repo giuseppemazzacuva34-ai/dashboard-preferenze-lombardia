@@ -54,7 +54,7 @@ cs=law.coalitionScores(["A","B","C"],{A:5,B:2.5,C:0.5},"camera");
 assert.strictEqual(cs.qualifies,true);
 assert.deepStrictEqual(cs.admitted,["A"]);
 assert.strictEqual(cs.ripCandidate,"B");
-assert.strictEqual(cs.premiumFigure,5);
+assert.strictEqual(cs.premiumFigure,7.5);
 assert.strictEqual(cs.allocationFigure,7.5);
 
 const coalitions=[
