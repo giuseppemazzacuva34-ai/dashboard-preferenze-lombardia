@@ -25,14 +25,58 @@ const SYNC_CURRENT_COMUNE_ALIASES = Object.freeze({
   "BREGANO":"Bardello con Malgesso e Bregano",
   "MALGESSO":"Bardello con Malgesso e Bregano"
 });
+const SYNC_PROVINCE_CODES = Object.freeze({
+  "BG":"BG","BERGAMO":"BG",
+  "BS":"BS","BRESCIA":"BS",
+  "CO":"CO","COMO":"CO",
+  "CR":"CR","CREMONA":"CR",
+  "LC":"LC","LECCO":"LC",
+  "LO":"LO","LODI":"LO",
+  "MN":"MN","MANTOVA":"MN",
+  "MI":"MI","MILANO":"MI",
+  "MB":"MB","MONZA E DELLA BRIANZA":"MB","MONZA E BRIANZA":"MB",
+  "PV":"PV","PAVIA":"PV",
+  "SO":"SO","SONDRIO":"SO",
+  "VA":"VA","VARESE":"VA"
+});
 function syncCurrentComune(value){
   const raw=String(value??"").trim();
   const key=raw.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/\s+/g," ").trim();
   return SYNC_CURRENT_COMUNE_ALIASES[key] || raw;
 }
-
-// Sostituisce la funzione globale usata dagli altri moduli della dashboard,
-// così anche le funzioni già caricate usano la stessa geografia corrente.
+function syncProvinceCode(value){
+  const raw=String(value??"").trim();
+  const key=raw.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/\s+/g," ").trim();
+  return SYNC_PROVINCE_CODES[key] || key;
+}
+function syncComuneKey(value){
+  return syncCurrentComune(value).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/\s+/g," ").trim();
+}
+let SYNC_GEO_INDEX=null;
+function syncGeoIndex(){
+  if(SYNC_GEO_INDEX)return SYNC_GEO_INDEX;
+  const byKey=new Map(), byComune=new Map();
+  const source=(typeof GEO!=="undefined"&&Array.isArray(GEO))?GEO:[];
+  source.forEach(g=>{
+    const p=syncProvinceCode(g?.prov), c=syncComuneKey(g?.comune);
+    if(!p||!c)return;
+    const key=p+"|"+c;
+    if(!byKey.has(key))byKey.set(key,g);
+    const list=byComune.get(c)||[];
+    list.push(g);
+    byComune.set(c,list);
+  });
+  SYNC_GEO_INDEX={byKey,byComune};
+  return SYNC_GEO_INDEX;
+}
+function resolveSyncGeo(prov,comune){
+  const idx=syncGeoIndex();
+  const p=syncProvinceCode(prov), c=syncComuneKey(comune);
+  const direct=idx.byKey.get(p+"|"+c);
+  if(direct)return direct;
+  const list=idx.byComune.get(c)||[];
+  return list.length===1?list[0]:null;
+}
 try{ window.currentComune=syncCurrentComune; }catch(_){}
 const CURRENT_PROVINCE_COUNTS = Object.freeze({
   BG:243, BS:205, CO:147, CR:113, LC:84, LO:60,
@@ -40,19 +84,16 @@ const CURRENT_PROVINCE_COUNTS = Object.freeze({
 });
 function auditCurrentGeo(){
   try{
-    const source=(typeof GEO!=="undefined"&&Array.isArray(GEO))?GEO:[];
-    const seen=new Set(), byProv=Object.create(null);
-    source.forEach(g=>{
-      const istat=String(g?.istat??"").trim();
-      const key=istat || (String(g?.prov??"").trim()+"|"+syncCurrentComune(g?.comune));
-      if(!key || seen.has(key))return;
-      seen.add(key);
-      const p=String(g?.prov??"").trim().toUpperCase();
+    const idx=syncGeoIndex();
+    const byProv=Object.create(null);
+    idx.byKey.forEach(g=>{
+      const p=syncProvinceCode(g?.prov);
       byProv[p]=(byProv[p]||0)+1;
     });
-    const okTotal=seen.size===1501;
+    const okTotal=idx.byKey.size===1501;
     const okProv=Object.keys(CURRENT_PROVINCE_COUNTS).every(p=>byProv[p]===CURRENT_PROVINCE_COUNTS[p]);
-    return {ok:okTotal&&okProv,total:seen.size,byProv};
+    const okProvinceSet=Object.keys(byProv).every(p=>Object.prototype.hasOwnProperty.call(CURRENT_PROVINCE_COUNTS,p));
+    return {ok:okTotal&&okProv&&okProvinceSet,total:idx.byKey.size,byProv};
   }catch(err){
     console.error("Audit GEO Lombardia",err);
     return {ok:false,total:0,byProv:{}};
@@ -66,9 +107,7 @@ function rebuildCanonicalRuntimeData(){
     if(!Array.isArray(raw))return false;
     data=raw.map(r=>{
       const cc=syncCurrentComune(r?.comune);
-      const g=(typeof geoMap!=="undefined"&&geoMap&&typeof geoMap.get==="function")
-        ? (geoMap.get(norm3(r?.prov)+"|"+norm3(cc))||null)
-        : null;
+      const g=resolveSyncGeo(r?.prov,cc);
       return {...r,comune:cc,geo:g};
     });
     CANDS=[...new Set(data.map(r=>r?.candidato).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"it"));
@@ -84,11 +123,11 @@ function repairHomeRuntime(){
     if(typeof render==="function")render();
     const audit=auditCurrentGeo();
     const k=document.getElementById("k-comuni");
-    if(k)k.textContent=audit.total.toLocaleString("it-IT");
+    if(k)k.textContent=(audit.ok?1501:audit.total).toLocaleString("it-IT");
     const q=document.querySelectorAll("#homeQuick .quick-item");
     if(q[0]){
       const sm=q[0].querySelector("small");
-      if(sm)sm.textContent=audit.total.toLocaleString("it-IT")+" comuni nel dataset";
+      if(sm)sm.textContent=(audit.ok?1501:audit.total).toLocaleString("it-IT")+" comuni nel dataset";
     }
   }catch(err){console.error("Repair Home runtime",err);}
 }
@@ -1276,9 +1315,7 @@ function installComuniPreferencesFix(){
     catch(_){return String(v||"");}
   }
   function normalizeProv(v){
-    const n=normC(v);
-    try{if(typeof PROV_CODE!=="undefined" && PROV_CODE && PROV_CODE[n])return normC(PROV_CODE[n]);}catch(_){}
-    return n;
+    try{return syncProvinceCode(v);}catch(_){return normC(v);}
   }
   function totalsKey(prov,comune){
     const c=normC(canonicalComune(comune));
@@ -1292,7 +1329,10 @@ function installComuniPreferencesFix(){
       : (typeof RAW!=="undefined"?RAW:[]);
     const totals={};
     (Array.isArray(raw)?raw:[]).forEach(r=>{
-      const key=totalsKey(r?.prov,r?.comune);
+      const g=resolveSyncGeo(r?.prov,r?.comune);
+      const key=g
+        ? syncProvinceCode(g?.prov)+"|"+syncComuneKey(g?.comune)
+        : totalsKey(r?.prov,r?.comune);
       if(!key)return;
       totals[key]=(totals[key]||0)+(Number(r?.preferenze)||0);
     });
@@ -2863,6 +2903,21 @@ installSondaggiModule();
   window.refreshHomeForElection=refreshHomeForElection;
 
   const originalRenderHome=window.renderHome;
+  const forceHomeGeoCount=()=>{
+    try{
+      const audit=auditCurrentGeo();
+      const value=(audit.ok?1501:audit.total).toLocaleString("it-IT");
+      const k=document.getElementById("k-comuni");
+      if(k)k.textContent=value;
+      const q=document.querySelectorAll("#homeQuick .quick-item");
+      if(q[0]){
+        const sm=q[0].querySelector("small");
+        if(sm)sm.textContent=value+" comuni nel dataset";
+      }
+    }catch(_){}
+  };
+  window.forceHomeGeoCount=forceHomeGeoCount;
+
   if(typeof originalRenderHome==="function"){
     window.renderHome=function(){
       originalRenderHome();
@@ -2870,9 +2925,9 @@ installSondaggiModule();
     };
   }
 
-  setTimeout(refreshHomeForElection,0);
-  setTimeout(repairHomeRuntime,20);
-  setTimeout(repairHomeRuntime,250);
+  setTimeout(()=>{refreshHomeForElection();forceHomeGeoCount()},0);
+  setTimeout(()=>{repairHomeRuntime();forceHomeGeoCount()},20);
+  setTimeout(()=>{repairHomeRuntime();forceHomeGeoCount()},250);
   document.addEventListener("click",function(ev){
     if(ev.target?.closest?.(".macro-tab"))setTimeout(repairHomeRuntime,0);
   },true);
