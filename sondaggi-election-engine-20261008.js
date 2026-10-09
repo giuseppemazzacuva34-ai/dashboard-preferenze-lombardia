@@ -778,13 +778,14 @@
     parties,
     coalitions,
     collegeValues,
+    collegeWeights,
     cameraMap,
     specialSeats,
     law,
     premium
   }){
     const circum=buildCameraCircumscriptions(cameraMap);
-    const circData=buildCircValues(cameraMap,collegeValues,parties);
+    const circData=buildCircValues(cameraMap,collegeValues,parties,collegeWeights);
     const plan=nationalUnits(nationalValues,"camera",coalitions,law);
     const units=plan.units;
 
@@ -1360,6 +1361,7 @@
       parties:input.parties||{},
       coalitions:input.coalitions||[],
       collegeValues:input.camera?.collegeValues||{},
+      collegeWeights:input.camera?.collegeWeights||{},
       cameraMap:input.camera?.collegeMap||{},
       specialSeats:input.specialSeats||{},
       law,
@@ -1386,7 +1388,7 @@
         lawVersion:"2026-10-08",
         lawStatus:law.rules?.status||"unknown",
         deterministicSorteggio:true,
-        territorialWeightModel:"college ordinary seat count unless explicit weight is supplied"
+        territorialWeightModel:"explicit camera college weight; otherwise ordinary no-prize college seats as neutral fallback"
       }
     };
   }
