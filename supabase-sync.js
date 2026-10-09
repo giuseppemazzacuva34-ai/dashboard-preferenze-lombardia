@@ -1495,7 +1495,6 @@ function installSondaggiModule(){
     ["AZ","Azione",3.2],
     ["IV","Italia Viva",2.4],
     ["PIU","+Europa",1.3],
-    ["PLD","Partito Liberaldemocratico",1.3],
     ["NM","Noi Moderati",1.1],
     ["ALTRI","Altri",4.8]
   ];
