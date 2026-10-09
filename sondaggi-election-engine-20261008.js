@@ -63,6 +63,10 @@
     return (keys||Object.keys(obj||{})).reduce((a,k)=>a+cleanPositive(obj?.[k]),0);
   }
 
+  function sumSeats(map){
+    return sumObject(map,Object.keys(map||{}));
+  }
+
   function parseCollegeMap(rawMap){
     const out=[];
     Object.entries(rawMap||{}).forEach(([region,items])=>{
@@ -85,6 +89,19 @@
       });
     });
     return out;
+  }
+
+  function validateMap(rawMap,baseExpected,withPremiumExpected,prizeExpected){
+    const rows=parseCollegeMap(rawMap);
+    const base=rows.filter(x=>!x.special)
+      .reduce((a,x)=>a+x.noPrizeSeats,0);
+    const withPremium=rows.filter(x=>!x.special)
+      .reduce((a,x)=>a+x.withPrizeSeats,0);
+    const prize=Math.max(0,base-withPremium);
+    return {
+      base,withPremium,prize,
+      valid:base===baseExpected&&withPremium===withPremiumExpected&&prize===prizeExpected
+    };
   }
 
   function buildCameraCircumscriptions(rawMap){
@@ -375,6 +392,10 @@
 
     return {units,byCoalition,cmap};
   }
+
+  // Compatibilità interna: il motore hardening usa il nome descrittivo
+  // buildNationalUnits, mentre il modulo storico esponeva nationalUnits.
+  const buildNationalUnits=nationalUnits;
 
   function splitCoalitionNational(unit,seatCount,values){
     if(unit.type!=="coalition")return {[unit.members[0]]:seatCount};
@@ -769,244 +790,665 @@
     return {collegeByList,detailed};
   }
 
+  function allocateStandardCircumscription({
+    units,nationalTargets,circum,circData,ordinarySeats
+  }){
+    const byCirc={},remainders={},nationalTotals={},remainderWinnersByCirc={};
+    units.forEach(u=>{nationalTotals[u.id]=0;});
+
+    Object.entries(circum||{}).forEach(([circId,circ])=>{
+      const seats=Math.floor(cleanPositive(ordinarySeats(circ)));
+      byCirc[circId]={};
+      remainders[circId]={};
+      remainderWinnersByCirc[circId]=[];
+      if(!seats)return;
+
+      const scored=units.filter(u=>(nationalTargets[u.id]||0)>0)
+        .map(u=>{
+          const target=Math.max(1,Math.floor(cleanPositive(nationalTargets[u.id])));
+          const q=cleanPositive(u.votes)/target;
+          const figure=calcCircUnitFigure(u,circData[circId]);
+          const index=q>0?trunc6(figure/q):0;
+          return {id:u.id,figure,index,target};
+        })
+        .filter(x=>x.index>0);
+
+      const sumIndex=scored.reduce((a,x)=>a+x.index,0);
+      const provisional=scored.map(x=>{
+        const raw=sumIndex>0?x.index*seats/sumIndex:0;
+        const base=Math.min(Math.floor(raw),x.target);
+        return {...x,raw,base,rest:raw-Math.floor(raw)};
+      });
+
+      let used=0;
+      provisional.forEach(x=>{
+        byCirc[circId][x.id]=x.base;
+        remainders[circId][x.id]=x.rest;
+        used+=x.base;
+      });
+
+      const ranked=provisional.slice().sort((a,b)=>{
+        const d=b.rest-a.rest;
+        if(Math.abs(d)>1e-15)return d;
+        const fv=b.figure-a.figure;
+        if(Math.abs(fv)>1e-12)return fv;
+        return tieOrder(a,b);
+      });
+
+      for(const x of ranked){
+        if(used>=seats)break;
+        if((byCirc[circId][x.id]||0)>=x.target)continue;
+        byCirc[circId][x.id]=(byCirc[circId][x.id]||0)+1;
+        remainderWinnersByCirc[circId].push(x.id);
+        used++;
+      }
+
+      if(used<seats){
+        const fallback=scored.slice().sort((a,b)=>
+          b.index-a.index||b.figure-a.figure||tieOrder(a,b)
+        );
+        for(const x of fallback){
+          if(used>=seats)break;
+          if((byCirc[circId][x.id]||0)>=x.target)continue;
+          byCirc[circId][x.id]=(byCirc[circId][x.id]||0)+1;
+          remainderWinnersByCirc[circId].push(x.id);
+          used++;
+        }
+      }
+    });
+
+    Object.values(byCirc).forEach(m=>{
+      Object.entries(m).forEach(([id,v])=>{
+        nationalTotals[id]=(nationalTotals[id]||0)+Math.floor(cleanPositive(v));
+      });
+    });
+
+    const over=()=>units.filter(u=>
+      (nationalTotals[u.id]||0)>(nationalTargets[u.id]||0)
+    );
+    const under=()=>units.filter(u=>
+      (nationalTotals[u.id]||0)<(nationalTargets[u.id]||0)
+    );
+
+    let guard=0;
+    while(guard++<10000){
+      const donors=over(),receivers=under();
+      if(!donors.length||!receivers.length)break;
+      let moved=false;
+
+      for(const donor of donors){
+        const donorCircs=Object.keys(byCirc)
+          .filter(c=>(byCirc[c][donor.id]||0)>0)
+          .sort((a,b)=>
+            (remainders[a][donor.id]??0)-(remainders[b][donor.id]??0)||
+            a.localeCompare(b,"it")
+          );
+
+        for(const circId of donorCircs){
+          const rcv=receivers.filter(u=>
+            (byCirc[circId][u.id]||0)<(nationalTargets[u.id]||0)
+          ).sort((a,b)=>
+            (remainders[circId][b.id]??-1)-(remainders[circId][a.id]??-1)||
+            String(a.id).localeCompare(String(b.id),"it")
+          );
+
+          if(!rcv.length)continue;
+          const receiver=rcv[0];
+          byCirc[circId][donor.id]--;
+          byCirc[circId][receiver.id]=(byCirc[circId][receiver.id]||0)+1;
+          nationalTotals[donor.id]--;
+          nationalTotals[receiver.id]++;
+          moved=true;
+          break;
+        }
+        if(moved)break;
+      }
+      if(!moved)break;
+    }
+
+    const deficits={};
+    units.forEach(u=>{
+      const d=(nationalTargets[u.id]||0)-(nationalTotals[u.id]||0);
+      if(d)deficits[u.id]=d;
+    });
+
+    return {
+      byCirc,
+      unitRemaindersByCirc:remainders,
+      nationalTotals,
+      deficits,
+      remainderWinnersByCirc
+    };
+  }
+
   function cameraResult({
-    nationalValues,
-    parties,
-    coalitions,
-    collegeValues,
-    collegeWeights,
-    cameraMap,
-    specialSeats,
-    law,
-    premium
+    nationalValues={},parties={},coalitions=[],
+    collegeValues={},collegeWeights={},cameraMap={},specialSeats={},
+    law,premium
   }){
     const circum=buildCameraCircumscriptions(cameraMap);
-    const circData=buildCircValues(cameraMap,collegeValues,parties,collegeWeights);
-    const plan=nationalUnits(nationalValues,"camera",coalitions,law);
+    const cv=buildCircValues(cameraMap,collegeValues,parties,collegeWeights);
+    const circData=cv;
+    const mapCheck=validateMap(cameraMap,384,314,70);
+    const plan=buildNationalUnits(nationalValues,"camera",coalitions,law);
     const units=plan.units;
+    const ordinaryTarget=premium?314:384;
 
     if(!units.length){
       return {
         seats:{},ordinarySeatsByParty:{},prizeSeatsByParty:{},
-        ordinarySeats:premium?314:384,premiumSeats:premium?70:0,
-        eligible:[],units:[],circResults:{},
-        complete:false,trace:{error:"Nessuna lista/coalizione eleggibile"}
+        ordinarySeats:ordinaryTarget,premiumSeats:premium?70:0,
+        bonusSeats:premium?70:0,prizeWinnerSeats:premium?70:0,
+        eligible:[],units:[],circResults:{},collegeResults:{},
+        complete:false,simulatedTotal:0,
+        trace:{errors:["Nessuna unità elettorale eleggibile."],mapCheck}
       };
     }
 
-    const specialWinnerSeats=(slugOrUnit)=>{
-      const u=typeof slugOrUnit==="string"?nationalUnitById(units,slugOrUnit):slugOrUnit;
-      if(!u)return 0;
-      return (u.members||[]).reduce((a,k)=>
-        a+cleanPositive(specialSeats?.camera?.valleDAosta?.[k])+
-        cleanPositive(specialSeats?.camera?.trentinoAltoAdige?.[k]),0
-      );
-    };
-
-    let initialNational=quotientAllocate(
+    const initial=quotientAllocate(
       units.map(u=>({id:u.id,votes:u.votes})),
-      premium?314:384,
+      ordinaryTarget,
       k=>units.find(u=>u.id===k)?.votes||0
     );
 
-    let finalNational=initialNational;
-    let capTriggered=false;
-    let majorityIds=new Set();
-    let minorityIds=new Set(units.map(u=>u.id));
-    let majorityQ=0;
-    let minorityQ=0;
-
     const winnerUnit=premium?nationalUnitById(units,nationalUnitIdForSubject(premium)):null;
+    let final=initial;
+    let capTriggered=false;
+    let specialWinner=0;
+    let ordinaryWinnerCap=null;
 
     if(premium&&winnerUnit){
-      const special=specialWinnerSeats(winnerUnit);
-      const winnerInitial=initialNational.seats[winnerUnit.id]||0;
-      if(winnerInitial+special>law.rules.camera.winnerOrdinaryCapWithPremium){
+      specialWinner=(winnerUnit.members||[]).reduce((a,k)=>
+        a+cleanPositive(specialSeats?.camera?.valleDAosta?.[k])+
+        cleanPositive(specialSeats?.camera?.trentinoAltoAdige?.[k]),0
+      );
+      const totalWinner=(initial.seats[winnerUnit.id]||0)+70+specialWinner;
+      if(totalWinner>law.rules.camera.winnerCapExcludingEstero){
         capTriggered=true;
-        const target=Math.max(0,law.rules.camera.winnerOrdinaryCapWithPremium-special);
+        ordinaryWinnerCap=Math.max(
+          0,law.rules.camera.winnerOrdinaryCapWithPremium-specialWinner
+        );
         const others=units.filter(u=>u.id!==winnerUnit.id);
-        const minoritySeats=Math.max(0,314-target);
-
-        majorityQ=target>0?Math.floor(scaled(winnerUnit.votes)/target):0;
-        minorityQ=minoritySeats>0
-          ?Math.floor(others.reduce((a,u)=>a+scaled(u.votes),0)/minoritySeats)
-          :0;
-
-        const majoritySeats=target;
-        finalNational={
-          seats:{[winnerUnit.id]:majoritySeats},
-          remainders:{[winnerUnit.id]:0},
-          quota:majorityQ,
-          totalVotes:scaled(winnerUnit.votes)
-        };
-
+        const minoritySeats=Math.max(0,314-ordinaryWinnerCap);
+        const majorityQ=ordinaryWinnerCap>0
+          ?Math.floor(scaled(winnerUnit.votes)/ordinaryWinnerCap):0;
+        const minorityQ=minoritySeats>0
+          ?Math.floor(others.reduce((a,u)=>a+scaled(u.votes),0)/minoritySeats):0;
         const minAlloc=quotientAllocate(
           others.map(u=>({id:u.id,votes:u.votes})),
           minoritySeats,
           k=>units.find(u=>u.id===k)?.votes||0
         );
-        Object.assign(finalNational.seats,minAlloc.seats);
-        Object.assign(finalNational.remainders,minAlloc.remainders);
-        finalNational.minority=minAlloc;
-        majorityIds=new Set([winnerUnit.id]);
-        minorityIds=new Set(others.map(u=>u.id));
+        final={
+          seats:{[winnerUnit.id]:ordinaryWinnerCap},
+          remainders:{[winnerUnit.id]:0},
+          quota:0,
+          majorityQ:majorityQ/SCALE,
+          minorityQ:minorityQ/SCALE,
+          majorityTarget:ordinaryWinnerCap,
+          minorityTarget:minoritySeats,
+          initial,
+          minority:minAlloc,
+          sorteggi:(initial.sorteggi||0)+(minAlloc.sorteggi||0)
+        };
+        Object.assign(final.seats,minAlloc.seats);
+        Object.assign(final.remainders,minAlloc.remainders);
       }
     }
 
-    if(!premium||!capTriggered){
-      const q=finalNational.quota;
-      majorityQ=q;
-      minorityQ=q;
-      majorityIds=new Set();
-      minorityIds=new Set(units.map(u=>u.id));
-    }
-
-    const listTargets=nationalListTargets(finalNational.seats,units,nationalValues);
-
-    let unitCirc;
-    if(premium&&capTriggered){
-      unitCirc=groupCircAllocation({
-        units,
-        nationalTargets:finalNational.seats,
-        circum,
-        circData,
-        bonusActive:true,
-        majorityIds,
-        minorityIds,
-        majorityNationalQuotient:majorityQ,
-        minorityNationalQuotient:minorityQ
-      });
-    }else{
-      /*
-       * Nel riparto ordinario il quoziente nazionale di ciascuna unità è il
-       * rapporto tra la sua cifra nazionale e i seggi ad essa spettanti.
-       */
-      const dynamicMajority=new Set();
-      const unitQ={};
-      units.forEach(u=>{
-        const target=finalNational.seats[u.id]||0;
-        unitQ[u.id]=target>0?scaled(u.votes)/target:0;
-      });
-
-      const calc={};
-      const remByCirc={};
-      const remainderWinnersByCirc={};
-      Object.entries(circum).forEach(([circId,circ])=>{
-        const seats=premium?circ.withPrizeSeats:circ.noPrizeSeats;
-        calc[circId]={};
-        remByCirc[circId]={};
-        remainderWinnersByCirc[circId]=[];
-        if(!seats)return;
-        const scored=units.filter(u=>(finalNational.seats[u.id]||0)>0)
-          .map(u=>{
-            const figure=calcCircUnitFigure(u,circData[circId]);
-            const q=unitQ[u.id];
-            const index=q>0?trunc6(scaled(figure)/q):0;
-            return {id:u.id,figure,index};
-          }).filter(x=>x.index>0);
-        const sumIdx=scored.reduce((a,x)=>a+x.index,0);
-        const provisional=scored.map(x=>{
-          const exact=sumIdx>0?x.index*seats/sumIdx:0;
-          return {...x,base:Math.floor(exact),rest:exact-Math.floor(exact)};
+    const ordinaryCirc=capTriggered
+      ?groupCircAllocation({
+          units,
+          nationalTargets:final.seats,
+          circum,
+          circData,
+          bonusActive:true,
+          majorityIds:new Set([winnerUnit.id]),
+          minorityIds:new Set(units.filter(u=>u.id!==winnerUnit.id).map(u=>u.id)),
+          majorityNationalQuotient:final.majorityQ||0,
+          minorityNationalQuotient:final.minorityQ||0
+        })
+      :allocateStandardCircumscription({
+          units,
+          nationalTargets:final.seats,
+          circum,
+          circData,
+          ordinarySeats:c=>premium?c.withPrizeSeats:c.noPrizeSeats
         });
-        let used=0;
-        provisional.forEach(x=>{
-          calc[circId][x.id]=x.base;
-          remByCirc[circId][x.id]=x.rest;
-          used+=x.base;
-        });
-        const ranked=stableSorted(provisional,(a,b)=>
-          b.rest-a.rest||b.figure-a.figure||tieOrder(a,b)
-        );
-        for(const x of ranked){
-          if(used>=seats)break;
-          if((calc[circId][x.id]||0)>=(finalNational.seats[x.id]||0))continue;
-          calc[circId][x.id]=(calc[circId][x.id]||0)+1;
-          remainderWinnersByCirc[circId].push(x.id);
-          used++;
+
+    const errors=[];
+    const warnings=[];
+    if(!mapCheck.valid)errors.push(
+      "Mappa Camera non quadrata: senza premio="+mapCheck.base+
+      ", ordinari con premio="+mapCheck.withPremium+
+      ", premio="+mapCheck.prize
+    );
+    const territorialSeats=sumSeats(ordinaryCirc.nationalTotals);
+    if(territorialSeats!==ordinaryTarget)
+      errors.push("Riparto territoriale Camera: "+territorialSeats+" != "+ordinaryTarget);
+
+    const listByCirc={};
+    const splitRemainders={};
+    Object.entries(ordinaryCirc.byCirc||{}).forEach(([circId,unitMap])=>{
+      listByCirc[circId]={};
+      splitRemainders[circId]={};
+      Object.entries(unitMap||{}).forEach(([unitId,count])=>{
+        const unit=nationalUnitById(units,unitId);
+        const nSeats=Math.floor(cleanPositive(count));
+        if(!unit||!nSeats)return;
+        if(unit.type==="list"){
+          const k=unit.members[0];
+          listByCirc[circId][k]=(listByCirc[circId][k]||0)+nSeats;
+        }else{
+          const split=quotientAllocate(
+            unit.members.map(k=>({
+              id:k,
+              votes:calcCircListFigures(circData[circId],k)
+            })),
+            nSeats,
+            k=>cleanPositive(nationalValues[k])
+          );
+          Object.entries(split.seats).forEach(([k,v])=>{
+            listByCirc[circId][k]=(listByCirc[circId][k]||0)+v;
+          });
+          splitRemainders[circId][unitId]=split;
         }
       });
-      unitCirc={byCirc:calc,unitRemaindersByCirc:remByCirc,remainderWinnersByCirc,nationalTotals:{}};
-      units.forEach(u=>unitCirc.nationalTotals[u.id]=0);
-      Object.values(calc).forEach(m=>Object.entries(m).forEach(([k,v])=>{
-        unitCirc.nationalTotals[k]=(unitCirc.nationalTotals[k]||0)+v;
-      }));
+    });
+
+    function allocateColleges(listMap,circId){
+      const circ=circum[circId];
+      const remaining={...listMap};
+      const assigned={};
+      const remByList={};
+      const detail={};
+      Object.keys(listMap||{}).forEach(k=>{assigned[k]=0;remByList[k]=[];});
+      circ.colleges.slice().sort((a,b)=>a.name.localeCompare(b.name,"it")).forEach(col=>{
+        const seats=Math.floor(cleanPositive(premium?col.withPrizeSeats:col.noPrizeSeats));
+        if(!seats)return;
+        const rows=Object.keys(remaining).filter(k=>(remaining[k]||0)>0).map(k=>({
+          id:k,
+          figure:cleanPositive(circData[circId]?.figures?.[col.name]?.[k]),
+          circFigure:calcCircListFigures(circData[circId],k),
+          cap:Math.floor(cleanPositive(remaining[k]))
+        })).filter(x=>x.figure>0);
+        if(!rows.length)return;
+
+        const totalFigure=rows.reduce((a,x)=>a+x.figure,0);
+        const q=Math.floor(totalFigure/seats);
+        const alloc={},rem={};
+        let used=0;
+        rows.forEach(x=>{
+          const raw=q>0?x.figure/q:seats*x.figure/totalFigure;
+          const base=Math.min(Math.floor(raw),x.cap);
+          alloc[x.id]=base;
+          rem[x.id]=raw-Math.floor(raw);
+          used+=base;
+        });
+
+        const ranked=rows.slice().sort((a,b)=>{
+          const d=(rem[b.id]||0)-(rem[a.id]||0);
+          if(Math.abs(d)>1e-15)return d;
+          const dv=b.circFigure-a.circFigure;
+          if(Math.abs(dv)>1e-12)return dv;
+          return tieOrder(a,b);
+        });
+        for(const x of ranked){
+          if(used>=seats)break;
+          if((alloc[x.id]||0)>=(x.cap||0))continue;
+          alloc[x.id]=(alloc[x.id]||0)+1;
+          used++;
+        }
+
+        detail[col.name]={seats,quota:q/SCALE,alloc,remainder:rem,totalFigure};
+        Object.entries(alloc).forEach(([k,v])=>{
+          remaining[k]=(remaining[k]||0)-v;
+          assigned[k]=(assigned[k]||0)+v;
+          remByList[k].push({
+            college:col.name,
+            rest:rem[k]||0,
+            figure:cleanPositive(circData[circId]?.figures?.[col.name]?.[k])
+          });
+        });
+      });
+
       /*
-       * Compensazione come per la lettera h: sposta i seggi eccedentari
-       * verso unità deficitarie nelle stesse circoscrizioni.
+       * Chiusura delle liste: trasferiamo un seggio alla lista deficitaria
+       * nel collegio dove la lista eccedentaria ha il minor resto e la lista
+       * deficitaria il maggior resto/valore. Il numero di seggi del collegio
+       * resta invariato.
        */
-      let loops=0;
-      while(loops++<10000){
-        const over=units.filter(u=>(unitCirc.nationalTotals[u.id]||0)>(finalNational.seats[u.id]||0));
-        const under=units.filter(u=>(unitCirc.nationalTotals[u.id]||0)<(finalNational.seats[u.id]||0));
+      let guard=0;
+      while(guard++<10000){
+        const over=Object.keys(listMap).filter(k=>(assigned[k]||0)>Math.floor(cleanPositive(listMap[k])));
+        const under=Object.keys(listMap).filter(k=>(assigned[k]||0)<Math.floor(cleanPositive(listMap[k])));
         if(!over.length||!under.length)break;
+
         let moved=false;
-        for(const donor of over){
-          const donorCircs=Object.keys(calc)
-            .filter(c=>(calc[c]?.[donor.id]||0)>0)
-            .sort((a,b)=>
-              (remByCirc[a]?.[donor.id]??-1)-
-              (remByCirc[b]?.[donor.id]??-1) ||
-              a.localeCompare(b,"it")
-            );
-          for(const c of donorCircs){
-            const receivers=under.slice().filter(u=>
-              (calc[c]?.[u.id]||0)<(finalNational.seats[u.id]||0)
-            ).sort((a,b)=>
-              (remByCirc[c]?.[b.id]??-1)-
-              (remByCirc[c]?.[a.id]??-1) ||
-              String(a.id).localeCompare(String(b.id),"it")
-            );
-            if(!receivers.length)continue;
-            const rec=receivers[0];
-            calc[c][donor.id]--;
-            calc[c][rec.id]=(calc[c][rec.id]||0)+1;
-            unitCirc.nationalTotals[donor.id]--;
-            unitCirc.nationalTotals[rec.id]++;
-            moved=true;break;
+        for(const donor of over.sort()){
+          const donorCols=(remByList[donor]||[])
+            .filter(x=>(detail[x.college]?.alloc?.[donor]||0)>0)
+            .sort((a,b)=>a.rest-b.rest||a.figure-b.figure||a.college.localeCompare(b.college,"it"));
+          for(const underList of under){
+            const recvCols=(remByList[underList]||[])
+              .slice().sort((a,b)=>b.rest-a.rest||b.figure-a.figure||a.college.localeCompare(b.college,"it"));
+            for(const d of donorCols){
+              for(const r of recvCols){
+                if(d.college!==r.college)continue;
+                const col=detail[d.college];
+                if(!col)continue;
+                col.alloc[donor]=(col.alloc[donor]||0)-1;
+                col.alloc[underList]=(col.alloc[underList]||0)+1;
+                assigned[donor]--;
+                assigned[underList]++;
+                moved=true;
+                break;
+              }
+              if(moved)break;
+            }
+            if(moved)break;
           }
           if(moved)break;
         }
         if(!moved)break;
       }
+
+      const bad=Object.keys(listMap).filter(k=>
+        (assigned[k]||0)!==Math.floor(cleanPositive(listMap[k]))
+      );
+      if(bad.length)warnings.push(
+        "Camera "+circId+": chiusura collegi non completata per "+bad.join(",")
+      );
+
+      return {assigned,detail};
     }
 
-    const ordinaryListCirc=distributeSimpleListsToCircs({
-      listTargets:listTargets.listTargets,
-      units,
-      unitCirc,
-      circData,
-      circum,
-      bonusActive:!!premium,
-      parties,
-      collegeValues
-    });
+    function allocateCapColleges(listMap,circId){
+      const circ=circum[circId];
+      const groupByList={};
+      const groups={majority:[],minority:[]};
+      Object.keys(listMap).forEach(k=>{
+        const unit=units.find(u=>u.members?.includes(k));
+        const g=(winnerUnit&&unit?.id===winnerUnit.id)?"majority":"minority";
+        groupByList[k]=g;
+        groups[g].push(k);
+      });
 
-    const ordinaryColleges=allocateListsToColleges(
-      ordinaryListCirc.listByCirc,
-      circData,circum,parties,!!premium
-    );
+      const groupTargets={
+        majority:groups.majority.reduce((a,k)=>a+Math.floor(cleanPositive(listMap[k])),0),
+        minority:groups.minority.reduce((a,k)=>a+Math.floor(cleanPositive(listMap[k])),0)
+      };
+      const remainingGroups={...groupTargets};
+      const remainingLists={...listMap};
+      const assigned={};
+      const byCollege={};
+      const remByList={};
+      const warnings=[];
+      Object.keys(listMap).forEach(k=>{
+        assigned[k]=0;
+        remByList[k]=[];
+      });
+
+      circ.colleges.slice().sort((a,b)=>a.name.localeCompare(b.name,"it")).forEach(col=>{
+        const seats=Math.floor(cleanPositive(col.withPrizeSeats));
+        if(!seats)return;
+
+        const groupRows=["majority","minority"].map(g=>{
+          const figure=groups[g].reduce((a,k)=>
+            a+cleanPositive(circData[circId]?.figures?.[col.name]?.[k]),0);
+          const q=(g==="majority"?final.majorityQ:final.minorityQ)||0;
+          return {
+            g,figure,
+            index:q>0?trunc6(figure/q):0,
+            remaining:remainingGroups[g]||0
+          };
+        }).filter(x=>x.index>0&&x.remaining>0);
+
+        const sumIndex=groupRows.reduce((a,x)=>a+x.index,0);
+        const groupAlloc={majority:0,minority:0};
+        const groupRem={};
+
+        if(sumIndex>0){
+          groupRows.forEach(x=>{
+            const raw=seats*x.index/sumIndex;
+            groupAlloc[x.g]=Math.min(
+              Math.floor(raw),
+              x.remaining
+            );
+            groupRem[x.g]=raw-Math.floor(raw);
+          });
+
+          let used=groupAlloc.majority+groupAlloc.minority;
+          const ranked=groupRows.slice().sort((a,b)=>
+            (groupRem[b.g]||0)-(groupRem[a.g]||0)||
+            b.figure-a.figure||
+            a.g.localeCompare(b.g)
+          );
+          for(const x of ranked){
+            if(used>=seats)break;
+            if((groupAlloc[x.g]||0)>=(remainingGroups[x.g]||0))continue;
+            groupAlloc[x.g]=(groupAlloc[x.g]||0)+1;
+            used++;
+          }
+        }
+
+        let groupUsed=groupAlloc.majority+groupAlloc.minority;
+        if(groupUsed<seats){
+          const fallback=groupRows.slice().sort((a,b)=>
+            b.index-a.index||b.figure-a.figure||a.g.localeCompare(b.g)
+          );
+          for(const x of fallback){
+            if(groupUsed>=seats)break;
+            if((groupAlloc[x.g]||0)>=(remainingGroups[x.g]||0))continue;
+            groupAlloc[x.g]=(groupAlloc[x.g]||0)+1;
+            groupUsed++;
+          }
+        }
+
+        if(groupUsed!==seats){
+          warnings.push(
+            "Camera "+circId+" "+col.name+": riparto gruppo "+groupUsed+" != "+seats
+          );
+        }
+
+        byCollege[col.name]={seats,groupAlloc,alloc:{},groupRemainders:groupRem};
+
+        for(const g of ["majority","minority"]){
+          const nSeats=Math.floor(cleanPositive(groupAlloc[g]||0));
+          if(!nSeats)continue;
+          const eligible=groups[g].filter(k=>(remainingLists[k]||0)>0)
+            .map(k=>({
+              id:k,
+              figure:cleanPositive(circData[circId]?.figures?.[col.name]?.[k]),
+              circFigure:calcCircListFigures(circData[circId],k),
+              cap:Math.floor(cleanPositive(remainingLists[k]))
+            })).filter(x=>x.figure>0);
+
+          if(!eligible.length){
+            warnings.push(
+              "Camera "+circId+" "+col.name+": nessuna lista eleggibile nel gruppo "+g
+            );
+            continue;
+          }
+
+          const total=eligible.reduce((a,x)=>a+x.figure,0);
+          const q=Math.floor(total/nSeats);
+          const alloc={},rem={};
+          let used=0;
+
+          eligible.forEach(x=>{
+            const raw=q>0?x.figure/q:nSeats*x.figure/total;
+            const base=Math.min(Math.floor(raw),x.cap);
+            alloc[x.id]=base;
+            rem[x.id]=raw-Math.floor(raw);
+            used+=base;
+          });
+
+          eligible.slice().sort((a,b)=>
+            (rem[b.id]||0)-(rem[a.id]||0)||
+            b.circFigure-a.circFigure||
+            tieOrder(a,b)
+          ).forEach(x=>{
+            if(used>=nSeats)return;
+            if((alloc[x.id]||0)>=(x.cap||0))return;
+            alloc[x.id]=(alloc[x.id]||0)+1;
+            used++;
+          });
+
+          byCollege[col.name].alloc=Object.assign(
+            byCollege[col.name].alloc,alloc
+          );
+          Object.entries(alloc).forEach(([k,v])=>{
+            remainingLists[k]-=v;
+            assigned[k]=(assigned[k]||0)+v;
+            remByList[k].push({
+              college:col.name,
+              rest:rem[k]||0,
+              figure:cleanPositive(circData[circId]?.figures?.[col.name]?.[k])
+            });
+            remainingGroups[g]-=v;
+          });
+        }
+      });
+
+      let guard=0;
+      while(guard++<10000){
+        const over=Object.keys(listMap).filter(k=>
+          (assigned[k]||0)>Math.floor(cleanPositive(listMap[k]))
+        );
+        const under=Object.keys(listMap).filter(k=>
+          (assigned[k]||0)<Math.floor(cleanPositive(listMap[k]))
+        );
+        if(!over.length||!under.length)break;
+
+        let moved=false;
+        for(const donor of over.sort()){
+          const donorUnit=units.find(u=>u.members?.includes(donor));
+          const donorGroup=(winnerUnit&&donorUnit?.id===winnerUnit.id)
+            ?"majority":"minority";
+          const donorCols=(remByList[donor]||[])
+            .filter(x=>(byCollege[x.college]?.alloc?.[donor]||0)>0)
+            .sort((a,b)=>
+              a.rest-b.rest||a.figure-b.figure||
+              a.college.localeCompare(b.college,"it")
+            );
+
+          for(const receiver of under.sort()){
+            const receiverUnit=units.find(u=>u.members?.includes(receiver));
+            const receiverGroup=(winnerUnit&&receiverUnit?.id===winnerUnit.id)
+              ?"majority":"minority";
+            if(receiverGroup!==donorGroup)continue;
+
+            const recvCols=(remByList[receiver]||[])
+              .slice().sort((a,b)=>
+                b.rest-a.rest||b.figure-a.figure||
+                a.college.localeCompare(b.college,"it")
+              );
+
+            for(const d of donorCols){
+              const r=recvCols.find(x=>x.college===d.college);
+              if(!r)continue;
+              const rec=byCollege[d.college];
+              rec.alloc[donor]=(rec.alloc[donor]||0)-1;
+              rec.alloc[receiver]=(rec.alloc[receiver]||0)+1;
+              assigned[donor]--;
+              assigned[receiver]++;
+              moved=true;
+              break;
+            }
+            if(moved)break;
+          }
+          if(moved)break;
+        }
+        if(!moved)break;
+      }
+
+      const bad=Object.keys(listMap).filter(k=>
+        (assigned[k]||0)!==Math.floor(cleanPositive(listMap[k]))
+      );
+      if(bad.length){
+        warnings.push(
+          "Camera "+circId+": chiusura liste cap non completata per "+bad.join(",")
+        );
+      }
+
+      return {assigned,detail:byCollege,warnings};
+    }
+
+    const collegeByList={};
+    const collegeDetail={};
+    Object.keys(listByCirc).forEach(circId=>{
+      const clean={};
+      Object.entries(listByCirc[circId]).forEach(([k,v])=>{
+        if(k!=="__group")clean[k]=v;
+      });
+      const r=capTriggered
+        ?allocateCapColleges(clean,circId)
+        :allocateColleges(clean,circId);
+      collegeDetail[circId]=r.detail;
+      if(r.warnings?.length)warnings.push(...r.warnings);
+      Object.entries(r.detail||{}).forEach(([college,rec])=>{
+        Object.entries(rec.alloc||{}).forEach(([k,v])=>{
+          if(!v)return;
+          collegeByList[k]??={};
+          collegeByList[k][college]=(collegeByList[k][college]||0)+v;
+        });
+      });
+    });
 
     const ordinaryByParty={};
-    Object.values(ordinaryListCirc.listByCirc).forEach(m=>{
-      Object.entries(m).forEach(([k,v])=>ordinaryByParty[k]=(ordinaryByParty[k]||0)+v);
-    });
+    Object.values(listByCirc).forEach(m=>Object.entries(m).forEach(([k,v])=>{
+      if(k!=="__group")ordinaryByParty[k]=(ordinaryByParty[k]||0)+Math.floor(cleanPositive(v));
+    }));
 
-    const prizeByParty={};
-    const prizeByCirc={};
+    const prizeByCirc={},prizeByParty={},prizeCollegeByList={},prizeCollegeDetail={};
     if(premium&&winnerUnit){
       Object.entries(circum).forEach(([circId,circ])=>{
-        const n=Number(circ.prizeSeats)||0;
+        const n=Math.floor(cleanPositive(circ.prizeSeats));
         if(!n)return;
-        prizeByCirc[circId]={};
-        const items=(winnerUnit.members||[]).map(k=>({
-          id:k,
-          votes:calcCircListFigures(circData[circId],k)
-        })).filter(x=>x.votes>0);
-        const split=quotientAllocate(items,n,k=>nationalValues?.[k]||0);
+        const members=winnerUnit.members||[winnerUnit.id];
+        const split=winnerUnit.type==="coalition"
+          ?quotientAllocate(
+              members.map(k=>({
+                id:k,
+                votes:calcCircListFigures(circData[circId],k)
+              })),
+              n,
+              k=>cleanPositive(nationalValues[k])
+            )
+          :{seats:{[members[0]]:n},remainders:{}};
         prizeByCirc[circId]=split.seats;
         Object.entries(split.seats).forEach(([k,v])=>{
           prizeByParty[k]=(prizeByParty[k]||0)+v;
+          const cols=circ.colleges.filter(col=>col.prizeSeats>0).map(col=>({
+            id:col.name,
+            figure:cleanPositive(circData[circId]?.figures?.[col.name]?.[k]),
+            cap:col.prizeSeats
+          }));
+          const total=cols.reduce((a,x)=>a+x.figure,0);
+          const alloc={},rem={};
+          let used=0;
+          if(total>0){
+            cols.forEach(x=>{
+              const raw=v*x.figure/total;
+              alloc[x.id]=Math.min(Math.floor(raw),x.cap);
+              rem[x.id]=raw-Math.floor(raw);
+              used+=alloc[x.id];
+            });
+            cols.slice().sort((a,b)=>
+              (rem[b.id]||0)-(rem[a.id]||0)||b.figure-a.figure||tieOrder(a,b)
+            ).forEach(x=>{
+              if(used>=v)return;
+              if((alloc[x.id]||0)>=x.cap)return;
+              alloc[x.id]=(alloc[x.id]||0)+1;used++;
+            });
+          }
+          prizeCollegeByList[k]??={};
+          Object.entries(alloc).forEach(([college,nSeats])=>{
+            if(nSeats)prizeCollegeByList[k][college]=(prizeCollegeByList[k][college]||0)+nSeats;
+          });
+          prizeCollegeDetail[circId]??={};
+          prizeCollegeDetail[circId][k]={target:v,seats:alloc,remainders:rem};
         });
       });
     }
@@ -1014,12 +1456,22 @@
     const seats={...ordinaryByParty};
     Object.entries(prizeByParty).forEach(([k,v])=>seats[k]=(seats[k]||0)+v);
 
-    const ordinaryAssigned=Object.values(ordinaryByParty).reduce((a,v)=>a+v,0);
-    const prizeAssigned=Object.values(prizeByParty).reduce((a,v)=>a+v,0);
-    const ordinaryTarget=premium?314:384;
-    const complete=ordinaryAssigned===ordinaryTarget && (!premium || prizeAssigned===70);
+    const ordinaryAssigned=sumSeats(ordinaryByParty);
+    const prizeAssigned=sumSeats(prizeByParty);
+    const simulatedTotal=sumSeats(seats);
+    const ordinaryExpected=ordinaryTarget;
+    const finalExpected=384;
 
-    const unitTargetTotal=Object.values(finalNational.seats).reduce((a,v)=>a+v,0);
+    if(ordinaryAssigned!==ordinaryExpected)
+      errors.push("Seggi ordinari Camera "+ordinaryAssigned+" != "+ordinaryExpected);
+    if(premium&&prizeAssigned!==70)
+      errors.push("Premio Camera "+prizeAssigned+" != 70");
+    if(!premium&&prizeAssigned!==0)
+      errors.push("Premio Camera non attivo ma sono presenti seggi premio.");
+    if(premium&&simulatedTotal!==finalExpected)
+      errors.push("Totale Camera con premio "+simulatedTotal+" != 384");
+    if(!premium&&simulatedTotal!==384)
+      errors.push("Totale Camera senza premio "+simulatedTotal+" != 384");
 
     return {
       seats,
@@ -1030,34 +1482,36 @@
       bonusSeats:premium?70:0,
       prizeWinnerSeats:premium?70:0,
       prizeRedistributed:0,
-      eligible:units.flatMap(u=>u.members),
+      eligible:units.flatMap(u=>u.members).filter((v,i,a)=>a.indexOf(v)===i),
       units,
-      coalTotals:Object.fromEntries(
-        units.filter(u=>u.type==="coalition").map(u=>[
-          u.coalitionId,
-          u.votes
-        ])
-      ),
+      coalTotals:Object.fromEntries(units.filter(u=>u.type==="coalition").map(u=>[u.coalitionId,u.votes])),
       circResults:{
-        byCirc:unitCirc.byCirc,
-        nationalTotals:unitCirc.nationalTotals,
-        listByCirc:ordinaryListCirc.listByCirc,
-        colleges:ordinaryColleges.collegeByList,
-        prizeByCirc
+        byCirc:ordinaryCirc.byCirc,
+        nationalTotals:ordinaryCirc.nationalTotals,
+        listByCirc,
+        colleges:collegeByList,
+        prizeByCirc,
+        prizeColleges:prizeCollegeByList
       },
-      collegeResults:ordinaryColleges.detailed,
-      complete,
-      simulatedTotal:Object.values(seats).reduce((a,v)=>a+v,0),
+      collegeResults:{ordinary:collegeDetail,prize:prizeCollegeDetail},
+      complete:errors.length===0,
+      simulatedTotal,
       capTriggered,
-      winnerOrdinary:premium&&winnerUnit?(finalNational.seats[winnerUnit.id]||0):0,
+      winnerOrdinary:winnerUnit?(final.seats[winnerUnit.id]||0):0,
       ordinaryRedistributed:capTriggered?
-        Math.max(0,(initialNational.seats[winnerUnit.id]||0)-((finalNational.seats[winnerUnit.id]||0))):0,
+        Math.max(0,(initial.seats[winnerUnit.id]||0)-(final.seats[winnerUnit.id]||0)):0,
       trace:{
-        nationalInitial:initialNational,
-        nationalFinal:finalNational,
-        listTargets,
-        unitTargetTotal,
-        territorialProxy:"college no-prize seat count when no explicit vote weight is provided"
+        nationalInitial:initial,
+        nationalFinal:final,
+        ordinaryAssigned,
+        prizeAssigned,
+        specialWinner,
+        ordinaryWinnerCap,
+        capTriggered,
+        mapCheck,
+        errors,
+        warnings,
+        territorialModel:"peso esplicito per collegio; in assenza del peso, seggi ordinari del collegio come proxy di simulazione"
       }
     };
   }
@@ -1134,6 +1588,13 @@
     return split.seats;
   }
 
+  function senateSpecialSeats(specialSeats,winner){
+    return (winner?.members||[]).reduce((a,k)=>
+      a+cleanPositive(specialSeats?.senato?.valleDAosta?.[k])+
+      cleanPositive(specialSeats?.senato?.trentinoAltoAdige?.[k]),0
+    );
+  }
+
   function senateRegionResult({
     region,
     seats,
@@ -1170,178 +1631,485 @@
     };
   }
 
-  function senateResult({
-    nationalValues,
-    parties,
-    coalitions,
-    regionalValuesByRegion,
-    senateMap,
-    senatePremiumByRegion,
-    specialSeats,
-    law,
-    premium
-  }){
+  function senateResult(input){
+    const {
+      nationalValues={},parties={},coalitions=[],
+      regionalValuesByRegion={},collegeValues={},collegeWeights={},
+      senateMap={},senatePremiumByRegion={},specialSeats={},law,premium
+    }=input;
+
     const regions=Object.keys(senatePremiumByRegion||{});
-    const winner=premium||null;
     const regionResults={};
+    const ordinaryByParty={},prizeByParty={},regionPartySeats={},regionUnitSeats={};
+    const errors=[],warnings=[];
+
+    const mapCheck=validateMap(
+      senateMap,
+      law.rules.senate.ordinarySeats,
+      law.rules.senate.ordinarySeatsWithPremium,
+      law.rules.senate.premiumSeats
+    );
 
     regions.forEach(region=>{
-      const items=(senateMap?.[region]||[]).map(raw=>{
-        const p=String(raw).split("|");
-        return {
-          name:p[0],
-          noPrizeSeats:cleanPositive(p[1]),
-          withPrizeSeats:cleanPositive(p[2]??p[1]),
-          special:String(p[3]||"").toUpperCase()==="SPECIAL" ||
-            String(p[0]).includes(" - U")
-        };
-      }).filter(x=>!x.special);
-      const totalNoPrize=items.reduce((a,x)=>a+x.noPrizeSeats,0);
-      const premiumSeats=cleanPositive(senatePremiumByRegion?.[region]||0);
-      const ordinarySeats=premium?Math.max(0,totalNoPrize-premiumSeats):totalNoPrize;
-      const reg=regionalValuesByRegion?.[region]||Object.fromEntries(
-        Object.keys(parties||{}).map(k=>[k,parties?.[k]?.senate||0])
+      const rows=parseCollegeMap({[region]:senateMap[region]||[]});
+      const colleges=rows.filter(x=>!x.special);
+      const totalNoPrize=colleges.reduce((a,x)=>a+x.noPrizeSeats,0);
+      const prizeSeatsRegion=Math.floor(cleanPositive(senatePremiumByRegion[region]||0));
+      const ordinarySeats=premium ?
+        colleges.reduce((a,x)=>a+x.withPrizeSeats,0) : totalNoPrize;
+      const regionalValues=regionalValuesByRegion[region]||
+        Object.fromEntries(Object.keys(parties).map(k=>[k,parties?.[k]?.senate||0]));
+
+      const plan=buildSenateRegionalUnits(
+        region,regionalValues,nationalValues,coalitions,law
       );
-      regionResults[region]=senateRegionResult({
-        region,
-        seats:ordinarySeats,
-        regionalValues:reg,
-        nationalValues,
-        coalitions,
-        law,
-        premium:premium?premiumSeats:0,
-        winner
-      });
-      regionResults[region].collegeMap=items;
-      regionResults[region].totalNoPrize=totalNoPrize;
-      regionResults[region].ordinarySeats=ordinarySeats;
-      regionResults[region].regionalValues=reg;
+      const units=plan.units;
+      const initial=quotientAllocate(
+        units.map(u=>({id:u.id,votes:u.votes})),
+        ordinarySeats,
+        k=>units.find(u=>u.id===k)?.votes||0
+      );
+
+      regionResults[region]={
+        region,colleges,units,initial,targets:{...initial.seats},
+        ordinarySeats,prizeSeats:premium?prizeSeatsRegion:0,
+        regionalValues
+      };
     });
 
+    const winner=premium||null;
     const winnerUnitId=nationalUnitIdForSubject(winner);
-    let winnerOrdinary=regions.reduce((a,r)=>a+(regionResults[r].targets[winnerUnitId]||0),0);
-
-    const winnerSpecial=(winner?.members||[]).reduce((a,k)=>
-      a+cleanPositive(specialSeats?.senato?.valleDAosta?.[k])+
-      cleanPositive(specialSeats?.senato?.trentinoAltoAdige?.[k]),0
+    const winnerSpecial=winner
+      ?senateSpecialSeats(specialSeats,winner)
+      :0;
+    const initialWinner=regions.reduce((a,r)=>
+      a+(regionResults[r].targets[winnerUnitId]||0),0
     );
 
     let capTriggered=false;
+    let ordinaryWinnerCap=null;
     let excess=0;
-    const ordinaryCap=law.rules.senate.winnerOrdinaryCapWithPremium-winnerSpecial;
-    if(premium&&winnerUnitId&&winnerOrdinary+winnerSpecial>law.rules.senate.winnerCapExcludingEstero-law.rules.senate.premiumSeats){
-      capTriggered=true;
-      excess=Math.max(0,winnerOrdinary-ordinaryCap);
 
-      /*
-       * La legge considera i seggi ottenuti con i resti minori nelle regioni.
-       * Usiamo il resto effettivo del vincitore nella ripartizione regionale;
-       * a parità, il voto regionale più basso e poi il sorteggio deterministico.
-       */
-      const candidates=regions.map(region=>{
-        const rr=regionResults[region];
-        const rest=rr.initial.remainders?.[winnerUnitId]??-1;
-        const votes=rr.units.find(u=>u.id===winnerUnitId)?.votes||0;
-        return {region,rest,votes,seats:rr.targets[winnerUnitId]||0};
-      }).filter(x=>x.seats>0&&x.rest>=0)
-        .sort((a,b)=>a.rest-b.rest||a.votes-b.votes||a.region.localeCompare(b.region,"it"));
+    if(premium&&winnerUnitId){
+      const totalWinner=initialWinner+35+winnerSpecial;
+      if(totalWinner>law.rules.senate.winnerCapExcludingEstero){
+        capTriggered=true;
+        ordinaryWinnerCap=Math.max(
+          0,law.rules.senate.winnerOrdinaryCapWithPremium-winnerSpecial
+        );
+        excess=Math.max(0,initialWinner-ordinaryWinnerCap);
 
-      for(const c of candidates){
-        if(excess<=0)break;
-        const rr=regionResults[c.region];
-        if(!(rr.targets[winnerUnitId]>0))continue;
-        rr.targets[winnerUnitId]--;
-        excess--;
-        const usedRemainders=new Set(rr.initial.remainderWinners||[]);
-        const losing=rr.units.filter(u=>u.id!==winnerUnitId&&u.votes>0&&!usedRemainders.has(u.id))
-          .sort((a,b)=>{
-            const ra=rr.initial.remainders?.[a.id]??-1;
-            const rb=rr.initial.remainders?.[b.id]??-1;
-            return rb-ra||b.votes-a.votes||tieOrder(a,b);
-          })[0] ||
-          rr.units.filter(u=>u.id!==winnerUnitId&&u.votes>0)
-            .sort((a,b)=>{
-              const ra=rr.initial.remainders?.[a.id]??-1;
-              const rb=rr.initial.remainders?.[b.id]??-1;
-              return rb-ra||b.votes-a.votes||tieOrder(a,b);
-            })[0];
-        if(losing)rr.targets[losing.id]=(rr.targets[losing.id]||0)+1;
-      }
-
-      while(excess>0){
-        const more=regions.map(region=>{
+        const removalOrder=regions.map(region=>{
           const rr=regionResults[region];
           return {
             region,
-            rest:rr.initial.remainders?.[winnerUnitId]??-1,
-            votes:rr.units.find(u=>u.id===winnerUnitId)?.votes||0,
-            seats:rr.targets[winnerUnitId]||0
+            rest:rr.initial.remainders[winnerUnitId]??-1,
+            votes:rr.units.find(u=>u.id===winnerUnitId)?.votes||0
           };
-        }).filter(x=>x.seats>0)
-          .sort((a,b)=>a.rest-b.rest||a.votes-b.votes||a.region.localeCompare(b.region,"it"));
+        }).filter(x=>(regionResults[x.region].targets[winnerUnitId]||0)>0)
+          .sort((a,b)=>
+            a.rest-b.rest||a.votes-b.votes||a.region.localeCompare(b.region,"it")
+          );
 
-        if(!more.length)break;
-        const c=more[0],rr=regionResults[c.region];
-        rr.targets[winnerUnitId]--;
-        excess--;
-        const usedRemainders=new Set(rr.initial.remainderWinners||[]);
-        const losing=rr.units.filter(u=>u.id!==winnerUnitId&&u.votes>0&&!usedRemainders.has(u.id))
-          .sort((a,b)=>{
-            const ra=rr.initial.remainders?.[a.id]??-1;
-            const rb=rr.initial.remainders?.[b.id]??-1;
-            return rb-ra||b.votes-a.votes||tieOrder(a,b);
-          })[0] ||
-          rr.units.filter(u=>u.id!==winnerUnitId&&u.votes>0)
+        while(excess>0){
+          const available=removalOrder.filter(x=>
+            (regionResults[x.region].targets[winnerUnitId]||0)>0
+          );
+          if(!available.length){
+            errors.push("Senato: impossibile applicare integralmente il tetto del vincitore.");
+            break;
+          }
+
+          const item=available[0];
+          const rr=regionResults[item.region];
+          rr.targets[winnerUnitId]--;
+          excess--;
+
+          /*
+           * Il seggio sottratto viene attribuito alla minoranza secondo la
+           * graduatoria dei resti non già utilizzati. In caso di ulteriore
+           * parità: maggiore cifra regionale, quindi ordine deterministico
+           * di simulazione al posto del sorteggio reale.
+           */
+          const usedRemainders=new Set(rr.initial.remainderWinners||[]);
+          const candidates=rr.units
+            .filter(u=>u.id!==winnerUnitId&&u.votes>0)
             .sort((a,b)=>{
-              const ra=rr.initial.remainders?.[a.id]??-1;
-              const rb=rr.initial.remainders?.[b.id]??-1;
-              return rb-ra||b.votes-a.votes||tieOrder(a,b);
-            })[0];
-        if(losing)rr.targets[losing.id]=(rr.targets[losing.id]||0)+1;
-        else break;
+              const aUsed=usedRemainders.has(a.id)?1:0;
+              const bUsed=usedRemainders.has(b.id)?1:0;
+              const ar=rr.initial.remainders[a.id]??-1;
+              const br=rr.initial.remainders[b.id]??-1;
+              return aUsed-bUsed||br-ar||b.votes-a.votes||tieOrder(a,b);
+            });
+
+          const receiver=candidates[0];
+          if(receiver){
+            rr.targets[receiver.id]=(rr.targets[receiver.id]||0)+1;
+          }else{
+            errors.push("Senato "+item.region+": impossibile riallocare un seggio sottratto al vincitore.");
+            break;
+          }
+        }
       }
     }
 
-    const ordinaryByParty={},prizeByParty={},regionPartySeats={},regionUnitSeats={};
+    function splitRegionUnits(rr){
+      const listTargets={};
+      const splitByUnit={};
+      Object.entries(rr.targets).forEach(([unitId,count])=>{
+        const unit=nationalUnitById(rr.units,unitId);
+        const nSeats=Math.floor(cleanPositive(count));
+        if(!unit||!nSeats)return;
+        if(unit.type==="list"){
+          splitByUnit[unitId]={[unit.members[0]]:nSeats};
+        }else{
+          splitByUnit[unitId]=quotientAllocate(
+            unit.members.map(k=>({
+              id:k,
+              votes:cleanPositive(rr.regionalValues[k])
+            })),
+            nSeats,
+            k=>cleanPositive(nationalValues[k])
+          ).seats;
+        }
+        Object.values(splitByUnit[unitId]).forEach((v,idx)=>{
+          const keys=Object.keys(splitByUnit[unitId]);
+          const k=keys[idx];
+          listTargets[k]=(listTargets[k]||0)+Math.floor(cleanPositive(v));
+        });
+      });
+      return {splitByUnit,listTargets};
+    }
 
-    regions.forEach(region=>{
-      const rr=regionResults[region];
-      regionPartySeats[region]={};
-      regionUnitSeats[region]={};
+    function buildCollegeData(rr,listTargets){
+      const out={};
+      rr.colleges.forEach(col=>{
+        out[col.name]={};
+        Object.keys(listTargets).forEach(k=>{
+          const explicit=collegeValues?.[rr.region]?.[col.name]?.[k] ??
+            collegeValues?.[col.name]?.[k];
+          const weight=cleanPositive(
+            collegeWeights?.[rr.region]?.[col.name] ??
+            collegeWeights?.[col.name] ??
+            col.noPrizeSeats
+          );
+          const base=explicit==null?cleanPositive(rr.regionalValues[k]):cleanPositive(explicit);
+          out[col.name][k]=base*weight;
+        });
+      });
+      return out;
+    }
 
-      rr.units.forEach(u=>{
-        const count=Math.max(0,Math.floor(rr.targets[u.id]||0));
-        if(!count)return;
-        regionUnitSeats[region][u.id]=count;
-        const split=u.type==="coalition"
-          ?splitRegionalCoalition(u,count,rr.regionalValues,nationalValues)
-          :{[u.members[0]]:count};
-        Object.entries(split).forEach(([k,v])=>{
-          ordinaryByParty[k]=(ordinaryByParty[k]||0)+v;
-          regionPartySeats[region][k]=(regionPartySeats[region][k]||0)+v;
+    function standardCollegeAllocate(rr,listTargets,data){
+      const remaining={...listTargets};
+      const assigned={};
+      const detail={};
+      const remByList={};
+      Object.keys(listTargets).forEach(k=>{
+        assigned[k]=0;remByList[k]=[];
+      });
+
+      rr.colleges.slice().sort((a,b)=>a.name.localeCompare(b.name,"it")).forEach(col=>{
+        const seats=Math.floor(cleanPositive(premium?col.withPrizeSeats:col.noPrizeSeats));
+        if(!seats)return;
+        const rows=Object.keys(remaining).filter(k=>(remaining[k]||0)>0).map(k=>({
+          id:k,figure:cleanPositive(data[col.name]?.[k]),
+          regionalFigure:Object.values(data).reduce((a,r)=>a+cleanPositive(r?.[k]),0),
+          cap:Math.floor(cleanPositive(remaining[k]))
+        })).filter(x=>x.figure>0);
+        if(!rows.length)return;
+
+        const total=rows.reduce((a,x)=>a+x.figure,0);
+        const q=Math.floor(total/seats);
+        const alloc={},rem={};
+        let used=0;
+        rows.forEach(x=>{
+          const raw=q>0?x.figure/q:seats*x.figure/total;
+          const base=Math.min(Math.floor(raw),x.cap);
+          alloc[x.id]=base;rem[x.id]=raw-Math.floor(raw);used+=base;
+        });
+
+        rows.slice().sort((a,b)=>{
+          const d=(rem[b.id]||0)-(rem[a.id]||0);
+          if(Math.abs(d)>1e-15)return d;
+          return b.regionalFigure-a.regionalFigure||tieOrder(a,b);
+        }).forEach(x=>{
+          if(used>=seats)return;
+          if((alloc[x.id]||0)>=x.cap)return;
+          alloc[x.id]=(alloc[x.id]||0)+1;used++;
+        });
+
+        detail[col.name]={seats,quota:q/SCALE,alloc,remainder:rem,totalFigure:total};
+        Object.entries(alloc).forEach(([k,v])=>{
+          remaining[k]-=v;assigned[k]=(assigned[k]||0)+v;
+          remByList[k].push({college:col.name,rest:rem[k]||0,figure:data[col.name]?.[k]||0});
         });
       });
 
-      if(premium&&winner){
-        const n=cleanPositive(rr.premiumSeats);
-        if(n){
-          const split=winner.type==="coalition"
-            ?splitRegionalCoalition(winner,n,rr.regionalValues,nationalValues)
-            :{[winner.members[0]]:n};
-          Object.entries(split).forEach(([k,v])=>{
-            prizeByParty[k]=(prizeByParty[k]||0)+v;
-            regionPartySeats[region][k]=(regionPartySeats[region][k]||0)+v;
+      let guard=0;
+      while(guard++<10000){
+        const over=Object.keys(listTargets).filter(k=>(assigned[k]||0)>Math.floor(cleanPositive(listTargets[k])));
+        const under=Object.keys(listTargets).filter(k=>(assigned[k]||0)<Math.floor(cleanPositive(listTargets[k])));
+        if(!over.length||!under.length)break;
+        let moved=false;
+
+        for(const donor of over){
+          const dcols=(remByList[donor]||[])
+            .filter(x=>(detail[x.college]?.alloc?.[donor]||0)>0)
+            .sort((a,b)=>a.rest-b.rest||a.figure-b.figure||a.college.localeCompare(b.college,"it"));
+          for(const receiver of under){
+            const rcols=(remByList[receiver]||[])
+              .slice().sort((a,b)=>b.rest-a.rest||b.figure-a.figure||a.college.localeCompare(b.college,"it"));
+            for(const d of dcols){
+              for(const r of rcols){
+                if(d.college!==r.college)continue;
+                detail[d.college].alloc[donor]=(detail[d.college].alloc[donor]||0)-1;
+                detail[d.college].alloc[receiver]=(detail[d.college].alloc[receiver]||0)+1;
+                assigned[donor]--;assigned[receiver]++;moved=true;break;
+              }
+              if(moved)break;
+            }
+            if(moved)break;
+          }
+          if(moved)break;
+        }
+        if(!moved)break;
+      }
+
+      const bad=Object.keys(listTargets).filter(k=>
+        (assigned[k]||0)!==Math.floor(cleanPositive(listTargets[k]))
+      );
+      if(bad.length)warnings.push(
+        "Senato "+rr.region+": chiusura collegi non completata per "+bad.join(",")
+      );
+
+      const byList={};
+      Object.keys(listTargets).forEach(k=>{
+        Object.entries(detail).forEach(([college,rec])=>{
+          const n=rec.alloc?.[k]||0;
+          if(n){
+            byList[k]??={};
+            byList[k][college]=n;
+          }
+        });
+      });
+      return {byList,detail};
+    }
+
+    function groupedCollegeAllocate(rr,listTargets,data){
+      const groupByList={};
+      Object.keys(listTargets).forEach(k=>{
+        const u=rr.units.find(x=>x.members?.includes(k));
+        groupByList[k]=(winnerUnitId&&u?.id===winnerUnitId)?"majority":"minority";
+      });
+
+      const groupTargets={
+        majority:Object.keys(listTargets).filter(k=>groupByList[k]==="majority")
+          .reduce((a,k)=>a+Math.floor(cleanPositive(listTargets[k])),0),
+        minority:Object.keys(listTargets).filter(k=>groupByList[k]==="minority")
+          .reduce((a,k)=>a+Math.floor(cleanPositive(listTargets[k])),0)
+      };
+
+      const groupFigure=group=>{
+        return Object.keys(listTargets).filter(k=>groupByList[k]===group)
+          .reduce((a,k)=>a+Object.values(data).reduce((s,row)=>s+cleanPositive(row?.[k]),0),0);
+      };
+      const qMaj=groupTargets.majority>0?Math.floor(groupFigure("majority")/groupTargets.majority):0;
+      const qMin=groupTargets.minority>0?Math.floor(groupFigure("minority")/groupTargets.minority):0;
+
+      const remainingGroups={...groupTargets};
+      const rawGroupByCollege={};
+      rr.colleges.slice().sort((a,b)=>a.name.localeCompare(b.name,"it")).forEach(col=>{
+        const seats=Math.floor(cleanPositive(premium?col.withPrizeSeats:col.noPrizeSeats));
+        if(!seats)return;
+        const mf=["majority","minority"].map(g=>({
+          g,
+          figure:Object.keys(listTargets).filter(k=>groupByList[k]===g)
+            .reduce((a,k)=>a+cleanPositive(data[col.name]?.[k]),0),
+          q:g==="majority"?qMaj:qMin
+        }));
+        const idx=mf.map(x=>({
+          g:x.g,
+          index:x.q>0?trunc6(x.figure/x.q):0,
+          figure:x.figure
+        })).filter(x=>x.index>0);
+        const sumIdx=idx.reduce((a,x)=>a+x.index,0);
+        const alloc={majority:0,minority:0};
+        if(sumIdx>0){
+          const ex=idx.map(x=>({
+            ...x,
+            raw:seats*x.index/sumIdx
+          }));
+          ex.forEach(x=>{
+            alloc[x.g]=Math.min(Math.floor(x.raw),remainingGroups[x.g]||0);
+          });
+          let used=alloc.majority+alloc.minority;
+          ex.sort((a,b)=>{
+            const d=(b.raw-Math.floor(b.raw))-(a.raw-Math.floor(a.raw));
+            return Math.abs(d)>1e-15?d:b.figure-a.figure;
+          }).forEach(x=>{
+            if(used>=seats)return;
+            if(alloc[x.g]>=(remainingGroups[x.g]||0))return;
+            alloc[x.g]++;used++;
           });
         }
-      }
+        alloc.majority=Math.min(alloc.majority,remainingGroups.majority);
+        alloc.minority=Math.min(alloc.minority,remainingGroups.minority);
+        remainingGroups.majority-=alloc.majority;
+        remainingGroups.minority-=alloc.minority;
+        rawGroupByCollege[col.name]=alloc;
+      });
+
+      const byList={},detail={};
+      Object.entries(rawGroupByCollege).forEach(([college,groups])=>{
+        detail[college]={...groups};
+        for(const group of ["majority","minority"]){
+          const nSeats=groups[group]||0;
+          if(!nSeats)continue;
+          const lists=Object.keys(listTargets).filter(k=>groupByList[k]===group);
+          const split=quotientAllocate(
+            lists.map(k=>({id:k,votes:cleanPositive(data[college]?.[k])})),
+            nSeats,
+            k=>Object.values(data).reduce((a,row)=>a+cleanPositive(row?.[k]),0)
+          );
+          Object.entries(split.seats).forEach(([k,v])=>{
+            byList[k]??={};
+            byList[k][college]=(byList[k][college]||0)+v;
+          });
+        }
+      });
+
+      return {byList,detail,warnings:[]};
+    }
+
+    function prizeColleges(rr,data){
+      const out={},detail={};
+      if(!premium||!winner)return {byList:out,detail};
+      const nSeats=Math.floor(cleanPositive(rr.prizeSeats));
+      if(!nSeats)return {byList:out,detail};
+
+      const weightFor=(col)=>{
+        return cleanPositive(
+          collegeWeights?.[rr.region]?.[col.name] ??
+          collegeWeights?.[col.name] ??
+          col.noPrizeSeats
+        );
+      };
+      const figureFor=(col,k)=>{
+        const explicit=collegeValues?.[rr.region]?.[col.name]?.[k] ??
+          collegeValues?.[col.name]?.[k];
+        const base=explicit==null
+          ?cleanPositive(rr.regionalValues[k])
+          :cleanPositive(explicit);
+        return base*weightFor(col);
+      };
+      const totalFigureFor=(k)=>
+        rr.colleges.reduce((a,col)=>a+figureFor(col,k),0);
+
+      const members=winner.members||[winner.id];
+      const split=winner.type==="coalition"
+        ?quotientAllocate(
+          members.map(k=>({id:k,votes:totalFigureFor(k)})),
+          nSeats,
+          k=>cleanPositive(nationalValues[k])
+        )
+        :{seats:{[members[0]]:nSeats}};
+
+      Object.entries(split.seats||{}).forEach(([k,target])=>{
+        const cols=rr.colleges.filter(c=>c.prizeSeats>0).map(c=>({
+          id:c.name,
+          figure:figureFor(c,k),
+          cap:c.prizeSeats
+        }));
+        const total=cols.reduce((a,x)=>a+x.figure,0);
+        const alloc={},rem={};
+        let used=0;
+        if(total>0){
+          cols.forEach(x=>{
+            const raw=target*x.figure/total;
+            alloc[x.id]=Math.min(Math.floor(raw),x.cap);
+            rem[x.id]=raw-Math.floor(raw);
+            used+=alloc[x.id];
+          });
+          cols.slice().sort((a,b)=>
+            (rem[b.id]||0)-(rem[a.id]||0)||
+            b.figure-a.figure||
+            tieOrder(a,b)
+          ).forEach(x=>{
+            if(used>=target)return;
+            if((alloc[x.id]||0)>=x.cap)return;
+            alloc[x.id]=(alloc[x.id]||0)+1;
+            used++;
+          });
+        }
+        if(used!==target){
+          warnings.push(
+            "Senato "+rr.region+": premio regionale non completamente distribuito a "+k+
+            " ("+used+" di "+target+")."
+          );
+        }
+        out[k]=alloc;
+        detail[k]={target,seats:alloc,remainders:rem};
+        const got=sumSeats(alloc);
+        prizeByParty[k]=(prizeByParty[k]||0)+got;
+      });
+      return {byList:out,detail};
+    }
+
+    regions.forEach(region=>{
+      const rr=regionResults[region];
+      const split=splitRegionUnits(rr);
+      rr.splitByUnit=split.splitByUnit;
+      rr.listTargets=split.listTargets;
+      const data=buildCollegeData(rr,split.listTargets);
+      rr.collegeData=data;
+
+      const college=capTriggered
+        ?groupedCollegeAllocate(rr,split.listTargets,data)
+        :standardCollegeAllocate(rr,split.listTargets,data);
+      rr.collegeResults=college;
+
+      const regionParty={};
+      Object.entries(split.listTargets).forEach(([k,v])=>{
+        ordinaryByParty[k]=(ordinaryByParty[k]||0)+Math.floor(cleanPositive(v));
+        regionParty[k]=(regionParty[k]||0)+Math.floor(cleanPositive(v));
+      });
+      regionPartySeats[region]=regionParty;
+      regionUnitSeats[region]={...rr.targets};
+
+      const prize=prizeColleges(rr,data);
+      rr.prizeCollegeResults=prize;
     });
 
-    const ordinaryTarget=premium?154:189;
     const prizeTarget=premium?35:0;
-    const ordinaryAssigned=Object.values(ordinaryByParty).reduce((a,v)=>a+v,0);
-    const prizeAssigned=Object.values(prizeByParty).reduce((a,v)=>a+v,0);
+    const ordinaryTarget=premium?154:189;
+    const ordinaryAssigned=sumSeats(ordinaryByParty);
+    const prizeAssigned=sumSeats(prizeByParty);
     const seats={...ordinaryByParty};
     Object.entries(prizeByParty).forEach(([k,v])=>seats[k]=(seats[k]||0)+v);
+
+    if(ordinaryAssigned!==ordinaryTarget)
+      errors.push("Seggi ordinari Senato "+ordinaryAssigned+" != "+ordinaryTarget);
+    if(prizeAssigned!==prizeTarget)
+      errors.push("Premio Senato "+prizeAssigned+" != "+prizeTarget);
+    regions.forEach(region=>{
+      const rr=regionResults[region];
+      if(sumSeats(rr.targets)!==rr.ordinarySeats)
+        errors.push(
+          "Senato "+region+": "+sumSeats(rr.targets)+" != "+rr.ordinarySeats
+        );
+    });
+    if(!mapCheck.valid)
+      errors.push(
+        "Mappa Senato non quadrata: ordinari="+mapCheck.ordinary+
+        ", totale con premio="+mapCheck.withPremium+
+        ", premio="+mapCheck.prize
+      );
+
+    const simulatedTotal=sumSeats(seats);
+    warnings.push(
+      "Pesi territoriali Senato: valori per collegio se forniti; altrimenti seggi ordinari come proxy neutro."
+    );
 
     return {
       seats,
@@ -1352,30 +2120,29 @@
       bonusSeats:prizeTarget,
       prizeWinnerSeats:prizeTarget,
       prizeRedistributed:0,
-      ordinaryRedistributed:capTriggered?Math.max(0,winnerOrdinary-ordinaryCap):0,
+      ordinaryRedistributed:capTriggered?Math.max(0,initialWinner-(
+        regions.reduce((a,r)=>a+(regionResults[r].targets[winnerUnitId]||0),0))):0,
       winnerOrdinary:regions.reduce((a,r)=>a+(regionResults[r].targets[winnerUnitId]||0),0),
+      capTriggered,
       winnerPremiumSeats:premium?35:0,
       premiumWinnerSeats:premium?35:0,
       premiumRedistributed:0,
-      simulatedTotal:Object.values(seats).reduce((a,v)=>a+v,0),
+      simulatedTotal,
       eligible:regions.flatMap(r=>regionResults[r].units.flatMap(u=>u.members))
         .filter((v,i,a)=>a.indexOf(v)===i),
       units:regions.length?regionResults[regions[0]].units:[],
       regions:regionResults,
       regionPartySeats,
       regionUnitSeats,
-      complete:ordinaryAssigned===ordinaryTarget&&prizeAssigned===prizeTarget,
+      complete:errors.length===0 && simulatedTotal===189,
       regionCount:regions.length,
       customizedRegions:0,
       trace:{
         ordinaryTarget,ordinaryAssigned,prizeTarget,prizeAssigned,
-        capTriggered,winnerSpecial,ordinaryCap
+        capTriggered,winnerSpecial,ordinaryWinnerCap,
+        mapCheck,errors,warnings
       }
     };
-  }
-
-  function normalizeWinner(law,camValues,senValues,coalitions){
-    return law.premiumCandidate?.(camValues,senValues,coalitions)||null;
   }
 
   function simulate(input){
@@ -1383,7 +2150,9 @@
     if(!law)throw new Error("Motore legge 08/10/2026 non caricato.");
     const cameraValues=input.camera?.nationalValues||{};
     const senateValues=input.senato?.nationalValues||{};
-    const winner=normalizeWinner(law,cameraValues,senateValues,input.coalitions||[]);
+    const winner=law.premiumCandidate?.(
+      cameraValues,senateValues,input.coalitions||[]
+    )||null;
 
     const cam=cameraResult({
       nationalValues:cameraValues,
