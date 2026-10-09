@@ -1163,6 +1163,218 @@
       return {assigned,detail};
     }
 
+    function allocateCapColleges(listMap,circId){
+      const circ=circum[circId];
+      const groupByList={};
+      const groups={majority:[],minority:[]};
+      Object.keys(listMap).forEach(k=>{
+        const unit=units.find(u=>u.members?.includes(k));
+        const g=(winnerUnit&&unit?.id===winnerUnit.id)?"majority":"minority";
+        groupByList[k]=g;
+        groups[g].push(k);
+      });
+
+      const groupTargets={
+        majority:groups.majority.reduce((a,k)=>a+Math.floor(cleanPositive(listMap[k])),0),
+        minority:groups.minority.reduce((a,k)=>a+Math.floor(cleanPositive(listMap[k])),0)
+      };
+      const remainingGroups={...groupTargets};
+      const remainingLists={...listMap};
+      const assigned={};
+      const byCollege={};
+      const remByList={};
+      const warnings=[];
+      Object.keys(listMap).forEach(k=>{
+        assigned[k]=0;
+        remByList[k]=[];
+      });
+
+      circ.colleges.slice().sort((a,b)=>a.name.localeCompare(b.name,"it")).forEach(col=>{
+        const seats=Math.floor(cleanPositive(col.withPrizeSeats));
+        if(!seats)return;
+
+        const groupRows=["majority","minority"].map(g=>{
+          const figure=groups[g].reduce((a,k)=>
+            a+cleanPositive(circData[circId]?.figures?.[col.name]?.[k]),0);
+          const q=(g==="majority"?final.majorityQ:final.minorityQ)||0;
+          return {
+            g,figure,
+            index:q>0?trunc6(figure/q):0,
+            remaining:remainingGroups[g]||0
+          };
+        }).filter(x=>x.index>0&&x.remaining>0);
+
+        const sumIndex=groupRows.reduce((a,x)=>a+x.index,0);
+        const groupAlloc={majority:0,minority:0};
+        const groupRem={};
+
+        if(sumIndex>0){
+          groupRows.forEach(x=>{
+            const raw=seats*x.index/sumIndex;
+            groupAlloc[x.g]=Math.min(
+              Math.floor(raw),
+              x.remaining
+            );
+            groupRem[x.g]=raw-Math.floor(raw);
+          });
+
+          let used=groupAlloc.majority+groupAlloc.minority;
+          const ranked=groupRows.slice().sort((a,b)=>
+            (groupRem[b.g]||0)-(groupRem[a.g]||0)||
+            b.figure-a.figure||
+            a.g.localeCompare(b.g)
+          );
+          for(const x of ranked){
+            if(used>=seats)break;
+            if((groupAlloc[x.g]||0)>=(remainingGroups[x.g]||0))continue;
+            groupAlloc[x.g]=(groupAlloc[x.g]||0)+1;
+            used++;
+          }
+        }
+
+        let groupUsed=groupAlloc.majority+groupAlloc.minority;
+        if(groupUsed<seats){
+          const fallback=groupRows.slice().sort((a,b)=>
+            b.index-a.index||b.figure-a.figure||a.g.localeCompare(b.g)
+          );
+          for(const x of fallback){
+            if(groupUsed>=seats)break;
+            if((groupAlloc[x.g]||0)>=(remainingGroups[x.g]||0))continue;
+            groupAlloc[x.g]=(groupAlloc[x.g]||0)+1;
+            groupUsed++;
+          }
+        }
+
+        if(groupUsed!==seats){
+          warnings.push(
+            "Camera "+circId+" "+col.name+": riparto gruppo "+groupUsed+" != "+seats
+          );
+        }
+
+        byCollege[col.name]={seats,groupAlloc,alloc:{},groupRemainders:groupRem};
+
+        for(const g of ["majority","minority"]){
+          const nSeats=Math.floor(cleanPositive(groupAlloc[g]||0));
+          if(!nSeats)continue;
+          const eligible=groups[g].filter(k=>(remainingLists[k]||0)>0)
+            .map(k=>({
+              id:k,
+              figure:cleanPositive(circData[circId]?.figures?.[col.name]?.[k]),
+              circFigure:calcCircListFigures(circData[circId],k),
+              cap:Math.floor(cleanPositive(remainingLists[k]))
+            })).filter(x=>x.figure>0);
+
+          if(!eligible.length){
+            warnings.push(
+              "Camera "+circId+" "+col.name+": nessuna lista eleggibile nel gruppo "+g
+            );
+            continue;
+          }
+
+          const total=eligible.reduce((a,x)=>a+x.figure,0);
+          const q=Math.floor(total/nSeats);
+          const alloc={},rem={};
+          let used=0;
+
+          eligible.forEach(x=>{
+            const raw=q>0?x.figure/q:nSeats*x.figure/total;
+            const base=Math.min(Math.floor(raw),x.cap);
+            alloc[x.id]=base;
+            rem[x.id]=raw-Math.floor(raw);
+            used+=base;
+          });
+
+          eligible.slice().sort((a,b)=>
+            (rem[b.id]||0)-(rem[a.id]||0)||
+            b.circFigure-a.circFigure||
+            tieOrder(a,b)
+          ).forEach(x=>{
+            if(used>=nSeats)return;
+            if((alloc[x.id]||0)>=(x.cap||0))return;
+            alloc[x.id]=(alloc[x.id]||0)+1;
+            used++;
+          });
+
+          byCollege[col.name].alloc=Object.assign(
+            byCollege[col.name].alloc,alloc
+          );
+          Object.entries(alloc).forEach(([k,v])=>{
+            remainingLists[k]-=v;
+            assigned[k]=(assigned[k]||0)+v;
+            remByList[k].push({
+              college:col.name,
+              rest:rem[k]||0,
+              figure:cleanPositive(circData[circId]?.figures?.[col.name]?.[k])
+            });
+            remainingGroups[g]-=v;
+          });
+        }
+      });
+
+      let guard=0;
+      while(guard++<10000){
+        const over=Object.keys(listMap).filter(k=>
+          (assigned[k]||0)>Math.floor(cleanPositive(listMap[k]))
+        );
+        const under=Object.keys(listMap).filter(k=>
+          (assigned[k]||0)<Math.floor(cleanPositive(listMap[k]))
+        );
+        if(!over.length||!under.length)break;
+
+        let moved=false;
+        for(const donor of over.sort()){
+          const donorUnit=units.find(u=>u.members?.includes(donor));
+          const donorGroup=(winnerUnit&&donorUnit?.id===winnerUnit.id)
+            ?"majority":"minority";
+          const donorCols=(remByList[donor]||[])
+            .filter(x=>(byCollege[x.college]?.alloc?.[donor]||0)>0)
+            .sort((a,b)=>
+              a.rest-b.rest||a.figure-b.figure||
+              a.college.localeCompare(b.college,"it")
+            );
+
+          for(const receiver of under.sort()){
+            const receiverUnit=units.find(u=>u.members?.includes(receiver));
+            const receiverGroup=(winnerUnit&&receiverUnit?.id===winnerUnit.id)
+              ?"majority":"minority";
+            if(receiverGroup!==donorGroup)continue;
+
+            const recvCols=(remByList[receiver]||[])
+              .slice().sort((a,b)=>
+                b.rest-a.rest||b.figure-a.figure||
+                a.college.localeCompare(b.college,"it")
+              );
+
+            for(const d of donorCols){
+              const r=recvCols.find(x=>x.college===d.college);
+              if(!r)continue;
+              const rec=byCollege[d.college];
+              rec.alloc[donor]=(rec.alloc[donor]||0)-1;
+              rec.alloc[receiver]=(rec.alloc[receiver]||0)+1;
+              assigned[donor]--;
+              assigned[receiver]++;
+              moved=true;
+              break;
+            }
+            if(moved)break;
+          }
+          if(moved)break;
+        }
+        if(!moved)break;
+      }
+
+      const bad=Object.keys(listMap).filter(k=>
+        (assigned[k]||0)!==Math.floor(cleanPositive(listMap[k]))
+      );
+      if(bad.length){
+        warnings.push(
+          "Camera "+circId+": chiusura liste cap non completata per "+bad.join(",")
+        );
+      }
+
+      return {assigned,detail:byCollege,warnings};
+    }
+
     const collegeByList={};
     const collegeDetail={};
     Object.keys(listByCirc).forEach(circId=>{
@@ -1170,13 +1382,16 @@
       Object.entries(listByCirc[circId]).forEach(([k,v])=>{
         if(k!=="__group")clean[k]=v;
       });
-      const r=allocateColleges(clean,circId);
+      const r=capTriggered
+        ?allocateCapColleges(clean,circId)
+        :allocateColleges(clean,circId);
       collegeDetail[circId]=r.detail;
-      Object.entries(r.assigned).forEach(([k,v])=>{
-        collegeByList[k]??={};
-        Object.entries(r.detail).forEach(([college,rec])=>{
-          const n=rec.alloc?.[k]||0;
-          if(n)collegeByList[k][college]=(collegeByList[k][college]||0)+n;
+      if(r.warnings?.length)warnings.push(...r.warnings);
+      Object.entries(r.detail||{}).forEach(([college,rec])=>{
+        Object.entries(rec.alloc||{}).forEach(([k,v])=>{
+          if(!v)return;
+          collegeByList[k]??={};
+          collegeByList[k][college]=(collegeByList[k][college]||0)+v;
         });
       });
     });
