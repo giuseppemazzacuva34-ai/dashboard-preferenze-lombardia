@@ -2286,7 +2286,7 @@ function installSondaggiModule(){
       ?(nationalPlan.units.find(u=>u.id===winnerId)||null)
       :null;
     const winnerTerritorial=winnerId
-      ?specialNonEsteroPartySeats("senato",winnerId)
+      ?specialUnitNonEsteroSeats("senato",winnerUnit)
       :0;
 
     let winnerOrdinary=SENATE_PROP_REGIONS.reduce(
@@ -2506,6 +2506,13 @@ function installSondaggiModule(){
 
   function specialUnassigned(chamber,cat){
     return Math.max(0,Number(SPECIAL_SEATS[chamber]?.[cat]||0)-specialAssigned(chamber,cat));
+  }
+
+  function specialUnitNonEsteroSeats(chamber,unit){
+    if(!unit)return 0;
+    return (unit.members||[]).reduce(
+      (sum,k)=>sum+specialNonEsteroPartySeats(chamber,k),0
+    );
   }
 
   function specialNonEsteroPartySeats(chamber,slug){
