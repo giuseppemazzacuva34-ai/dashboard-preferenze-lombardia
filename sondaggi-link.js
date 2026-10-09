@@ -1,17 +1,25 @@
 (function(){
 "use strict";
 
-function loadIntegrityGuard(){
+function loadScript(id,src){
   try{
-    if(document.getElementById("dashboard-runtime-integrity")) return;
+    if(document.getElementById(id)) return;
     const s=document.createElement("script");
-    s.id="dashboard-runtime-integrity";
-    s.src="dashboard-runtime-integrity.js?v=20261009-1";
+    s.id=id;
+    s.src=src;
     s.async=false;
     (document.head||document.documentElement).appendChild(s);
   }catch(err){
-    console.error("Dashboard integrity guard load",err);
+    console.error("Sondaggi script load",id,err);
   }
+}
+
+function loadLawEngine(){
+  loadScript("sondaggi-law-20261008","sondaggi-law-20261008.js?v=20261009-legal");
+}
+
+function loadIntegrityGuard(){
+  loadScript("dashboard-runtime-integrity","dashboard-runtime-integrity.js?v=20261009-1");
 }
 
 function ensure(){
@@ -26,10 +34,6 @@ function ensure(){
     btn.innerHTML="<span>📊</span><b> Sondaggi</b>";
     btn.title="Apri la pagina dedicata ai sondaggi";
     btn.addEventListener("click",function(ev){
-      // Nella dashboard normale apriamo la pagina autonoma.
-      // Dentro la pagina autonoma (iframe same-origin) lasciamo invece
-      // funzionare il navigatore nativo della dashboard, che apre il modulo
-      // Sondaggi completo già presente nell'applicazione.
       if(window.self!==window.top)return;
       ev.preventDefault();
       ev.stopPropagation();
@@ -39,6 +43,7 @@ function ensure(){
   }
 }
 
+loadLawEngine();
 loadIntegrityGuard();
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",ensure,{once:true});
 else ensure();
