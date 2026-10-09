@@ -132,15 +132,6 @@ window.dashboardSetMacro=function(v){
 };
 window.switchElection=window.dashboardSetMacro;
 
-const observer=new MutationObserver(function(){
-  forceHomeComuneCount();
-});
-observer.observe(document.documentElement||document,{
-  subtree:true,
-  childList:true,
-  characterData:true
-});
-
 document.addEventListener("click",function(ev){
   if(ev.target?.closest?.(".macro-tab"))afterMacro();
 },true);
@@ -150,12 +141,6 @@ window.addEventListener("load",run);
 
 // Il runtime principale può ridisegnare la Home molto dopo il boot:
 // manteniamo il contatore corretto durante le fasi di render.
-const started=Date.now();
-const timer=setInterval(function(){
-  forceHomeComuneCount();
-  if(Date.now()-started>30000)clearInterval(timer);
-},100);
-
 window.forceHomeGeoCount=forceHomeComuneCount;
 window.redrawHomeElectionChart=redrawHomeElectionChart;
 run();
