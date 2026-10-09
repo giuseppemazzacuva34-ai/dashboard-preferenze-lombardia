@@ -599,8 +599,9 @@ function installSondaggiModule(){
 
       let eligible=false;
       if(coalId){
-        // Coalizione sotto l'8%: la lista collegata accede al riparto
-        // già dal 2%, secondo il testo approvato.
+        // Coalizione sotto il 10%: le singole liste collegate restano soggette
+        // alla soglia del 3%; il ripescaggio della prima lista sotto il 3%
+        // opera solo all'interno delle coalizioni sopra soglia.
         eligible=window.SONDAGGI_LAW_20261008.listAllocationEligible(
           nationalValue,
           chamber,
@@ -1795,7 +1796,7 @@ function installSondaggiModule(){
     host.innerHTML=
       '<div class="sg-wrap">'+
         '<div class="sg-head"><div><div class="sg-kicker">SONDAGGI ELETTORALI</div><h1>Simulatore nazionale e per collegio</h1><p>Inserisci le percentuali nazionali e quelle del territorio selezionato, costruisci le coalizioni e verifica l&#39;effetto sul riparto dei seggi.</p></div><button class="sg-btn primary" id="sondaggiRefreshYT">AGGIORNA DA YOUTREND</button></div>'+
-        '<div class="sg-law">LEGGE ELETTORALE · TESTO APPROVATO DEFINITIVAMENTE 8 OTTOBRE 2026 · soglia 3% per le liste non collegate · soglia 2% per le liste collegate a coalizioni che non raggiungono l’8% · soglia 8% per le coalizioni con almeno una lista al 2% · deroga del 20% regionale al Senato · premio 70 Camera / 35 Senato se lo stesso soggetto è primo in entrambe le Camere e raggiunge il 42% in entrambe. Testo definitivamente approvato, in attesa di pubblicazione.</div>'+
+        '<div class="sg-law">LEGGE ELETTORALE · TESTO APPROVATO DEFINITIVAMENTE 8 OTTOBRE 2026 · soglia 3% per le liste · soglia 10% per le coalizioni con almeno una lista al 3% · deroga del 20% regionale al Senato · premio 70 Camera / 35 Senato se lo stesso soggetto è primo in entrambe le Camere e raggiunge il 42% in entrambe. Testo definitivamente approvato, in attesa di pubblicazione.</div>'+
         '<div class="sg-layout">'+
           '<div class="sg-map-card"><div class="sg-card-title"><b>Italia</b><span>'+esc2(S.region)+'</span></div><div class="sg-map"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Italy_map_with_regions.svg" alt="Mappa d’Italia divisa in regioni"><div class="sg-map-caption">La mappa mostra la divisione regionale; usa i pulsanti per selezionare la regione e caricare i relativi collegi.</div></div><div class="sg-regions">'+REGIONS.map(x=>'<button type="button" data-region="'+esc2(x)+'" class="'+(x===S.region?"active":"")+'">'+esc2(x)+'</button>').join("")+'</div></div>'+
           '<div class="sg-main">'+
