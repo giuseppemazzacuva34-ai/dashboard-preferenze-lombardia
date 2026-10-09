@@ -2171,6 +2171,8 @@
       parties:input.parties||{},
       coalitions:input.coalitions||[],
       regionalValuesByRegion:input.senato?.regionalValuesByRegion||{},
+      collegeValues:input.senato?.collegeValues||{},
+      collegeWeights:input.senato?.collegeWeights||{},
       senateMap:input.senato?.collegeMap||{},
       senatePremiumByRegion:input.senato?.premiumByRegion||law.rules.senatePremiumByRegion||{},
       specialSeats:input.specialSeats||{},

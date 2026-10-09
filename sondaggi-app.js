@@ -1440,6 +1440,7 @@ function installSondaggiModule(){
       senato:{
         nationalValues:senVals,
         regionalValuesByRegion,
+        collegeValues:S.collegeValues?.senato||{},
         collegeMap:SEN_COLLEGI,
         premiumByRegion:SENATE_PREMIO_REGIONI
       },
