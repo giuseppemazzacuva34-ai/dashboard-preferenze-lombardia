@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sondaggi · Simulatore elettorale</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#061323;color:#e8f2f8;font-family:Inter,Segoe UI,Arial,sans-serif}
+body{min-height:100vh}
+.sg-page-head{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;background:rgba(6,19,35,.96);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px)}
+.sg-brand{display:flex;align-items:center;gap:12px}
+.sg-brand-mark{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#102c45;border:1px solid #274965;font-size:18px}
+.sg-brand h1{margin:0;font-size:15px;letter-spacing:.03em}
+.sg-brand small{display:block;margin-top:3px;color:#7c98ac;font-size:10px}
+.sg-back{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:8px;border:1px solid #315875;background:#0d263c;color:#dbeaf3;text-decoration:none;font-size:11px;font-weight:800}
+.sg-back:hover{background:#123650}
+main{max-width:1700px;margin:0 auto;padding:18px}
+#tab-sondaggi{display:block!important;min-height:calc(100vh - 78px)}
+@media(max-width:700px){.sg-page-head{padding:12px}.sg-page-head .sg-back{font-size:10px;padding:8px 10px}main{padding:10px}}
+</style>
+</head>
+<body>
+<header class="sg-page-head">
+  <div class="sg-brand">
+    <div class="sg-brand-mark">📊</div>
+    <div><h1>SONDAGGI ELETTORALI</h1><small>Simulatore nazionale e per collegio</small></div>
+  </div>
+  <a class="sg-back" href="index.html">← TORNA ALLA DASHBOARD</a>
+</header>
+<main>
+  <section id="tab-sondaggi" class="panel"></section>
+</main>
+<script src="sondaggi-app.js?v=1"></script>
+</body>
+</html>
