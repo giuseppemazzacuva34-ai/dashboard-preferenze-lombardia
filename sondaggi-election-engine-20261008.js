@@ -1375,6 +1375,13 @@
     return split.seats;
   }
 
+  function senateSpecialSeats(specialSeats,winner){
+    return (winner?.members||[]).reduce((a,k)=>
+      a+cleanPositive(specialSeats?.senato?.valleDAosta?.[k])+
+      cleanPositive(specialSeats?.senato?.trentinoAltoAdige?.[k]),0
+    );
+  }
+
   function senateRegionResult({
     region,
     seats,
@@ -1440,7 +1447,7 @@
       const regionalValues=regionalValuesByRegion[region]||
         Object.fromEntries(Object.keys(parties).map(k=>[k,parties?.[k]?.senate||0]));
 
-      const plan=senateRegionalUnits(
+      const plan=buildSenateRegionalUnits(
         region,regionalValues,nationalValues,coalitions,law
       );
       const units=plan.units;
