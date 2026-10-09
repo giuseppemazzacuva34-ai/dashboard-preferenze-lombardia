@@ -15,7 +15,6 @@
   },
   "mutable_modules": [
     "sondaggi.html",
-    "sondaggi-app.js",
-    "sondaggi-link.js"
+    "sondaggi-app.js"
   ]
 }
