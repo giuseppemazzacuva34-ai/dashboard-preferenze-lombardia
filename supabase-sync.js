@@ -2621,19 +2621,25 @@ function installSondaggiModule(){
       remainderByCirc[circ]={};
       if(!seats)return;
 
-      const scored=units.map(u=>{
+      const preliminary=units.map(u=>{
         const figure=cameraUnitCircFigure(circ,u,bonusActive);
         const quota=u.id===winnerId?winnerQuota:minorityQuota;
         const index=quota>0
           ?Math.floor((figure/quota)*1e6)/1e6
           :0;
-        const exact=index*seats;
+        return {id:u.id,index,figure};
+      });
+      const indexSum=preliminary.reduce((sum,x)=>sum+(Number(x.index)||0),0);
+      const scored=preliminary.map(x=>{
+        const exact=indexSum>0
+          ?(Number(x.index)||0)*seats/indexSum
+          :0;
         const base=Math.floor(exact);
         return {
-          id:u.id,
+          id:x.id,
           base,
           rest:exact-base,
-          figure
+          figure:x.figure
         };
       });
 
