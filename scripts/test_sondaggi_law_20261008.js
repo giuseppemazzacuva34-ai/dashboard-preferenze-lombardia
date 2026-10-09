@@ -32,7 +32,7 @@ assert.strictEqual(law.listRegionallyEligibleForSenate(2.99,19.99),false);
 assert.strictEqual(law.listRegionallyEligibleForSenate(2.99,20),true);
 
 let q=law.coalitionQualification(["A","B"],{A:5,B:3},"camera");
-assert.strictEqual(q.qualifies,true);
+assert.strictEqual(q.qualifies,false);
 q=law.coalitionQualification(["A","B"],{A:7,B:3},"camera");
 assert.strictEqual(q.qualifies,true);
 q=law.coalitionQualification(["A","B"],{A:9.9,B:0.1},"camera");
