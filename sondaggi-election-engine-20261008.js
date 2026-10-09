@@ -786,6 +786,137 @@
     return {collegeByList,detailed};
   }
 
+  function allocateStandardCircumscription({
+    units,nationalTargets,circum,circData,ordinarySeats
+  }){
+    const byCirc={},remainders={},nationalTotals={},remainderWinnersByCirc={};
+    units.forEach(u=>{nationalTotals[u.id]=0;});
+
+    Object.entries(circum||{}).forEach(([circId,circ])=>{
+      const seats=Math.floor(pos(ordinarySeats(circ)));
+      byCirc[circId]={};
+      remainders[circId]={};
+      remainderWinnersByCirc[circId]=[];
+      if(!seats)return;
+
+      const scored=units.filter(u=>(nationalTargets[u.id]||0)>0)
+        .map(u=>{
+          const target=Math.max(1,Math.floor(pos(nationalTargets[u.id])));
+          const q=pos(u.votes)/target;
+          const figure=calcCircUnitFigure(u,circData[circId]);
+          const index=q>0?trunc6(figure/q):0;
+          return {id:u.id,figure,index,target};
+        })
+        .filter(x=>x.index>0);
+
+      const sumIndex=scored.reduce((a,x)=>a+x.index,0);
+      const provisional=scored.map(x=>{
+        const raw=sumIndex>0?x.index*seats/sumIndex:0;
+        const base=Math.min(Math.floor(raw),x.target);
+        return {...x,raw,base,rest:raw-Math.floor(raw)};
+      });
+
+      let used=0;
+      provisional.forEach(x=>{
+        byCirc[circId][x.id]=x.base;
+        remainders[circId][x.id]=x.rest;
+        used+=x.base;
+      });
+
+      const ranked=provisional.slice().sort((a,b)=>{
+        const d=b.rest-a.rest;
+        if(Math.abs(d)>1e-15)return d;
+        const fv=b.figure-a.figure;
+        if(Math.abs(fv)>1e-12)return fv;
+        return tieOrder(a,b);
+      });
+
+      for(const x of ranked){
+        if(used>=seats)break;
+        if((byCirc[circId][x.id]||0)>=x.target)continue;
+        byCirc[circId][x.id]=(byCirc[circId][x.id]||0)+1;
+        remainderWinnersByCirc[circId].push(x.id);
+        used++;
+      }
+
+      if(used<seats){
+        const fallback=scored.slice().sort((a,b)=>
+          b.index-a.index||b.figure-a.figure||tieOrder(a,b)
+        );
+        for(const x of fallback){
+          if(used>=seats)break;
+          if((byCirc[circId][x.id]||0)>=x.target)continue;
+          byCirc[circId][x.id]=(byCirc[circId][x.id]||0)+1;
+          remainderWinnersByCirc[circId].push(x.id);
+          used++;
+        }
+      }
+    });
+
+    Object.values(byCirc).forEach(m=>{
+      Object.entries(m).forEach(([id,v])=>{
+        nationalTotals[id]=(nationalTotals[id]||0)+Math.floor(pos(v));
+      });
+    });
+
+    const over=()=>units.filter(u=>
+      (nationalTotals[u.id]||0)>(nationalTargets[u.id]||0)
+    );
+    const under=()=>units.filter(u=>
+      (nationalTotals[u.id]||0)<(nationalTargets[u.id]||0)
+    );
+
+    let guard=0;
+    while(guard++<10000){
+      const donors=over(),receivers=under();
+      if(!donors.length||!receivers.length)break;
+      let moved=false;
+
+      for(const donor of donors){
+        const donorCircs=Object.keys(byCirc)
+          .filter(c=>(byCirc[c][donor.id]||0)>0)
+          .sort((a,b)=>
+            (remainders[a][donor.id]??0)-(remainders[b][donor.id]??0)||
+            a.localeCompare(b,"it")
+          );
+
+        for(const circId of donorCircs){
+          const rcv=receivers.filter(u=>
+            (byCirc[circId][u.id]||0)<(nationalTargets[u.id]||0)
+          ).sort((a,b)=>
+            (remainders[circId][b.id]??-1)-(remainders[circId][a.id]??-1)||
+            String(a.id).localeCompare(String(b.id),"it")
+          );
+
+          if(!rcv.length)continue;
+          const receiver=rcv[0];
+          byCirc[circId][donor.id]--;
+          byCirc[circId][receiver.id]=(byCirc[circId][receiver.id]||0)+1;
+          nationalTotals[donor.id]--;
+          nationalTotals[receiver.id]++;
+          moved=true;
+          break;
+        }
+        if(moved)break;
+      }
+      if(!moved)break;
+    }
+
+    const deficits={};
+    units.forEach(u=>{
+      const d=(nationalTargets[u.id]||0)-(nationalTotals[u.id]||0);
+      if(d)deficits[u.id]=d;
+    });
+
+    return {
+      byCirc,
+      unitRemaindersByCirc:remainders,
+      nationalTotals,
+      deficits,
+      remainderWinnersByCirc
+    };
+  }
+
   function cameraResult({
     nationalValues={},parties={},coalitions=[],
     collegeValues={},collegeWeights={},cameraMap={},specialSeats={},
