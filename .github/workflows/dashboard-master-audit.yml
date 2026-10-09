@@ -21,3 +21,4 @@ jobs:
       - name: Run master audit
         run: python3 scripts/master_dashboard_audit.py
 # Test master aggiornato
+# Alias geografici verificati
