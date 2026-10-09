@@ -126,6 +126,24 @@
     return {admitted,ripCandidate,excluded};
   }
 
+  function listAllocationEligible(value, chamber, insideFailedCoalition, regionalValue){
+    const v=n(value);
+    if(v>=RULES.national.thresholdList)return true;
+    if(insideFailedCoalition){
+      if(chamber==="senato" && v<RULES.national.thresholdList &&
+         n(regionalValue)>=RULES.national.regionalSenateException){
+        return true;
+      }
+      return v>=RULES.national.thresholdMemberForCoalitionQualification;
+    }
+    return false;
+  }
+
+  function coalitionNationalStatus(members,nationalValues){
+    const q=coalitionQualification(members,nationalValues,"camera");
+    return q;
+  }
+
   function coalitionScores(members,nationalValues,chamber,regionalValues){
     const q=coalitionQualification(members,nationalValues,chamber);
     if(!q.qualifies){
@@ -271,7 +289,9 @@
     listNationallyEligible,
     listRegionallyEligibleForSenate,
     coalitionQualification,
+    listAllocationEligible,
     coalitionMembersForAllocation,
+    coalitionNationalStatus,
     coalitionScores,
     subjectScore,
     premiumCandidate,
