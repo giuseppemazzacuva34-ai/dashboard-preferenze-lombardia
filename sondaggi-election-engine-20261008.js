@@ -806,7 +806,10 @@
     let ordinaryWinnerCap=null;
 
     if(premium&&winnerUnit){
-      specialWinner=specialSeatsTotal(specialSeats,"camera",winnerUnit);
+      specialWinner=(winnerUnit.members||[]).reduce((a,k)=>
+        a+pos(specialSeats?.camera?.valleDAosta?.[k])+
+        pos(specialSeats?.camera?.trentinoAltoAdige?.[k]),0
+      );
       const totalWinner=(initial.seats[winnerUnit.id]||0)+70+specialWinner;
       if(totalWinner>law.rules.camera.winnerCapExcludingEstero){
         capTriggered=true;
