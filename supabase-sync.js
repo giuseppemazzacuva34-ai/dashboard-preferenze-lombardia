@@ -2031,7 +2031,7 @@ function installSondaggiModule(){
     if(usePrize&&winnerId){
       winnerOrdinary=SENATE_PROP_REGIONS.reduce((sum,r)=>sum+(regionResults[r].unitSeats[winnerId]||0),0);
       const winnerTerritorial=specialPartyTotal("senato",winnerId,false);
-      const winnerPremium=Math.min(35,Math.max(0,113-winnerOrdinary-winnerTerritorial));
+      const winnerPremiumTarget=Math.min(35,Math.max(0,113-winnerOrdinary-winnerTerritorial));
 
       // I 35 seggi-premio sono distribuiti per regione. Se il tetto di 113
       // non consente di attribuirli tutti al vincitore, scegliamo i posti del
@@ -2053,7 +2053,7 @@ function installSondaggiModule(){
         b.score-a.score||b.rest-a.rest||b.votes-a.votes||a.region.localeCompare(b.region,"it")||a.ordinal-b.ordinal
       );
       const byRegion={};
-      candidateSlots.slice(0,winnerPremium).forEach(x=>{byRegion[x.region]=(byRegion[x.region]||0)+1;});
+      candidateSlots.slice(0,winnerPremiumTarget).forEach(x=>{byRegion[x.region]=(byRegion[x.region]||0)+1;});
 
       SENATE_PROP_REGIONS.forEach(region=>{
         const rr=regionResults[region],vals=senateRegionalValues(region);
