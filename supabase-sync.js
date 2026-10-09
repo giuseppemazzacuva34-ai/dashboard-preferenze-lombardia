@@ -1819,7 +1819,7 @@ function installSondaggiModule(){
       if(rip&&!admitted.includes(rip))admitted.push(rip);
 
       admittedByCoalition.set(c.id,admitted);
-      units.push({id:"C:"+c.id,type:"coalition",coalitionId:c.id,members:admitted,votes:stats.total,name:c.name});
+      units.push({id:"C:"+c.id,type:"coalition",coalitionId:c.id,members:admitted,ripCandidate:rip||null,votes:stats.total,name:c.name});
       coalStats.push({id:c.id,members,figure:stats.total,admitted});
     });
 
@@ -1977,12 +1977,13 @@ function installSondaggiModule(){
         const coalition=coalitionFor(nu.coalitionId);
         const allMembers=(coalition?.members||[]).filter(k=>regionalValues[k]!=null);
 
-        // 2-bis: nella ripartizione entrano le liste della coalizione che
-        // raggiungono il 3% nazionale oppure il 20% nella regione. 2-ter:
-        // una sola lista ulteriore sotto soglia, la più forte a livello
-        // nazionale, già presente in nu.members.
-        const admitted=new Set(nu.members||[]);
-        allMembers.forEach(k=>{if(regionalValues[k]>=20)admitted.add(k);});
+        const admitted=new Set();
+        allMembers.forEach(k=>{
+          const nationalValue=num(S.parties[k]?.senate||0);
+          if(nationalValue>=3 || regionalValues[k]>=20)admitted.add(k);
+        });
+        if(nu.ripCandidate&&allMembers.includes(nu.ripCandidate))admitted.add(nu.ripCandidate);
+
         const splitMembers=[...admitted].filter(k=>allMembers.includes(k));
         const figure=splitMembers.reduce((sum,k)=>sum+(regionalValues[k]||0),0);
 
@@ -1992,21 +1993,17 @@ function installSondaggiModule(){
             members:splitMembers,votes:figure
           });
         }
-
-        // Le liste della stessa coalizione non ammesse non vengono
-        // trasformate in liste autonome nella medesima regione.
         allMembers.forEach(k=>used.add(k));
       }else{
         const k=nu.members?.[0],v=regionalValues[k]||0;
-        if(k&&v>0){
+        const nationalValue=num(S.parties[k]?.senate||0);
+        if(k&&v>0&&(nationalValue>=3||v>=20)){
           units.push({id:nu.id,type:"list",members:[k],votes:v,name:nu.name});
           used.add(k);
         }
       }
     });
 
-    // Eccezione regionale del 20% per liste non già comprese in una
-    // coalizione nazionale ammessa.
     Object.keys(regionalValues).forEach(k=>{
       const v=regionalValues[k]||0;
       if(v<20||used.has(k))return;
@@ -2017,7 +2014,6 @@ function installSondaggiModule(){
     });
     return units;
   }
-
   function splitRegionalUnit(unit,count,regionalValues){
     if(!unit||count<=0)return {};
     if(unit.type!=="coalition")return {[unit.members[0]]:count};
@@ -2046,7 +2042,7 @@ function installSondaggiModule(){
     });
 
     const winnerUnit=winnerId
-      ?SENATE_PROP_REGIONS.map(r=>regionResults[r].units.find(u=>u.id===winnerId)).find(Boolean)
+      ?(nationalPlan.units.find(u=>u.id===winnerId)||null)
       :null;
     const winnerTerritorial=winnerUnit
       ?winnerUnit.members.reduce((sum,k)=>sum+specialNonEsteroPartySeats("senato",k),0)
