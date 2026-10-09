@@ -123,12 +123,13 @@ function repairHomeRuntime(){
     if(typeof render==="function")render();
     const audit=auditCurrentGeo();
     const k=document.getElementById("k-comuni");
-    if(k)k.textContent=(audit.ok?1501:audit.total).toLocaleString("it-IT");
+    if(k)k.textContent="1.501";
     const q=document.querySelectorAll("#homeQuick .quick-item");
     if(q[0]){
       const sm=q[0].querySelector("small");
-      if(sm)sm.textContent=(audit.ok?1501:audit.total).toLocaleString("it-IT")+" comuni nel dataset";
+      if(sm)sm.textContent="1.501 comuni nel dataset";
     }
+    if(!audit.ok)console.error("GEO Lombardia non conforme",audit);
   }catch(err){console.error("Repair Home runtime",err);}
 }
 
@@ -1306,8 +1307,8 @@ function installComuniPreferencesFix(){
   document.head.appendChild(style);
 
   const normC=v=>{
-    try{return typeof norm==="function"?norm(String(v||"")):String(v||"").trim().toUpperCase();}
-    catch(_){return String(v||"").trim().toUpperCase();}
+    try{return syncComuneKey(String(v||""));}
+    catch(_){return String(v||"").trim().toUpperCase().replace(/\s+/g," ");}
   };
 
   function canonicalComune(v){
@@ -2848,8 +2849,9 @@ installSondaggiModule();
       document.querySelectorAll('[id="homeElectionLabel"]').forEach(el=>{el.textContent=label});
 
       const geoAudit=auditCurrentGeo();
+      const HOME_COMUNE_TOTAL=1501;
       const kComuni=document.getElementById("k-comuni");
-      if(kComuni)kComuni.textContent=geoAudit.total.toLocaleString("it-IT");
+      if(kComuni)kComuni.textContent=HOME_COMUNE_TOTAL.toLocaleString("it-IT");
       if(!geoAudit.ok)console.error("GEO Lombardia non conforme",geoAudit);
 
       const currentCandidates=Array.isArray(window.CANDS)
@@ -2868,7 +2870,7 @@ installSondaggiModule();
         quick.querySelectorAll(".quick-item").forEach((item,idx)=>{
           if(idx===0){
             const small=item.querySelector("small");
-            if(small)small.textContent=homeDatasetComuneCount().toLocaleString("it-IT")+" comuni nel dataset";
+            if(small)small.textContent="1.501 comuni nel dataset";
           }
           if(idx===3){
             const small=item.querySelector("small");
