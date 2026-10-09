@@ -800,8 +800,6 @@ function installSondaggiModule(){
         });
         if(nu.ripCandidate&&allMembers.includes(nu.ripCandidate))admittedSet.add(nu.ripCandidate);
 
-        if(nu.ripCandidate&&allMembers.includes(nu.ripCandidate))admittedSet.add(nu.ripCandidate);
-
         const splitMembers=[...admittedSet];
         // La cifra regionale della coalizione comprende le liste ammesse
         // e, per ogni coalizione qualificata, la lista 2-ter recuperata.
