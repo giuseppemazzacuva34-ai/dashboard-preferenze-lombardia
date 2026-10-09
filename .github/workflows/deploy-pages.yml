@@ -24,6 +24,61 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+
+      - name: Audit geografia Lombardia e dati elettorali
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const zlib=require('zlib');
+          const vm=require('vm');
+          const src=fs.readFileSync('index.html','utf8');
+          const m=src.match(/const b64="([^"]+)"/);
+          if(!m) throw new Error('b64 non trovato');
+          const app=zlib.gunzipSync(Buffer.from(m[1],'base64')).toString('utf8');
+          function extract(name){
+            const marker='const '+name+'=';
+            const start=app.indexOf(marker);
+            if(start<0) throw new Error(name+' non trovato');
+            let i=start+marker.length, depth=0, quote=null, esc=false;
+            for(;i<app.length;i++){
+              const ch=app[i];
+              if(quote){ if(esc) esc=false; else if(ch==='\\\\') esc=true; else if(ch===quote) quote=null; continue; }
+              if(ch==='"' || ch==="'") { quote=ch; continue; }
+              if(ch==='['||ch==='{') depth++;
+              else if(ch===']'||ch==='}') depth--;
+              else if(ch===';'&&depth===0) break;
+            }
+            return vm.runInNewContext(app.slice(start+marker.length,i));
+          }
+          const GEO=extract('GEO');
+          const RAW=extract('RAW');
+          const EURO_RAW=extract('EURO_RAW');
+          const alias={RONAGO:'Uggiate con Ronago','UGGIATE-TREVANO':'Uggiate con Ronago','UGGIATE TREVANO':'Uggiate con Ronago','ALBAREDO ARNABOLDI':'Campospinoso Albaredo',CAMPOSPINOSO:'Campospinoso Albaredo',LIRIO:'Montalto Pavese',BARDELLO:'Bardello con Malgesso e Bregano',BREGANO:'Bardello con Malgesso e Bregano',MALGESSO:'Bardello con Malgesso e Bregano'};
+          const canon=s=>{const raw=String(s??'').trim();const k=raw.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase().replace(/\\s+/g,' ').trim();return alias[k]||raw};
+          const norm=s=>String(s??'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+          const counts={BG:243,BS:205,CO:147,CR:113,LC:84,LO:60,MN:64,MI:133,MB:55,PV:184,SO:77,VA:136};
+          const keys=new Map(), byProv={};
+          for(const g of GEO){const p=String(g?.prov??'').trim().toUpperCase(), c=canon(g?.comune); const k=p+'|'+norm(c); if(!k||keys.has(k)) continue; keys.set(k,g); byProv[p]=(byProv[p]||0)+1;}
+          const dupByName={};
+          for(const g of GEO){const p=String(g?.prov??'').trim().toUpperCase(), c=canon(g?.comune); const k=p+'|'+norm(c); dupByName[k]=(dupByName[k]||0)+1;}
+          const duplicates=Object.entries(dupByName).filter(([,n])=>n>1).map(([k,n])=>[k,n]);
+          console.log('GEO_RAW_ROWS',GEO.length);
+          console.log('GEO_CANONICAL_TOTAL',keys.size);
+          console.log('GEO_BY_PROV',JSON.stringify(byProv));
+          console.log('GEO_DUPLICATES_CANONICAL',JSON.stringify(duplicates));
+          function auditRaw(name,raw){
+            const canonKeys=new Set(), missing=[]; const totals={};
+            for(const r of raw){const c=canon(r?.comune),p=String(r?.prov??'').trim().toUpperCase(),k=p+'|'+norm(c); canonKeys.add(k); totals[k]=(totals[k]||0)+(Number(r?.preferenze)||0); if(!keys.has(k)) missing.push({prov:p,comune:r?.comune,canonical:c});}
+            console.log(name+'_ROWS',raw.length);
+            console.log(name+'_UNIQUE_CURRENT_PROV_COMUNI',canonKeys.size);
+            console.log(name+'_MISSING_GEO_ROWS',missing.length,JSON.stringify(missing.slice(0,25)));
+            console.log(name+'_ZERO_PREF_CURRENT_KEYS',Object.keys(totals).filter(k=>totals[k]===0).length);
+          }
+          auditRaw('RAW',RAW); auditRaw('EURO_RAW',EURO_RAW);
+          const ok=keys.size===1501 && Object.keys(counts).every(p=>byProv[p]===counts[p]) && Object.keys(byProv).length===12;
+          if(!ok) process.exitCode=1;
+          NODE
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
