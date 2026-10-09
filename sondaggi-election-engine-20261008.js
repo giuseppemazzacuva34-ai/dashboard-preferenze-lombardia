@@ -637,9 +637,17 @@
           .filter(c=>num(listByCirc[c]?.[donor])>0)
           .sort((a,b)=>(listRemainders[a]?.[donor]??0)-(listRemainders[b]?.[donor]??0)||a.localeCompare(b,"it"));
         for(const circId of cands){
+          const donorUnit=units.find(u=>u.members?.includes(donor));
           const receivers=under.filter(k=>{
-            const unit=units.find(u=>u.members?.includes(k));
-            return !!unit;
+            const receiverUnit=units.find(u=>u.members?.includes(k));
+            // La compensazione della ripartizione interna riguarda la sola
+            // coalizione di appartenenza; una lista singola non può cedere
+            // seggi a una coalizione diversa.
+            if(!receiverUnit)return false;
+            if(donorUnit?.type==="coalition")
+              return receiverUnit.type==="coalition" &&
+                receiverUnit.coalitionId===donorUnit.coalitionId;
+            return receiverUnit.type!=="coalition" && receiverUnit.members?.[0]===donor;
           }).sort((a,b)=>
             (listRemainders[circId]?.[b]??-1)-(listRemainders[circId]?.[a]??-1)||
             String(a).localeCompare(String(b),"it")
