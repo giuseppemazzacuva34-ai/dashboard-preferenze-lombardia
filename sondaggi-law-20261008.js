@@ -175,40 +175,55 @@
     ).premiumFigure;
   }
 
-  function premiumCandidate(subject, chamberValues, senateValues, coalitions){
-    const candidates=[];
+  function premiumCandidate(chamberValues, senateValues, coalitions){
+    const subjects=[];
+
     Object.keys(chamberValues||{}).forEach(k=>{
-      if(k==="ALTRI") return;
-      const c={type:"list",id:k,members:[k],name:k};
-      const cam=n(chamberValues[k]);
-      const sen=n(senateValues?.[k]);
-      if(cam>=RULES.national.premiumThreshold && sen>=RULES.national.premiumThreshold){
-        candidates.push({...c,camera:cam,senato:sen});
-      }
+      if(k==="ALTRI")return;
+      subjects.push({
+        type:"list",
+        id:k,
+        members:[k],
+        name:k,
+        camera:n(chamberValues[k]),
+        senato:n(senateValues?.[k])
+      });
     });
 
     for(const co of coalitions||[]){
       const cam=coalitionScores(co.members||[],chamberValues,"camera");
       const sen=coalitionScores(co.members||[],senateValues,"senato");
-      if(cam.qualifies && sen.qualifies &&
-         cam.premiumFigure>=RULES.national.premiumThreshold &&
-         sen.premiumFigure>=RULES.national.premiumThreshold){
-        candidates.push({
-          type:"coalition",id:co.id,members:[...(co.members||[])],name:co.name,
-          camera:cam.premiumFigure,senato:sen.premiumFigure
-        });
-      }
+      if(!cam.qualifies || !sen.qualifies)continue;
+      subjects.push({
+        type:"coalition",
+        id:co.id,
+        members:[...(co.members||[])],
+        name:co.name,
+        camera:n(cam.premiumFigure),
+        senato:n(sen.premiumFigure)
+      });
     }
 
-    candidates.sort((a,b)=>
-      Math.min(b.camera,b.senato)-Math.min(a.camera,a.senato) ||
-      b.camera+b.senato-a.camera-a.senato ||
-      String(a.id).localeCompare(String(b.id),"it")
+    if(!subjects.length)return null;
+
+    const maxCamera=Math.max(...subjects.map(x=>x.camera));
+    const maxSenato=Math.max(...subjects.map(x=>x.senato));
+
+    // Il premio richiede che il medesimo soggetto sia il più votato
+    // in entrambe le Camere e raggiunga almeno il 42% in entrambe.
+    const sameWinner=subjects.filter(x=>
+      x.camera===maxCamera &&
+      x.senato===maxSenato &&
+      x.camera>=RULES.national.premiumThreshold &&
+      x.senato>=RULES.national.premiumThreshold
     );
 
-    return candidates[0]||null;
+    if(!sameWinner.length)return null;
+    return sameWinner.slice().sort((a,b)=>
+      b.camera+b.senato-a.camera-a.senato ||
+      String(a.id).localeCompare(String(b.id),"it")
+    )[0];
   }
-
   function largestRemainder(items,seats){
     const clean=(items||[]).map(x=>({id:String(x.id),votes:n(x.votes)}))
       .filter(x=>x.votes>0);
