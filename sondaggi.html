@@ -3,35 +3,81 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sondaggi · Simulatore elettorale</title>
+<title>Sondaggi — Nuovo sistema elettorale</title>
 <style>
-:root{color-scheme:dark}
-*{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:#061323;color:#e8f2f8;font-family:Inter,Segoe UI,Arial,sans-serif}
-body{min-height:100vh}
-.sg-page-head{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;background:rgba(6,19,35,.96);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px)}
-.sg-brand{display:flex;align-items:center;gap:12px}
-.sg-brand-mark{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#102c45;border:1px solid #274965;font-size:18px}
-.sg-brand h1{margin:0;font-size:15px;letter-spacing:.03em}
-.sg-brand small{display:block;margin-top:3px;color:#7c98ac;font-size:10px}
-.sg-back{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:8px;border:1px solid #315875;background:#0d263c;color:#dbeaf3;text-decoration:none;font-size:11px;font-weight:800}
-.sg-back:hover{background:#123650}
-main{max-width:1700px;margin:0 auto;padding:18px}
-#tab-sondaggi{display:block!important;min-height:calc(100vh - 78px)}
-@media(max-width:700px){.sg-page-head{padding:12px}.sg-page-head .sg-back{font-size:10px;padding:8px 10px}main{padding:10px}}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#061323}
+#app{display:block;width:100%;height:100%;border:0;background:#061323}
+#loading{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:#061323;color:#dbeaf3;font:700 13px Arial,sans-serif;letter-spacing:.03em}
+#loading small{display:block;margin-top:8px;color:#7c98ac;font-weight:500;text-align:center}
 </style>
 </head>
 <body>
-<header class="sg-page-head">
-  <div class="sg-brand">
-    <div class="sg-brand-mark">📊</div>
-    <div><h1>SONDAGGI ELETTORALI</h1><small>Simulatore nazionale e per collegio</small></div>
-  </div>
-  <a class="sg-back" href="index.html">← TORNA ALLA DASHBOARD</a>
-</header>
-<main>
-  <section id="tab-sondaggi" class="panel"></section>
-</main>
-<script src="sondaggi-app.js?v=2"></script>
+<div id="loading"><div>CARICAMENTO SONDAGGI…<small>Sto aprendo il modulo Sondaggi completo.</small></div></div>
+<iframe id="app" title="Sondaggi — Nuovo sistema elettorale" src="index.html?dedicated=sondaggi"></iframe>
+
+<script>
+(function(){
+  const frame=document.getElementById("app");
+  const loading=document.getElementById("loading");
+  let done=false;
+  function cleanAndOpen(){
+    if(done)return;
+    try{
+      const d=frame.contentDocument;
+      if(!d||!d.body)return;
+      const btn=d.querySelector("#sideSondaggi");
+      const panel=d.querySelector("#tab-sondaggi");
+      if(btn && panel && getComputedStyle(panel).display!=="block"){
+        btn.click();
+      }
+      // Alcune versioni del modulo rendono il pannello al click successivo:
+      // riprova senza creare nuovi componenti.
+      const active=d.querySelector("#tab-sondaggi");
+      if(active && (
+        getComputedStyle(active).display!=="none" ||
+        active.innerText.trim().length>80
+      )){
+        d.querySelector(".app-sidebar")?.style.setProperty("display","none","important");
+        d.querySelector("header")?.style.setProperty("display","none","important");
+        d.querySelector(".topbar")?.style.setProperty("display","none","important");
+        d.body.style.margin="0";
+        d.body.style.padding="0";
+        d.body.style.overflow="auto";
+        const main=d.querySelector("main");
+        if(main){
+          main.style.margin="0";
+          main.style.padding="0";
+          main.style.maxWidth="none";
+          main.style.width="100%";
+        }
+        [...d.body.children].forEach(el=>{
+          if(el!==active && el.tagName!=="SCRIPT" && el.id!=="tab-sondaggi"){
+            const cs=getComputedStyle(el);
+            if(el.querySelector && !el.querySelector("#tab-sondaggi")) el.style.setProperty("display","none","important");
+          }
+        });
+        active.style.setProperty("display","block","important");
+        active.style.setProperty("width","100%","important");
+        active.style.setProperty("min-height","100vh","important");
+        done=true;
+        loading.style.display="none";
+        return;
+      }
+    }catch(e){
+      // Attendi il completamento del document.write dell'app principale.
+    }
+    setTimeout(cleanAndOpen,120);
+  }
+  frame.addEventListener("load",function(){
+    setTimeout(cleanAndOpen,50);
+    setTimeout(cleanAndOpen,250);
+    setTimeout(cleanAndOpen,700);
+    setTimeout(cleanAndOpen,1400);
+    setTimeout(cleanAndOpen,2500);
+  });
+  setTimeout(cleanAndOpen,600);
+  setTimeout(cleanAndOpen,1800);
+})();
+</script>
 </body>
 </html>
