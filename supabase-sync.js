@@ -16,8 +16,7 @@ const H={
 */
 const SYNC_CURRENT_COMUNE_ALIASES = Object.freeze({
   "RONAGO":"Uggiate con Ronago",
-  "UGGIATE-TREVANO":"Uggiate con Ronago",
-  "UGGIATE TREVANO":"Uggiate con Ronago",
+  "UGGIATETREVANO":"Uggiate con Ronago",
   "ALBAREDO ARNABOLDI":"Campospinoso Albaredo",
   "CAMPOSPINOSO":"Campospinoso Albaredo",
   "LIRIO":"Montalto Pavese",
@@ -53,6 +52,40 @@ function auditCurrentGeo(){
     console.error("Audit GEO Lombardia",err);
     return {ok:false,total:0,byProv:{}};
   }
+}
+function rebuildCanonicalRuntimeData(){
+  try{
+    const raw=(typeof election!=="undefined"&&election==="europee")
+      ? (typeof EURO_RAW!=="undefined"&&Array.isArray(EURO_RAW)?EURO_RAW:[])
+      : (typeof RAW!=="undefined"&&Array.isArray(RAW)?RAW:[]);
+    if(!Array.isArray(raw))return false;
+    data=raw.map(r=>{
+      const cc=syncCurrentComune(r?.comune);
+      const g=(typeof geoMap!=="undefined"&&geoMap&&typeof geoMap.get==="function")
+        ? (geoMap.get(norm3(r?.prov)+"|"+norm3(cc))||null)
+        : null;
+      return {...r,comune:cc,geo:g};
+    });
+    CANDS=[...new Set(data.map(r=>r?.candidato).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"it"));
+    return true;
+  }catch(err){
+    console.error("Riconciliazione dati comuni",err);
+    return false;
+  }
+}
+function repairHomeRuntime(){
+  try{
+    rebuildCanonicalRuntimeData();
+    if(typeof render==="function")render();
+    const audit=auditCurrentGeo();
+    const k=document.getElementById("k-comuni");
+    if(k)k.textContent=audit.total.toLocaleString("it-IT");
+    const q=document.querySelectorAll("#homeQuick .quick-item");
+    if(q[0]){
+      const sm=q[0].querySelector("small");
+      if(sm)sm.textContent=audit.total.toLocaleString("it-IT")+" comuni nel dataset";
+    }
+  }catch(err){console.error("Repair Home runtime",err);}
 }
 
 async function api(path,options){
@@ -2762,6 +2795,7 @@ installSondaggiModule();
   }
   function refreshHomeForElection(){
     try{
+      rebuildCanonicalRuntimeData();
       const label=(typeof election!=="undefined"&&election==="europee")
         ?"Europee 2024 · FdI"
         :"Regionali 2023 · FdI";
@@ -2832,6 +2866,11 @@ installSondaggiModule();
   }
 
   setTimeout(refreshHomeForElection,0);
+  setTimeout(repairHomeRuntime,20);
+  setTimeout(repairHomeRuntime,250);
+  document.addEventListener("click",function(ev){
+    if(ev.target?.closest?.(".macro-tab"))setTimeout(repairHomeRuntime,0);
+  },true);
   // Allineamento iniziale: la Home usa subito la geografia corrente di 1.501 comuni.
   try{
     if(typeof setElectionData==="function")setElectionData();
