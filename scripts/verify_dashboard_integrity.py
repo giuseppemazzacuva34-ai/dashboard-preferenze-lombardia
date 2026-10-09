@@ -1,18 +1,36 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import json
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "dashboard-integrity.json"
+
+# Questo SHA identifica l'ultima versione conosciuta come perfetta.
+# Il controllo usa il commit Git direttamente, non un manifest modificabile:
+# una modifica accidentale al core viene quindi bloccata anche se qualcuno
+# dimentica di aggiornare la documentazione.
+BASELINE_COMMIT = "1be3e4dcbec1b6f503921fad218b544572637a3f"
+
+PROTECTED_FILES = (
+    "index.html",
+    "supabase-sync.js",
+    "home-election-fix.js",
+    "home-count-fix.js",
+    "estero-eletti.js",
+    "supabase_schema.sql",
+    "sondaggi-link.js",
+    "dashboard-runtime-integrity.js",
+    ".github/workflows/pages.yml",
+    ".github/workflows/dashboard-integrity.yml",
+    "scripts/verify_dashboard_integrity.py",
+)
 
 
-def git_blob_sha(path: Path) -> str:
+def run_git(*args: str) -> str:
     return subprocess.check_output(
-        ["git", "hash-object", str(path.relative_to(ROOT))],
+        ["git", *args],
         cwd=ROOT,
         text=True,
     ).strip()
@@ -23,55 +41,50 @@ def fail(message: str) -> None:
     sys.exit(1)
 
 
-if not MANIFEST.exists():
-    fail("dashboard-integrity.json non trovato")
+def expected_blob_sha(path: str) -> str:
+    return run_git("rev-parse", f"{BASELINE_COMMIT}:{path}")
 
-try:
-    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
-except Exception as exc:
-    fail(f"manifest non valido: {exc}")
 
-protected = manifest.get("protected_files") or {}
-if not protected:
-    fail("nessun file protetto nel manifest")
+def actual_blob_sha(path: str) -> str:
+    return run_git("hash-object", path)
 
-errors = []
-for rel, expected in protected.items():
+
+for rel in PROTECTED_FILES:
     path = ROOT / rel
     if not path.exists():
-        errors.append(f"{rel}: FILE MANCANTE")
-        continue
-    actual = git_blob_sha(path)
+        fail(f"{rel}: FILE MANCANTE")
+
+    expected = expected_blob_sha(rel)
+    actual = actual_blob_sha(rel)
     if actual != expected:
-        errors.append(f"{rel}: SHA ATTUALE {actual} != BASELINE {expected}")
+        fail(
+            f"{rel}: SHA ATTUALE {actual} != SHA BASELINE {expected}"
+        )
 
-if errors:
-    print("Protezione del core FALLITA.")
-    for item in errors:
-        print(" -", item)
-    sys.exit(1)
+# Il vecchio workflow duplicato deve restare assente: altrimenti potrebbe
+# partire un secondo deploy senza il gate di integrità.
+legacy_deploy = ROOT / ".github/workflows/deploy-pages.yml"
+if legacy_deploy.exists():
+    fail("deploy-pages.yml storico presente: rimuoverlo per evitare un secondo percorso di deploy")
 
-# Controlli strutturali minimi: questi elementi devono restare presenti anche
-# mentre i moduli Sondaggi evolvono separatamente.
 index = (ROOT / "index.html").read_text(encoding="utf-8")
-required_scripts = [
+for script in (
     "supabase-sync.js",
     "home-election-fix.js",
     "sondaggi-link.js",
     "estero-eletti.js",
     "home-count-fix.js",
-]
-for script in required_scripts:
+):
     if script not in index:
         fail(f"index.html non contiene piu' il loader {script}")
 
 guard = (ROOT / "dashboard-runtime-integrity.js").read_text(encoding="utf-8")
-for marker in [
+for marker in (
     "EXPECTED_PROVINCE_COUNTS",
     "1501",
     "window.dashboardIntegrityStatus",
     "Dataset sorgente",
-]:
+):
     if marker not in guard:
         fail(f"guard runtime incompleto: marker mancante {marker}")
 
@@ -79,6 +92,10 @@ link = (ROOT / "sondaggi-link.js").read_text(encoding="utf-8")
 if "dashboard-runtime-integrity.js" not in link:
     fail("sondaggi-link.js non carica il guard runtime")
 
-print("OK - core protetto e controlli strutturali superati.")
-print(f"File protetti verificati: {len(protected)}")
-print(f"Baseline commit: {manifest.get('baseline_commit')}")
+pages = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8")
+if "scripts/verify_dashboard_integrity.py" not in pages:
+    fail("il deploy GitHub Pages non esegue il controllo integrita")
+
+print("OK - core protetto, doppio deploy escluso e gate di integrita attivo.")
+print(f"Baseline commit: {BASELINE_COMMIT}")
+print(f"File protetti: {len(PROTECTED_FILES)}")
