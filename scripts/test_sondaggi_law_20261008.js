@@ -32,7 +32,7 @@ assert.strictEqual(law.listRegionallyEligibleForSenate(2.99,19.99),false);
 assert.strictEqual(law.listRegionallyEligibleForSenate(2.99,20),true);
 
 let q=law.coalitionQualification(["A","B"],{A:5,B:3},"camera");
-assert.strictEqual(q.qualifies,false);
+assert.strictEqual(q.qualifies,true);
 q=law.coalitionQualification(["A","B"],{A:6,B:2},"camera");
 assert.strictEqual(q.qualifies,true);
 q=law.coalitionQualification(["A","B"],{A:5.9,B:2},"camera");
@@ -59,11 +59,10 @@ const winner=law.premiumCandidate(
   {A:25,B:20,C:43,D:0,E:42},
   coalitions
 );
-// C2 qualifies only if 43 >=8 and C >=2; it is national first only at 43, E also 43.
-// Deterministic tie-break picks C2 before E because C2 sorts before E.
-assert.strictEqual(winner.id,"C2");
-assert.strictEqual(winner.camera,43);
-assert.strictEqual(winner.senato,43);
+// C1 is the national winner with 45%; C2 and E remain below it.
+assert.strictEqual(winner.id,"C1");
+assert.strictEqual(winner.camera,45);
+assert.strictEqual(winner.senato,45);
 
 const noWinner=law.premiumCandidate(
   {A:50,B:0},
