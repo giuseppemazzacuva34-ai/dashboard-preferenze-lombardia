@@ -1689,7 +1689,7 @@
       const remainingGroups={...groupTargets};
       const rawGroupByCollege={};
       rr.colleges.slice().sort((a,b)=>a.name.localeCompare(b.name,"it")).forEach(col=>{
-        const seats=Math.floor(cleanPositive(col.noPrizeSeats));
+        const seats=Math.floor(cleanPositive(premium?col.withPrizeSeats:col.noPrizeSeats));
         if(!seats)return;
         const mf=["majority","minority"].map(g=>({
           g,
@@ -1864,6 +1864,7 @@
       ordinaryRedistributed:capTriggered?Math.max(0,initialWinner-(
         regions.reduce((a,r)=>a+(regionResults[r].targets[winnerUnitId]||0),0))):0,
       winnerOrdinary:regions.reduce((a,r)=>a+(regionResults[r].targets[winnerUnitId]||0),0),
+      capTriggered,
       winnerPremiumSeats:premium?35:0,
       premiumWinnerSeats:premium?35:0,
       premiumRedistributed:0,
