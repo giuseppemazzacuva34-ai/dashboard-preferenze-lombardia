@@ -157,8 +157,9 @@
     const target=Math.max(0,Math.floor(num(seats)));
     const out={};
     const remainders={};
+    const remainderWinners=new Set();
     if(!clean.length||!target)return {
-      seats:out,remainders,quota:0,totalVotes:0,baseSeats:0,
+      seats:out,remainders,remainderWinners:[...remainderWinners],quota:0,totalVotes:0,baseSeats:0,
       remainderSeats:0,sorteggi:0
     };
 
@@ -187,9 +188,10 @@
       for(const x of max){
         if(remaining<=0)break;
         out[x.id]=(out[x.id]||0)+1;
+        remainderWinners.add(x.id);
         remaining--;
       }
-      return {seats:out,remainders,quota:0,totalVotes:total,
+      return {seats:out,remainders,remainderWinners:[...remainderWinners],quota:0,totalVotes:total,
         baseSeats:target-remaining,remainderSeats:remaining,sorteggi};
     }
 
@@ -244,12 +246,14 @@
     for(const x of ranked){
       if(remaining<=0)break;
       out[x.id]=(out[x.id]||0)+1;
+      remainderWinners.add(x.id);
       remaining--;
     }
 
     return {
       seats:out,
       remainders,
+      remainderWinners:[...remainderWinners],
       quota,
       totalVotes:total,
       baseSeats,
