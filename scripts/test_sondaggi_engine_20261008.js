@@ -83,13 +83,16 @@ Object.keys(SEN).filter(r=>r!=="Valle d'Aosta"&&r!=="Trentino-Alto Adige/Südtir
 
 function run(camVals=Object.fromEntries(Object.entries(parties).map(([k,v])=>[k,v.camera])),
             senVals=Object.fromEntries(Object.entries(parties).map(([k,v])=>[k,v.senate])),
-            specialSeats={camera:{},senato:{}}){
+            specialSeats={camera:{},senato:{}},
+            senateRegionalOverride=null){
   return engine.simulate({
     law,
     parties,
     coalitions,
     camera:{nationalValues:camVals,collegeValues:{},collegeMap:CAM},
-    senato:{nationalValues:senVals,regionalValuesByRegion,collegeMap:SEN,premiumByRegion:law.rules.senatePremiumByRegion},
+    senato:{nationalValues:senVals,
+      regionalValuesByRegion:senateRegionalOverride||regionalValuesByRegion,
+      collegeMap:SEN,premiumByRegion:law.rules.senatePremiumByRegion},
     specialSeats
   });
 }
@@ -110,7 +113,7 @@ const prizeSen={...prizeVals};
 r=run(prizeVals,prizeSen,{
   camera:{estero:{},valleDAosta:{FdI:1},trentinoAltoAdige:{FdI:7}},
   senato:{estero:{},valleDAosta:{FdI:1},trentinoAltoAdige:{FdI:6}}
-});
+},capRegionalValues);
 assert(r.bonus,"Premio attivo");
 assert.strictEqual(Object.values(r.cam.ordinarySeatsByParty).reduce((a,v)=>a+v,0),314);
 assert.strictEqual(Object.values(r.cam.prizeSeatsByParty).reduce((a,v)=>a+v,0),70);
@@ -149,6 +152,10 @@ Object.entries(r.sen.regions||{}).forEach(([region,rr])=>{
   });
 });
 
+const capRegionalValues={};
+Object.keys(regionalValuesByRegion).forEach(region=>{
+  capRegionalValues[region]={...capVals};
+});
 const capVals={...prizeVals};
 capVals.FdI=55; capVals.LEGA=4; capVals.FI=6; capVals.NM=1;
 const capRun=run(capVals,{...capVals},{
