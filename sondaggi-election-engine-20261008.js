@@ -887,7 +887,7 @@
       const remByCirc={};
       const remainderWinnersByCirc={};
       Object.entries(circum).forEach(([circId,circ])=>{
-        const seats=bonus?circ.withPrizeSeats:circ.noPrizeSeats;
+        const seats=premium?circ.withPrizeSeats:circ.noPrizeSeats;
         calc[circId]={};
         remByCirc[circId]={};
         remainderWinnersByCirc[circId]=[];
