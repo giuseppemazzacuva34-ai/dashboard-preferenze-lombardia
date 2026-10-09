@@ -48,8 +48,19 @@ EXPECTED = {
     },
 }
 
-# Unica fusione storica ammessa nella riconciliazione corrente.
-EXPECTED_MERGES = {"LIRIO": "MONTALTO PAVESE"}
+# Alias geografici già adottati dal runtime della dashboard.
+# Servono a riconciliare le denominazioni storiche con la geografia corrente.
+EXPECTED_CURRENT_ALIASES = {
+    "LIRIO": "MONTALTO PAVESE",
+    "RONAGO": "UGGIATE CON RONAGO",
+    "UGGIATE-TREVANO": "UGGIATE CON RONAGO",
+    "UGGIATE TREVANO": "UGGIATE CON RONAGO",
+    "ALBAREDO ARNABOLDI": "CAMPOSPINO ALBAREDO",
+    "CAMPOSPINOSO": "CAMPOSPINO ALBAREDO",
+    "BARDELLO": "BARDELLO CON MALGESSO E BREGANO",
+    "BREGANO": "BARDELLO CON MALGESSO E BREGANO",
+    "MALGESSO": "BARDELLO CON MALGESSO E BREGANO",
+}
 
 PROV = {
     "BG": "BG", "BERGAMO": "BG",
@@ -91,7 +102,7 @@ def province(value) -> str:
 
 def current_comune(value) -> str:
     k = norm(value)
-    return EXPECTED_MERGES.get(k, k)
+    return EXPECTED_CURRENT_ALIASES.get(k, k)
 
 def getfield(row, *names):
     if not isinstance(row, dict):
@@ -314,7 +325,14 @@ def audit_election(label, data, geo_pairs):
             continue
 
         raw_names = {e[0] for e in entries}
-        if raw_names.issubset({"LIRIO", "MONTALTO PAVESE"}) and "LIRIO" in raw_names:
+        allowed = False
+        if "LIRIO" in raw_names and raw_names.issubset({"LIRIO", "MONTALTO PAVESE"}):
+            allowed = True
+        else:
+            mapped = {EXPECTED_CURRENT_ALIASES.get(x, x) for x in raw_names}
+            if len(mapped) == 1 and any(x in EXPECTED_CURRENT_ALIASES for x in raw_names):
+                allowed = True
+        if allowed:
             merge_collisions.add(key)
         else:
             exact_duplicates.append((key, raw_names))
@@ -323,7 +341,7 @@ def audit_election(label, data, geo_pairs):
     print(f"{label} preferenze totali:", int(pref_total))
     print(f"{label} righe per provincia:", byprov)
     print(f"{label} comuni non riconciliati:", len(unresolved))
-    print(f"{label} collisioni Lirio→Montalto ammesse:", len(merge_collisions))
+    print(f"{label} riconciliazioni/alias ammessi:", len(merge_collisions))
     print(f"{label} collisioni non ammesse:", len(exact_duplicates))
 
     if len(rows) != expected["rows"]:
