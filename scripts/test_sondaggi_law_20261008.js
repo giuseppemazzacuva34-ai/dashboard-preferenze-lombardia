@@ -61,8 +61,8 @@ const winner=law.premiumCandidate(
 );
 // C1 is the national winner with 45%; C2 and E remain below it.
 assert.strictEqual(winner.id,"C1");
-assert.strictEqual(winner.camera,43);
-assert.strictEqual(winner.senato,43);
+assert.strictEqual(winner.camera,45);
+assert.strictEqual(winner.senato,45);
 
 const noWinner=law.premiumCandidate(
   {A:50,B:0},
