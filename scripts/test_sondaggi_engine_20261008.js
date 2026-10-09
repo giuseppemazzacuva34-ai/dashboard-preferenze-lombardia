@@ -107,6 +107,23 @@ assert.strictEqual(r.cam.complete,true,"Camera senza premio quadrata");
 assert.strictEqual(r.sen.complete,true,"Senato senza premio quadrato");
 assert.strictEqual(Object.values(r.cam.circResults.nationalTotals).reduce((a,v)=>a+v,0),384);
 
+const failedCoalitionThresholdTest=engine.simulate({
+  law,
+  parties:{
+    A:{name:"A",camera:4,senate:4},
+    B:{name:"B",camera:2.99,senate:2.99},
+    C:{name:"C",camera:93.01,senate:93.01},
+    ALTRI:{name:"Altri",camera:0,senate:0}
+  },
+  coalitions:[{id:"LOW",name:"Coalizione sotto soglia",members:["A","B"]}],
+  camera:{nationalValues:{A:4,B:2.99,C:93.01},collegeValues:{},collegeMap:CAM},
+  senato:{nationalValues:{A:4,B:2.99,C:93.01},regionalValuesByRegion:Object.fromEntries(
+    Object.keys(SEN).filter(r=>r!=="Valle d'Aosta"&&r!=="Trentino-Alto Adige/Südtirol").map(r=>[r,{A:4,B:2.99,C:93.01}])
+  ),collegeMap:SEN,premiumByRegion:law.rules.senatePremiumByRegion},
+  specialSeats:{camera:{},senato:{}}
+});
+assert(!failedCoalitionThresholdTest.cam.eligible.includes("B"),"Una lista al 2,99% in coalizione sotto soglia non entra nel riparto");
+
 const prizeVals={...Object.fromEntries(Object.entries(parties).map(([k,v])=>[k,v.camera]))};
 prizeVals.FdI=43; prizeVals.PD=18; prizeVals.M5S=10; prizeVals.FN=6; prizeVals.FI=6; prizeVals.AVS=5; prizeVals.LEGA=4; prizeVals.AZ=3; prizeVals.IV=2; prizeVals.PIU=1; prizeVals.NM=1; prizeVals.ALTRI=1;
 const prizeSen={...prizeVals};
