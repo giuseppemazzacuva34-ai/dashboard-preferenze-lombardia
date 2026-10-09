@@ -124,7 +124,7 @@
 
     box=document.createElement("details");
     box.id="sg7EsteroBox";
-    box.open=false;
+    box.open=true;
     box.className="sg7e-box";
     box.innerHTML=
       '<summary><span>ELETTI CIRCOSCRIZIONE ESTERO</span><small>8 Camera · 4 Senato · separati dal riparto nazionale</small></summary>'+
