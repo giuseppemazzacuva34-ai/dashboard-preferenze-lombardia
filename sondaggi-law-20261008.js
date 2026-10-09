@@ -161,19 +161,19 @@
       members,nationalValues,chamber,regionalValues
     );
 
-    // Per il requisito del premio e per individuare il soggetto primo,
-    // il punteggio della coalizione è quello delle liste che superano
-    // le condizioni di ammissione al riparto; il 2-ter è gestito come
-    // recupero della lista, non come ampliamento della soglia del premio.
-    const premiumFigure=chamber==="senato" && regionalValues
-      ? admitted.reduce((a,k)=>a+n(regionalValues[k]),0)
-      : admitted.reduce((a,k)=>a+n(nationalValues[k]),0);
-
-    const allocationFigure=premiumFigure+(ripCandidate?n(
+    /*
+     * La cifra della coalizione comprende le liste ammesse al riparto,
+     * incluso l'eventuale ripescaggio previsto dal numero 2-ter. I voti
+     * delle altre liste collegate, non ammesse, non concorrono alla cifra
+     * elettorale della coalizione.
+     */
+    const splitValues=(k)=>
       chamber==="senato" && regionalValues
-        ? regionalValues[ripCandidate]
-        : nationalValues[ripCandidate]
-    ):0);
+        ?n(regionalValues[k])
+        :n(nationalValues[k]);
+    const allocationFigure=admitted.reduce((a,k)=>a+splitValues(k),0)+
+      (ripCandidate?splitValues(ripCandidate):0);
+    const premiumFigure=allocationFigure;
 
     return {
       qualifies:true,

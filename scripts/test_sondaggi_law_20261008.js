@@ -40,6 +40,13 @@ assert.strictEqual(q.qualifies,false);
 q=law.coalitionQualification(["A","B"],{A:8,B:2},"camera");
 assert.strictEqual(q.qualifies,true);
 
+const score2=law.coalitionScores(["A","B"],{A:6,B:2},"camera");
+assert.strictEqual(score2.qualifies,true);
+assert.strictEqual(score2.admitted.length,1);
+assert.strictEqual(score2.ripCandidate,"B");
+assert.strictEqual(score2.allocationFigure,8);
+assert.strictEqual(score2.premiumFigure,8);
+
 let cs=law.coalitionScores(["A","B","C"],{A:5,B:2.5,C:0.5},"camera");
 assert.strictEqual(cs.qualifies,true);
 
@@ -47,7 +54,7 @@ cs=law.coalitionScores(["A","B","C"],{A:5,B:2.5,C:0.5},"camera");
 assert.strictEqual(cs.qualifies,true);
 assert.deepStrictEqual(cs.admitted,["A"]);
 assert.strictEqual(cs.ripCandidate,"B");
-assert.strictEqual(cs.premiumFigure,5);
+assert.strictEqual(cs.premiumFigure,7.5);
 assert.strictEqual(cs.allocationFigure,7.5);
 
 const coalitions=[
