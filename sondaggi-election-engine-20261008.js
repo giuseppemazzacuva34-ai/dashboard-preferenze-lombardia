@@ -344,32 +344,19 @@
       (co.members||[]).forEach(k=>covered.add(k));
     });
 
-    Object.keys(values||{}).forEach(k=>{
-      if(k==="ALTRI"||covered.has(k))return;
-      const v=cleanPositive(values?.[k]);
-      if(v<law.rules.national.thresholdList)return;
-      units.push({
-        id:"P:"+k,
-        type:"list",
-        name:k,
-        members:[k],
-        allMembers:[k],
-        votes:v,
-        coalitionId:cmap[k]||null,
-        ripCandidate:null
-      });
-    });
-
     /*
-     * Lista in coalizione non qualificata: resta autonoma se raggiunge il
-     * 2%, secondo la disciplina della soglia ridotta per le liste collegate.
+     * Le liste appartenenti a una coalizione non qualificata accedono dal 2%;
+     * le liste non collegate restano soggette al 3%. Le liste di una
+     * coalizione qualificata sono già rappresentate dall'unità coalizione.
      */
     Object.keys(values||{}).forEach(k=>{
       if(k==="ALTRI"||covered.has(k))return;
-      const coId=cmap[k];
-      if(!coId)return;
       const v=cleanPositive(values?.[k]);
-      if(v<law.rules.national.thresholdMemberForCoalitionQualification)return;
+      const coId=cmap[k];
+      const threshold=coId
+        ?law.rules.national.thresholdMemberForCoalitionQualification
+        :law.rules.national.thresholdList;
+      if(v<threshold)return;
       units.push({
         id:"P:"+k,
         type:"list",
