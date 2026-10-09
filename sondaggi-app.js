@@ -7,7 +7,20 @@ function esc(v){
 
 function installSondaggiModule(){
   if(!window.SONDAGGI_LAW_20261008){
-    console.error("Sondaggi: motore della legge elettorale 2026 non caricato.");
+    const id="sondaggi-law-20261008";
+    let s=document.getElementById(id);
+    if(!s){
+      s=document.createElement("script");
+      s.id=id;
+      s.src="sondaggi-law-20261008.js?v=20261009-legal";
+      s.async=false;
+      s.addEventListener("load",()=>installSondaggiModule(),{once:true});
+      s.addEventListener("error",()=>console.error("Sondaggi: impossibile caricare il motore della legge elettorale 2026."),{once:true});
+      (document.head||document.documentElement).appendChild(s);
+    }else if(!s.dataset.sondaggiRetry){
+      s.dataset.sondaggiRetry="1";
+      s.addEventListener("load",()=>installSondaggiModule(),{once:true});
+    }
     return;
   }
   const KEY="lombardia_sondaggi_2026";
