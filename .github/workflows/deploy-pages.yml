@@ -79,6 +79,21 @@ jobs:
           const ok=keys.size===1501 && Object.keys(counts).every(p=>byProv[p]===counts[p]) && Object.keys(byProv).length===12;
           if(!ok) process.exitCode=1;
           NODE
+
+      - name: Diagnostic normalizzazione geografica
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),zlib=require('zlib'),vm=require('vm');
+          const src=fs.readFileSync('index.html','utf8');
+          const m=src.match(/const b64="([^"]+)"/); const app=zlib.gunzipSync(Buffer.from(m[1],'base64')).toString('utf8');
+          function extract(name){const marker='const '+name+'=';const start=app.indexOf(marker);let i=start+marker.length,depth=0,q=null,e=false;for(;i<app.length;i++){const ch=app[i];if(q){if(e)e=false;else if(ch==='\\\\')e=true;else if(ch===q)q=null;continue;}if(ch==='"'||ch==="'"){q=ch;continue;}if(ch==='['||ch==='{')depth++;else if(ch===']'||ch==='}')depth--;else if(ch===';'&&depth===0)break;}return vm.runInNewContext(app.slice(start+marker.length,i));}
+          const GEO=extract('GEO'); const canon=s=>{const x=String(s??'').trim();const k=x.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase().replace(/\\s+/g,' ').trim();const a={RONAGO:'Uggiate con Ronago','UGGIATE-TREVANO':'Uggiate con Ronago','UGGIATE TREVANO':'Uggiate con Ronago','ALBAREDO ARNABOLDI':'Campospinoso Albaredo',CAMPOSPINOSO:'Campospinoso Albaredo',LIRIO:'Montalto Pavese',BARDELLO:'Bardello con Malgesso e Bregano',BREGANO:'Bardello con Malgesso e Bregano',MALGESSO:'Bardello con Malgesso e Bregano'};return a[k]||x};
+          const precise=s=>canon(s).normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase().replace(/\\s+/g,' ').trim();
+          const aggressive=s=>precise(s).replace(/[^A-Z0-9]/g,'');
+          for(const fn of [['PRECISE',precise],['AGGRESSIVE',aggressive]]){const set=new Set(GEO.map(g=>String(g?.prov??'').trim().toUpperCase()+'|'+fn[1](g?.comune)));const dup={};for(const g of GEO){const k=String(g?.prov??'').trim().toUpperCase()+'|'+fn[1](g?.comune);(dup[k]??=[]).push({istat:g?.istat,prov:g?.prov,comune:g?.comune});}console.log(fn[0]+'_TOTAL',set.size);console.log(fn[0]+'_DUP_KEYS',JSON.stringify(Object.entries(dup).filter(([,v])=>v.length>1)));}
+          const prov={};for(const g of GEO){const p=String(g?.prov??'').trim().toUpperCase();prov[p]=(prov[p]||0)+1;}console.log('GEO_PROV_RAW',JSON.stringify(prov));
+          NODE
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
