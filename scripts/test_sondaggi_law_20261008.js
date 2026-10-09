@@ -51,8 +51,8 @@ const coalitions=[
   {id:"C2",name:"Coalizione B",members:["C","D"]}
 ];
 const winner=law.premiumCandidate(
-  {A:25,B:20,C:43,D:0, E:43},
-  {A:25,B:20,C:43,D:0, E:43},
+  {A:25,B:20,C:43,D:0,E:42},
+  {A:25,B:20,C:43,D:0,E:42},
   coalitions
 );
 // C2 qualifies only if 43 >=8 and C >=2; it is national first only at 43, E also 43.
