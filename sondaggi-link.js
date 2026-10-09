@@ -19,7 +19,7 @@ function ensure(){
       if(window.self!==window.top)return;
       ev.preventDefault();
       ev.stopPropagation();
-      window.location.href="sondaggi.html";
+      window.location.href="sondaggi.html?v=2";
     });
     side.appendChild(btn);
   }
