@@ -2314,10 +2314,8 @@ function installSondaggiModule(){
       return S.coalitions.map(co=>{
         const members=new Set(co.members||[]);
         const seats=(Object.entries(res.seats||{}).filter(([k])=>members.has(k)).reduce((sum,[,v])=>sum+Number(v||0),0));
-        const total=(co.members||[]).reduce((sum,k)=>{
-          const src=type==="camera"?S.parties[k]?.camera:S.parties[k]?.senate;
-          return sum+Number(src||0);
-        },0);
+        const values=Object.fromEntries(partyKeys.map(k=>[k,num(type==="camera"?S.parties[k]?.camera:S.parties[k]?.senate)]));
+        const total=coalitionFigure(co.members,values,type==="camera"?"camera":"senato").total;
         return {name:co.name,seats,total};
       }).filter(x=>x.seats>0||x.total>0)
         .sort((a,b)=>b.seats-a.seats||b.total-a.total||a.name.localeCompare(b.name,"it"))
