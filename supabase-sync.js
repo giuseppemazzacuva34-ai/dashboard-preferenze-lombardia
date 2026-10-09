@@ -10,6 +10,50 @@ const H={
   Authorization:"Bearer "+SUPA_KEY,
   "Content-Type":"application/json"
 };
+/* ===== GEO CURRENT LOMBARDIA 2026 =====
+   Geografia corrente: 1.501 comuni, con 12 province.
+   I dataset elettorali storici possono usare denominazioni precedenti alle fusioni.
+*/
+const CURRENT_COMUNE_ALIASES = Object.freeze({
+  "RONAGO":"Uggiate con Ronago",
+  "UGGIATE-TREVANO":"Uggiate con Ronago",
+  "ALBAREDO ARNABOLDI":"Campospinoso Albaredo",
+  "CAMPOSPINOOSO":"Campospinoso Albaredo",
+  "CAMPOSPINOSO":"Campospinoso Albaredo",
+  "LIRIO":"Montalto Pavese",
+  "BARDELLO":"Bardello con Malgesso e Bregano",
+  "BREGANO":"Bardello con Malgesso e Bregano",
+  "MALGESSO":"Bardello con Malgesso e Bregano"
+});
+function currentComune(value){
+  const raw=String(value??"").trim();
+  const key=raw.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/\s+/g," ").trim();
+  return CURRENT_COMUNE_ALIASES[key] || raw;
+}
+const CURRENT_PROVINCE_COUNTS = Object.freeze({
+  BG:243, BS:205, CO:147, CR:113, LC:84, LO:60,
+  MN:64, MI:133, MB:55, PV:184, SO:77, VA:136
+});
+function auditCurrentGeo(){
+  try{
+    const source=(typeof GEO!=="undefined"&&Array.isArray(GEO))?GEO:[];
+    const seen=new Set(), byProv=Object.create(null);
+    source.forEach(g=>{
+      const istat=String(g?.istat??"").trim();
+      const key=istat || (String(g?.prov??"").trim()+"|"+currentComune(g?.comune));
+      if(!key || seen.has(key))return;
+      seen.add(key);
+      const p=String(g?.prov??"").trim().toUpperCase();
+      byProv[p]=(byProv[p]||0)+1;
+    });
+    const okTotal=seen.size===1501;
+    const okProv=Object.keys(CURRENT_PROVINCE_COUNTS).every(p=>byProv[p]===CURRENT_PROVINCE_COUNTS[p]);
+    return {ok:okTotal&&okProv,total:seen.size,byProv};
+  }catch(err){
+    console.error("Audit GEO Lombardia",err);
+    return {ok:false,total:0,byProv:{}};
+  }
+}
 
 async function api(path,options){
   const r=await fetch(SUPA_URL+"/rest/v1/"+path,{
@@ -2688,7 +2732,10 @@ installSondaggiModule();
   window.setElectionData=function(){
     try{
       const raw=(typeof election!=="undefined"&&election==="europee")?EURO_RAW:RAW;
-      data=raw.map(r=>{const cc=(typeof currentComune==="function"?currentComune(r.comune):r.comune);return {...r,comune:cc,geo:geoMap.get(norm(r.prov)+"|"+norm(cc))||null};});
+      data=raw.map(r=>{
+        const cc=currentComune(r.comune);
+        return {...r,comune:cc,geo:geoMap.get(norm(r.prov)+"|"+norm(cc))||null};
+      });
       CANDS=[...new Set(data.map(r=>r.candidato).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"it"));
       PROVS=["BERGAMO","BRESCIA","COMO","CREMONA","LECCO","LODI","MANTOVA","MILANO","MONZA E DELLA BRIANZA","PAVIA","SONDRIO","VARESE"];
       filters={prov:"",comune:"",candidato:"",corrente:"",camP:"",senP:"",lista:""};
@@ -2711,10 +2758,7 @@ installSondaggiModule();
 (function(){
   function homeDatasetComuneCount(){
     const normalize=(v)=>String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/\s+/g," ").trim();
-    const source=(typeof GEO!=="undefined"&&Array.isArray(GEO))?GEO:[];
-    const seen=new Set();
-    source.forEach(r=>seen.add(normalize(r.prov)+"|"+normalize(r.comune)));
-    return seen.size;
+    return auditCurrentGeo().total;
   }
   function refreshHomeForElection(){
     try{
@@ -2724,8 +2768,10 @@ installSondaggiModule();
 
       document.querySelectorAll('[id="homeElectionLabel"]').forEach(el=>{el.textContent=label});
 
+      const geoAudit=auditCurrentGeo();
       const kComuni=document.getElementById("k-comuni");
-      if(kComuni)kComuni.textContent=homeDatasetComuneCount().toLocaleString("it-IT");
+      if(kComuni)kComuni.textContent=geoAudit.total.toLocaleString("it-IT");
+      if(!geoAudit.ok)console.error("GEO Lombardia non conforme",geoAudit);
 
       const currentCandidates=Array.isArray(window.CANDS)
         ?window.CANDS
