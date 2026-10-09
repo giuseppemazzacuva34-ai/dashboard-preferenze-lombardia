@@ -142,7 +142,8 @@
         '</section>'+
       '</div>';
 
-    content.appendChild(box);
+    const anchor=content;
+    anchor.parentElement.appendChild(box);
 
     const style=document.createElement("style");
     style.textContent=
