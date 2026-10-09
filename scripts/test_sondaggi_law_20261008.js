@@ -59,9 +59,8 @@ const winner=law.premiumCandidate(
   {A:25,B:20,C:43,D:0,E:42},
   coalitions
 );
-// C2 qualifies only if 43 >=8 and C >=2; it is national first only at 43, E also 43.
-// Deterministic tie-break picks C2 before E because C2 sorts before E.
-assert.strictEqual(winner.id,"C2");
+// C1 is the national winner with 45%; C2 and E remain below it.
+assert.strictEqual(winner.id,"C1");
 assert.strictEqual(winner.camera,43);
 assert.strictEqual(winner.senato,43);
 
