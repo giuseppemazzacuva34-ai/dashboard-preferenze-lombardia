@@ -110,8 +110,9 @@
     return out;
   }
 
-  function defaultCollegeWeight(college){
-    return Math.max(1,cleanPositive(college.noPrizeSeats));
+  function defaultCollegeWeight(college,explicitWeights){
+    const explicit=cleanPositive(explicitWeights?.[college.name]);
+    return explicit>0?explicit:Math.max(1,cleanPositive(college.noPrizeSeats));
   }
 
   function collegeValue(collegeValues,collegeName,slug,fallback=0){
@@ -409,12 +410,12 @@
         .reduce((a,vals)=>a+cleanPositive(vals?.[slug]),0);
   }
 
-  function buildCircValues(cameraMap,collegeValues,parties){
+  function buildCircValues(cameraMap,collegeValues,parties,explicitWeights){
     const circum=buildCameraCircumscriptions(cameraMap);
     const all=Object.fromEntries(Object.keys(circum).map(c=>[c,{figures:{},colleges:circum[c].colleges}]));
     circum && Object.entries(circum).forEach(([circ,rec])=>{
       rec.colleges.forEach(col=>{
-        const weight=defaultCollegeWeight(col);
+        const weight=defaultCollegeWeight(col,explicitWeights);
         const bucket=collegeValues?.[col.name]||{};
         all[circ].figures[col.name]={};
         Object.keys(parties||{}).forEach(k=>{
