@@ -1,38 +1,54 @@
 (function(){
 "use strict";
 
-/*
- * Correzione SOLA visualizzazione del contatore comuni.
- * Non modifica render, dati, eventi dei pulsanti o calcoli.
- */
+const WRONG=/(1502|1503|1504|1\.502|1\.503|1\.504|1,502|1,503|1,504)/g;
+
 function normalizeHomeComuneCount(){
   try{
-    const wrong=/^(1502|1503|1504|1\.502|1\.503|1\.504|1,502|1,503|1,504)$/;
+    const k=document.getElementById("k-comuni");
+    if(k){
+      const t=String(k.textContent||"").trim();
+      if(/^(1502|1503|1504|1\.502|1\.503|1\.504|1,502|1,503|1,504)$/.test(t)){
+        k.textContent="1.501";
+      }
+    }
 
-    const setNumeric=(el)=>{
-      if(!el)return;
-      const t=String(el.textContent||"").trim();
-      if(wrong.test(t)) el.textContent="1.501";
-    };
-
-    setNumeric(document.getElementById("k-comuni"));
-
-    document.querySelectorAll("#homeQuick .quick-item").forEach((item,i)=>{
-      const text=String(item.textContent||"");
-      if(/\bCOMUNI\b/i.test(text)){
-        const small=item.querySelector("small");
-        if(small){
-          small.textContent=small.textContent
-            .replace(/1502|1503|1504|1\.502|1\.503|1\.504|1,502|1,503|1,504/g,"1.501");
-        }
+    document.querySelectorAll("#homeQuick .quick-item small").forEach(el=>{
+      if(/\bCOMUNI\b/i.test(String(el.parentElement?.textContent||""))){
+        el.textContent=String(el.textContent||"").replace(WRONG,"1.501");
       }
     });
 
-    document.querySelectorAll(".home-kpi,.top-kpis .kpi,.home-status").forEach(el=>{
-      if(/\bCOMUNI\b/i.test(String(el.textContent||""))){
-        el.textContent=String(el.textContent||"")
-          .replace(/1502|1503|1504|1\.502|1\.503|1\.504|1,502|1,503|1,504/g,"1.501");
+    // Sostituisce solo i nodi testuali che contengono il conteggio:
+    // non altera mai il contenuto HTML, le icone o i pulsanti del riquadro.
+    const walker=document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node){
+          const raw=String(node.nodeValue||"");
+          if(!WRONG.test(raw)){
+            WRONG.lastIndex=0;
+            return NodeFilter.FILTER_REJECT;
+          }
+          WRONG.lastIndex=0;
+          let p=node.parentElement;
+          for(let i=0;p&&i<6;i++,p=p.parentElement){
+            if(/\bCOMUNI\b/i.test(String(p.textContent||""))){
+              return NodeFilter.FILTER_ACCEPT;
+            }
+          }
+          return NodeFilter.FILTER_REJECT;
+        }
       }
+    );
+
+    const nodes=[];
+    let node;
+    while(node=walker.nextNode())nodes.push(node);
+    nodes.forEach(n=>{
+      WRONG.lastIndex=0;
+      n.nodeValue=String(n.nodeValue||"").replace(WRONG,"1.501");
     });
   }catch(err){
     console.error("Home comune count fix",err);
@@ -41,7 +57,6 @@ function normalizeHomeComuneCount(){
 
 function scheduleHomeComuneFix(){
   normalizeHomeComuneCount();
-  setTimeout(normalizeHomeComuneCount,0);
   setTimeout(normalizeHomeComuneCount,80);
   setTimeout(normalizeHomeComuneCount,250);
   setTimeout(normalizeHomeComuneCount,600);
@@ -52,13 +67,10 @@ function scheduleHomeComuneFix(){
 function boot(){
   scheduleHomeComuneFix();
 
-  // Intercetta SOLO il cambio macro della Home.
   document.addEventListener("click",function(ev){
-    const macro=ev.target?.closest?.(".macro-tab");
-    if(macro) scheduleHomeComuneFix();
+    if(ev.target?.closest?.(".macro-tab")) scheduleHomeComuneFix();
   },true);
 
-  // Intercetta anche eventuali cambi macro effettuati dal codice.
   const prev=window.dashboardSetMacro;
   if(typeof prev==="function"){
     window.dashboardSetMacro=function(v){
