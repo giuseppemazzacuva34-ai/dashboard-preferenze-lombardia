@@ -1247,12 +1247,19 @@
         if(!(rr.targets[winnerUnitId]>0))continue;
         rr.targets[winnerUnitId]--;
         excess--;
-        const losing=rr.units.filter(u=>u.id!==winnerUnitId&&u.votes>0)
+        const usedRemainders=new Set(rr.initial.remainderWinners||[]);
+        const losing=rr.units.filter(u=>u.id!==winnerUnitId&&u.votes>0&&!usedRemainders.has(u.id))
           .sort((a,b)=>{
             const ra=rr.initial.remainders?.[a.id]??-1;
             const rb=rr.initial.remainders?.[b.id]??-1;
             return rb-ra||b.votes-a.votes||tieOrder(a,b);
-          })[0];
+          })[0] ||
+          rr.units.filter(u=>u.id!==winnerUnitId&&u.votes>0)
+            .sort((a,b)=>{
+              const ra=rr.initial.remainders?.[a.id]??-1;
+              const rb=rr.initial.remainders?.[b.id]??-1;
+              return rb-ra||b.votes-a.votes||tieOrder(a,b);
+            })[0];
         if(losing)rr.targets[losing.id]=(rr.targets[losing.id]||0)+1;
       }
 
@@ -1272,12 +1279,19 @@
         const c=more[0],rr=regionResults[c.region];
         rr.targets[winnerUnitId]--;
         excess--;
-        const losing=rr.units.filter(u=>u.id!==winnerUnitId&&u.votes>0)
+        const usedRemainders=new Set(rr.initial.remainderWinners||[]);
+        const losing=rr.units.filter(u=>u.id!==winnerUnitId&&u.votes>0&&!usedRemainders.has(u.id))
           .sort((a,b)=>{
             const ra=rr.initial.remainders?.[a.id]??-1;
             const rb=rr.initial.remainders?.[b.id]??-1;
             return rb-ra||b.votes-a.votes||tieOrder(a,b);
-          })[0];
+          })[0] ||
+          rr.units.filter(u=>u.id!==winnerUnitId&&u.votes>0)
+            .sort((a,b)=>{
+              const ra=rr.initial.remainders?.[a.id]??-1;
+              const rb=rr.initial.remainders?.[b.id]??-1;
+              return rb-ra||b.votes-a.votes||tieOrder(a,b);
+            })[0];
         if(losing)rr.targets[losing.id]=(rr.targets[losing.id]||0)+1;
         else break;
       }
