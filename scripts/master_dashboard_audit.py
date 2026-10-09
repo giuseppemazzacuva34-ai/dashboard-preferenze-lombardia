@@ -56,125 +56,28 @@ PROV={
 
 def norm(v):
     import unicodedata
-    return " ".join(
-        str(v or "").strip().upper().split()
-    ).replace("\u2019","'")
+    s=str(v or "").strip().upper().replace("\u2019","'")
+    s=unicodedata.normalize("NFD",s)
+    s="".join(ch for ch in s if unicodedata.category(ch)!="Mn")
+    return " ".join(s.split())
+
+def geo_name_key(v):
+    # Normalizzazione solo per confrontare denominazioni storiche/ortografiche:
+    # Almè/ALME', Salò/SALO', Muggiò/MUGGIO', ecc.
+    s=norm(v)
+    return "".join(ch for ch in s if ch.isalnum())
 
 def province(v):
     return PROV.get(norm(v), norm(v))
 
-def comune(v):
-    x=norm(v)
-    return norm(ALIASES.get(x, str(v or "").strip()))
+ALIASED_CURRENT_COMUNI={
+    "LIRIO":"MONTALTO PAVESE",
+}
 
-def fail(msg):
-    print(f"[FAIL] {msg}")
-    sys.exit(1)
+def current_comune(v):
+    k=norm(v)
+    return ALIASED_CURRENT_COMUNI.get(k,k)
 
-def git(*args):
-    return subprocess.check_output(["git",*args],cwd=ROOT,text=True).strip()
-
-def assert_core_frozen():
-    print("== CORE FREEZE ==")
-    for rel in CORE_FILES:
-        path=ROOT/rel
-        if not path.exists():
-            fail(f"file core mancante: {rel}")
-        expected=git("rev-parse",f"{BASELINE}:{rel}")
-        actual=git("hash-object",rel)
-        print(f"{rel}: {'OK' if expected==actual else 'MODIFICATO'}")
-        if expected!=actual:
-            fail(f"core modificato: {rel}")
-
-def inflate_index():
-    raw=INDEX.read_text(encoding="utf-8")
-    match=re.search(r'const\s+b64\s*=\s*"([A-Za-z0-9+/=]+)"',raw)
-    if not match:
-        fail("index.html: blocco b64 non trovato")
-    try:
-        compressed=base64.b64decode(match.group(1),validate=True)
-        return gzip.decompress(compressed).decode("utf-8")
-    except Exception as exc:
-        fail(f"index.html: impossibile decomprimere il dataset/app: {exc}")
-
-def extract_assignment(source,name):
-    patterns=[
-        rf'\b(?:const|let|var)\s+{re.escape(name)}\s*=\s*',
-        rf'(?<![\w$]){re.escape(name)}\s*=\s*',
-    ]
-    m=None
-    for p in patterns:
-        m=re.search(p,source)
-        if m:
-            break
-    if not m:
-        return None,None
-    start=m.end()
-    while start<len(source) and source[start].isspace():
-        start+=1
-    if start>=len(source) or source[start] not in "[{":
-        return None,source[max(0,start-100):start+300]
-    opener=source[start]
-    closer="]" if opener=="[" else "}"
-    depth=0
-    quote=None
-    escape=False
-    line_comment=False
-    block_comment=False
-    i=start
-    while i<len(source):
-        ch=source[i]
-        nxt=source[i+1] if i+1<len(source) else ""
-        if line_comment:
-            if ch=="\n": line_comment=False
-            i+=1; continue
-        if block_comment:
-            if ch=="*" and nxt=="/":
-                block_comment=False; i+=2; continue
-            i+=1; continue
-        if quote:
-            if escape:
-                escape=False
-            elif ch=="\\":
-                escape=True
-            elif ch==quote:
-                quote=None
-            i+=1; continue
-        if ch in "\"'":
-            quote=ch; i+=1; continue
-        if ch=="/" and nxt=="/":
-            line_comment=True; i+=2; continue
-        if ch=="/" and nxt=="*":
-            block_comment=True; i+=2; continue
-        if ch==opener:
-            depth+=1
-        elif ch==closer:
-            depth-=1
-            if depth==0:
-                return source[start:i+1],None
-        i+=1
-    return None,"unterminated literal"
-
-def parse_literal(source,name):
-    literal,diagnostic=extract_assignment(source,name)
-    if literal is None:
-        if diagnostic:
-            print(f"[INFO] {name}: {diagnostic[:500]}")
-        return None
-    try:
-        return json.loads(literal)
-    except Exception as exc:
-        print(f"[INFO] {name}: trovato literal ma JSON parse non riuscito: {exc}")
-        print(literal[:500])
-        return None
-
-def records(data):
-    if isinstance(data,list): return data
-    if isinstance(data,dict):
-        for key in ("rows","data","records","items"):
-            if isinstance(data.get(key),list):
-                return data[key]
-    return []
 
 def getfield(row,*names):
     if not isinstance(row,dict): return None
@@ -195,7 +98,8 @@ def audit_geo(geo):
         c=comune(getfield(r,"comune","municipality","city"))
         if not p or not c:
             fail("GEO contiene una riga senza provincia/comune")
-        key=(p,c)
+        key=(p,geo_name_key(c))
+        geo_lookup.setdefault(key,[]).append(str(getfield(r,"comune","municipality","city") or ""))
         if key in pairs: dup.append(key)
         pairs.add(key)
         if p not in EXPECTED_PROVINCES:
@@ -203,35 +107,44 @@ def audit_geo(geo):
         byprov[p]+=1
     print("GEO righe:",len(rows))
     print("GEO comuni unici:",len(pairs))
+    ambiguous=[(k,v) for k,v in geo_lookup.items() if len(set(v))>1]
+    print("GEO chiavi ortografiche ambigue:",len(ambiguous))
+    if ambiguous:
+        for k,v in ambiguous[:20]: print("  GEO-AMBIG",k,sorted(set(v)))
     print("GEO province:",byprov)
     if dup: fail(f"GEO duplicati: {len(dup)}")
     if len(pairs)!=1501: fail(f"GEO totale != 1501: {len(pairs)}")
     if byprov!=EXPECTED_PROVINCES: fail(f"GEO province non conformi: {byprov}")
-    return {(p,c) for p,c in pairs}
+    return pairs
 
 def audit_election(name,data,geo_pairs):
     rows=records(data)
     if not rows:
         fail(f"{name}: dataset non estratto")
+
     missing_geo={}
     invalid_pref=0
     negatives=0
-    unique={}
-    duplicate_rows=[]
+    candidate_seen={}
+    exact_duplicates=[]
+    allowed_merges={}
+    unexpected_collisions=[]
     prov_counts={p:0 for p in EXPECTED_PROVINCES}
     pref_total=0
 
     for r in rows:
         p=province(getfield(r,"prov","provincia","province"))
-        c=comune(getfield(r,"comune","municipality","city"))
+        raw_c=getfield(r,"comune","municipality","city")
+        c=current_comune(raw_c)
         cand=getfield(r,"candidato","candidate","nome_candidato","nome","cognome")
         pref=getfield(r,"preferenze","preferences","preference","votes","voti")
+
         if not p or not c:
             fail(f"{name}: riga senza provincia/comune")
-        pair=(p,c)
+
+        pair=(p,geo_name_key(c))
         if pair not in geo_pairs:
-            bucket=missing_geo.setdefault(pair,[])
-            bucket.append(r)
+            missing_geo.setdefault(pair,[]).append(r)
         prov_counts[p]=prov_counts.get(p,0)+1
 
         try:
@@ -243,32 +156,46 @@ def audit_election(name,data,geo_pairs):
             invalid_pref+=1
 
         if cand is not None:
-            k=(p,c,str(cand))
-            if k in unique:
-                duplicate_rows.append((k,unique[k],r))
-            else:
-                unique[k]=r
+            k=(p,geo_name_key(c),str(cand))
+            raw_name=norm(raw_c)
+            entry=candidate_seen.setdefault(k,[])
+            entry.append((raw_name,r))
+
+    for k,entries in candidate_seen.items():
+        if len(entries)<=1:
+            continue
+        raw_names={x[0] for x in entries}
+        # Unica collisione storica ammessa: Lirio incorporato in Montalto Pavese.
+        if raw_names.issubset({"LIRIO","MONTALTO PAVESE"}) and "LIRIO" in raw_names:
+            allowed_merges[k]=sorted(raw_names)
+        else:
+            exact_duplicates.append((k,entries))
 
     print(f"{name} righe:",len(rows))
     print(f"{name} preferenze totali:",int(pref_total) if float(pref_total).is_integer() else pref_total)
     print(f"{name} righe per provincia:",prov_counts)
-    print(f"{name} combinazioni comune/provincia non in GEO:",len(missing_geo))
+    print(f"{name} comune/provincia irrisolti:",len(missing_geo))
     for (p,c),sample in sorted(missing_geo.items()):
         print("  GEO-MISSING",p,c,"n=",len(sample))
-        for r in sample[:3]:
+        for r in sample[:2]:
             print("    ",{k:r.get(k) for k in ("prov","provincia","comune","candidato","preferenze") if k in r})
+    print(f"{name} collisioni ammesse Lirio→Montalto:",len(allowed_merges))
+    print(f"{name} collisioni non ammesse:",len(exact_duplicates))
+    for k,entries in exact_duplicates[:20]:
+        print("  COLLISION",k,"raw_names=",sorted({x[0] for x in entries}))
     print(f"{name} preferenze non intere:",invalid_pref)
     print(f"{name} preferenze negative:",negatives)
-    print(f"{name} duplicati candidato/comune/provincia:",len(duplicate_rows))
-    for k,a,b in duplicate_rows[:40]:
-        print("  DUP",k)
-        print("    A",{x:a.get(x) for x in ("prov","provincia","comune","candidato","preferenze") if x in a})
-        print("    B",{x:b.get(x) for x in ("prov","provincia","comune","candidato","preferenze") if x in b})
 
-    if invalid_pref: fail(f"{name}: valori preferenze non validi")
-    if negatives: fail(f"{name}: preferenze negative")
-    return pref_total,prov_counts,missing_geo,duplicate_rows
+    if missing_geo:
+        fail(f"{name}: comuni non riconciliati con la geografia corrente")
+    if invalid_pref:
+        fail(f"{name}: valori preferenze non validi")
+    if negatives:
+        fail(f"{name}: preferenze negative")
+    if exact_duplicates:
+        fail(f"{name}: collisioni candidate/comune non ammesse")
 
+    return pref_total,prov_counts,allowed_merges
 
 def audit_source_structure(source):
     # Il build reale deve contenere riferimenti ai tre dataset sorgente.
@@ -294,12 +221,8 @@ def main():
         fail("Impossibile estrarre tutti i dataset GEO/RAW/EURO_RAW dal build corrente")
 
     geo_pairs=audit_geo(geo)
-    raw_total,_,raw_missing,raw_dups=audit_election("REGIONALI",raw,geo_pairs)
-    euro_total,_,euro_missing,euro_dups=audit_election("EUROPEE",euro,geo_pairs)
-    if raw_missing or raw_dups:
-        print("[WARN] anomalie Regionali da classificare prima della certificazione finale")
-    if euro_missing or euro_dups:
-        print("[WARN] anomalie Europee da classificare prima della certificazione finale")
+    raw_total,raw_prov,raw_merges=audit_election("REGIONALI",raw,geo_pairs)
+    euro_total,euro_prov,euro_merges=audit_election("EUROPEE",euro,geo_pairs)
 
     print("REGIONALI vs EUROPEE totali preferenze:",raw_total,euro_total)
 
