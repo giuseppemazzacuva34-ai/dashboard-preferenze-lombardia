@@ -1489,34 +1489,50 @@
           return {
             region,
             rest:rr.initial.remainders[winnerUnitId]??-1,
-            votes:rr.units.find(u=>u.id===winnerUnitId)?.votes||0,
-            seats:rr.targets[winnerUnitId]||0
+            votes:rr.units.find(u=>u.id===winnerUnitId)?.votes||0
           };
-        }).filter(x=>x.seats>0)
-          .sort((a,b)=>a.rest-b.rest||a.votes-b.votes||a.region.localeCompare(b.region,"it"));
+        }).filter(x=>(regionResults[x.region].targets[winnerUnitId]||0)>0)
+          .sort((a,b)=>
+            a.rest-b.rest||a.votes-b.votes||a.region.localeCompare(b.region,"it")
+          );
 
-        for(const item of removalOrder){
-          if(excess<=0)break;
+        while(excess>0){
+          const available=removalOrder.filter(x=>
+            (regionResults[x.region].targets[winnerUnitId]||0)>0
+          );
+          if(!available.length){
+            errors.push("Senato: impossibile applicare integralmente il tetto del vincitore.");
+            break;
+          }
+
+          const item=available[0];
           const rr=regionResults[item.region];
-          if(!(rr.targets[winnerUnitId]>0))continue;
           rr.targets[winnerUnitId]--;
           excess--;
 
+          /*
+           * Il seggio sottratto viene attribuito alla minoranza secondo la
+           * graduatoria dei resti non già utilizzati. In caso di ulteriore
+           * parità: maggiore cifra regionale, quindi ordine deterministico
+           * di simulazione al posto del sorteggio reale.
+           */
           const usedRemainders=new Set(rr.initial.remainderWinners||[]);
           const candidates=rr.units
             .filter(u=>u.id!==winnerUnitId&&u.votes>0)
             .sort((a,b)=>{
-              const aUnused=usedRemainders.has(a.id)?1:0;
-              const bUnused=usedRemainders.has(b.id)?1:0;
+              const aUsed=usedRemainders.has(a.id)?1:0;
+              const bUsed=usedRemainders.has(b.id)?1:0;
               const ar=rr.initial.remainders[a.id]??-1;
               const br=rr.initial.remainders[b.id]??-1;
-              return aUnused-bUnused||br-ar||b.votes-a.votes||tieOrder(a,b);
+              return aUsed-bUsed||br-ar||b.votes-a.votes||tieOrder(a,b);
             });
-          if(candidates.length){
-            const receiver=candidates[0];
+
+          const receiver=candidates[0];
+          if(receiver){
             rr.targets[receiver.id]=(rr.targets[receiver.id]||0)+1;
           }else{
             errors.push("Senato "+item.region+": impossibile riallocare un seggio sottratto al vincitore.");
+            break;
           }
         }
       }
