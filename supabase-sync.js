@@ -30,6 +30,10 @@ function syncCurrentComune(value){
   const key=raw.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/\s+/g," ").trim();
   return SYNC_CURRENT_COMUNE_ALIASES[key] || raw;
 }
+
+// Sostituisce la funzione globale usata dagli altri moduli della dashboard,
+// così anche le funzioni già caricate usano la stessa geografia corrente.
+try{ window.currentComune=syncCurrentComune; }catch(_){}
 const CURRENT_PROVINCE_COUNTS = Object.freeze({
   BG:243, BS:205, CO:147, CR:113, LC:84, LO:60,
   MN:64, MI:133, MB:55, PV:184, SO:77, VA:136
