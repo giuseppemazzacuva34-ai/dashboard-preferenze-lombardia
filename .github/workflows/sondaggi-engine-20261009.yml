@@ -1,0 +1,33 @@
+name: Sondaggi statutory engine tests
+
+on:
+  push:
+    paths:
+      - "sondaggi-*.js"
+      - "scripts/test_sondaggi_*.js"
+      - "sondaggi-app.js"
+      - ".github/workflows/sondaggi-engine-20261009.yml"
+  pull_request:
+    paths:
+      - "sondaggi-*.js"
+      - "scripts/test_sondaggi_*.js"
+      - "sondaggi-app.js"
+      - ".github/workflows/sondaggi-engine-20261009.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax checks
+        run: |
+          node --check sondaggi-law-20261008.js
+          node --check sondaggi-election-engine-20261008.js
+          node --check sondaggi-app.js
+      - name: Legal rule tests
+        run: node scripts/test_sondaggi_law_20261008.js
+      - name: Statutory engine tests
+        run: node scripts/test_sondaggi_engine_20261008.js
