@@ -84,7 +84,8 @@ Object.keys(SEN).filter(r=>r!=="Valle d'Aosta"&&r!=="Trentino-Alto Adige/Südtir
 function run(camVals=Object.fromEntries(Object.entries(parties).map(([k,v])=>[k,v.camera])),
             senVals=Object.fromEntries(Object.entries(parties).map(([k,v])=>[k,v.senate])),
             specialSeats={camera:{},senato:{}},
-            senateRegionalOverride=null){
+            senateRegionalOverride=null,
+            senateCollegeOverride={}){
   return engine.simulate({
     law,
     parties,
@@ -92,6 +93,7 @@ function run(camVals=Object.fromEntries(Object.entries(parties).map(([k,v])=>[k,
     camera:{nationalValues:camVals,collegeValues:{},collegeMap:CAM},
     senato:{nationalValues:senVals,
       regionalValuesByRegion:senateRegionalOverride||regionalValuesByRegion,
+      collegeValues:senateCollegeOverride,
       collegeMap:SEN,premiumByRegion:law.rules.senatePremiumByRegion},
     specialSeats
   });
@@ -106,6 +108,12 @@ assert.strictEqual(r.sen.simulatedTotal,189);
 assert.strictEqual(r.cam.complete,true,"Camera senza premio quadrata");
 assert.strictEqual(r.sen.complete,true,"Senato senza premio quadrato");
 assert.strictEqual(Object.values(r.cam.circResults.nationalTotals).reduce((a,v)=>a+v,0),384);
+
+const senateCollegeBaseline=r.sen.regions["Lombardia"].collegeData["Lombardia - P01"].FdI;
+const senateCollegeOverrideRun=run(undefined,undefined,{camera:{},senato:{}},null,{"Lombardia - P01":{FdI:50}});
+const senateCollegeOverrideValue=senateCollegeOverrideRun.sen.regions["Lombardia"].collegeData["Lombardia - P01"].FdI;
+assert.notStrictEqual(senateCollegeOverrideValue,senateCollegeBaseline,"Senato: override collegio non recepito");
+assert.strictEqual(senateCollegeOverrideValue,450,"Senato: percentuale locale collegio non trasformata con il peso del collegio");
 
 const prizeVals={...Object.fromEntries(Object.entries(parties).map(([k,v])=>[k,v.camera]))};
 prizeVals.FdI=43; prizeVals.PD=18; prizeVals.M5S=10; prizeVals.FN=6; prizeVals.FI=6; prizeVals.AVS=5; prizeVals.LEGA=4; prizeVals.AZ=3; prizeVals.IV=2; prizeVals.PIU=1; prizeVals.NM=1; prizeVals.ALTRI=1;
