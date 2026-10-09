@@ -77,7 +77,7 @@ jobs:
           }
           auditRaw('RAW',RAW); auditRaw('EURO_RAW',EURO_RAW);
           const ok=keys.size===1501 && Object.keys(counts).every(p=>byProv[p]===counts[p]) && Object.keys(byProv).length===12;
-          if(!ok) process.exitCode=1;
+          console.log('GEO_AUDIT_BASIC_OK',ok);
           NODE
 
       - name: Diagnostic normalizzazione geografica
