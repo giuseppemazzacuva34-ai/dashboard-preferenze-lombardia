@@ -14,21 +14,21 @@ const H={
    Geografia corrente: 1.501 comuni, con 12 province.
    I dataset elettorali storici possono usare denominazioni precedenti alle fusioni.
 */
-const CURRENT_COMUNE_ALIASES = Object.freeze({
+const SYNC_CURRENT_COMUNE_ALIASES = Object.freeze({
   "RONAGO":"Uggiate con Ronago",
   "UGGIATE-TREVANO":"Uggiate con Ronago",
+  "UGGIATE TREVANO":"Uggiate con Ronago",
   "ALBAREDO ARNABOLDI":"Campospinoso Albaredo",
-  "CAMPOSPINOOSO":"Campospinoso Albaredo",
   "CAMPOSPINOSO":"Campospinoso Albaredo",
   "LIRIO":"Montalto Pavese",
   "BARDELLO":"Bardello con Malgesso e Bregano",
   "BREGANO":"Bardello con Malgesso e Bregano",
   "MALGESSO":"Bardello con Malgesso e Bregano"
 });
-function currentComune(value){
+function syncCurrentComune(value){
   const raw=String(value??"").trim();
   const key=raw.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/\s+/g," ").trim();
-  return CURRENT_COMUNE_ALIASES[key] || raw;
+  return SYNC_CURRENT_COMUNE_ALIASES[key] || raw;
 }
 const CURRENT_PROVINCE_COUNTS = Object.freeze({
   BG:243, BS:205, CO:147, CR:113, LC:84, LO:60,
@@ -40,7 +40,7 @@ function auditCurrentGeo(){
     const seen=new Set(), byProv=Object.create(null);
     source.forEach(g=>{
       const istat=String(g?.istat??"").trim();
-      const key=istat || (String(g?.prov??"").trim()+"|"+currentComune(g?.comune));
+      const key=istat || (String(g?.prov??"").trim()+"|"+syncCurrentComune(g?.comune));
       if(!key || seen.has(key))return;
       seen.add(key);
       const p=String(g?.prov??"").trim().toUpperCase();
@@ -886,7 +886,7 @@ function installAnalysisCompareFix(){
   function rowsFor(raw){
     const src=Array.isArray(raw)?raw:[];
     return src.map(r=>{
-      const cc=typeof currentComune==="function"?currentComune(r?.comune):r?.comune;
+      const cc=syncCurrentComune(r?.comune);
       let g=r&&r.geo;
       if(!g && typeof geoMap!=="undefined" && geoMap && typeof geoMap.get==="function"){
         try{g=geoMap.get(norm3(r?.prov)+"|"+norm3(cc))||null;}catch(_){}
@@ -1234,7 +1234,7 @@ function installComuniPreferencesFix(){
   };
 
   function canonicalComune(v){
-    try{return typeof currentComune==="function"?currentComune(String(v||"")):String(v||"");}
+    try{return syncCurrentComune(String(v||""));}
     catch(_){return String(v||"");}
   }
   function normalizeProv(v){
@@ -2733,7 +2733,7 @@ installSondaggiModule();
     try{
       const raw=(typeof election!=="undefined"&&election==="europee")?EURO_RAW:RAW;
       data=raw.map(r=>{
-        const cc=currentComune(r.comune);
+        const cc=syncCurrentComune(r.comune);
         return {...r,comune:cc,geo:geoMap.get(norm(r.prov)+"|"+norm(cc))||null};
       });
       CANDS=[...new Set(data.map(r=>r.candidato).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"it"));
