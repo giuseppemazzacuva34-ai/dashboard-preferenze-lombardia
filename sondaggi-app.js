@@ -163,7 +163,9 @@ function installSondaggiModule(){
       capilista:{camera:{},senato:{}},
       capilistaSelectedParty:"",
       coalitions:defaultCoalitions(),
-      coalitionPresetVersion:COALITION_PRESET_VERSION
+      coalitionPresetVersion:COALITION_PRESET_VERSION,
+      scenarios:[],
+      currentScenarioId:""
     };
     POLLS.forEach(p=>{
       s.parties[p[0]]={name:p[1],camera:p[2],senate:p[2]};
@@ -383,6 +385,77 @@ function installSondaggiModule(){
   }
 
   function save(){localStorage.setItem(KEY,JSON.stringify(S));mirrorToLegacyV7();}
+  function cloneScenarioState(source=S){
+    return JSON.parse(JSON.stringify(source||{}));
+  }
+
+  function scenarioPayload(){
+    const snap=cloneScenarioState(S);
+    delete snap.scenarios;
+    delete snap.currentScenarioId;
+    return snap;
+  }
+
+  function ensureScenarios(){
+    if(!Array.isArray(S.scenarios))S.scenarios=[];
+    return S.scenarios;
+  }
+
+  function saveNamedScenario(name){
+    const clean=String(name||"").trim();
+    if(!clean)return {ok:false,reason:"missing_name"};
+    const list=ensureScenarios();
+    const existing=list.find(x=>String(x.name||"").toLowerCase()===clean.toLowerCase());
+    const record={
+      id:existing?.id||("SC"+Date.now().toString(36).toUpperCase()),
+      name:clean,
+      savedAt:new Date().toISOString(),
+      state:scenarioPayload()
+    };
+    if(existing){
+      existing.name=record.name;
+      existing.savedAt=record.savedAt;
+      existing.state=record.state;
+    }else{
+      list.push(record);
+    }
+    S.currentScenarioId=record.id;
+    save();
+    return {ok:true,id:record.id};
+  }
+
+  function loadScenario(id){
+    const rec=ensureScenarios().find(x=>x.id===id);
+    if(!rec?.state)return false;
+    const scenarios=cloneScenarioState(S.scenarios||[]);
+    const next=cloneScenarioState(rec.state);
+    next.scenarios=scenarios;
+    next.currentScenarioId=rec.id;
+    S=next;
+    save();
+    render();
+    return true;
+  }
+
+  function deleteScenario(id){
+    const list=ensureScenarios();
+    const before=list.length;
+    S.scenarios=list.filter(x=>x.id!==id);
+    if(S.currentScenarioId===id)S.currentScenarioId="";
+    if(S.scenarios.length!==before){
+      save();
+      render();
+      return true;
+    }
+    return false;
+  }
+
+  function scenarioDisplayList(){
+    return ensureScenarios().slice().sort((a,b)=>
+      String(a.name||"").localeCompare(String(b.name||""),"it")
+    );
+  }
+
 
   function esc2(v){
     try{return typeof esc==="function"?esc(String(v??"")):String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
@@ -1802,6 +1875,16 @@ function installSondaggiModule(){
           '<div class="sg-main">'+
             '<div class="sg-controls"><div><label>Camera / Senato</label><select id="sgChamber"><option value="camera">Camera</option><option value="senato">Senato</option></select></div><div><label>Regione</label><select id="sgRegion">'+REGIONS.map(x=>'<option value="'+esc2(x)+'">'+esc2(x)+'</option>').join("")+'</select></div><div><label>Collegio</label><select id="sgCollege">'+collegesFor(S.chamber,S.region).map(x=>'<option value="'+esc2(x.name)+'">'+esc2(x.name)+' · '+x.seats+' seggi</option>').join("")+'</select></div></div>'+
             '<div class="sg-card"><div class="sg-card-title"><b>Percentuali di voto</b><span>nazionale · regione · collegio</span></div><div class="sg-table-wrap"><table class="sg-table"><thead><tr><th>Partito</th><th>Camera naz.</th><th>Senato naz.</th><th>Senato regione</th><th>'+ (S.chamber==="camera"?"Camera":"Senato") +' collegio</th><th>Coalizione</th></tr></thead><tbody>'+partyRows+'</tbody></table></div><div class="sg-actions"><button type="button" class="sg-btn" id="sgSaveAll">SALVA SCENARIO</button><button type="button" class="sg-btn" id="sgReset">RIPRISTINA BASE YOUTREND</button></div></div>'+
+            '<div class="sg-card sg-scenarios"><div class="sg-card-title"><b>SCENARI DI TEST</b><span>salva · carica · confronta manualmente</span></div>'+
+              '<div class="sg-note">Ogni scenario conserva percentuali nazionali, dati regionali, collegi, coalizioni, seggi speciali e capilista. Dopo aver caricato uno scenario, la composizione del Parlamento viene ricalcolata automaticamente con la legge elettorale del 8 ottobre 2026.</div>'+
+              '<div class="sg-scenario-editor"><div><label>Nome scenario</label><input id="sgScenarioName" type="text" placeholder="Es. Centrodestra 44% · premio attivo"></div>'+
+                '<div class="sg-scenario-actions"><button type="button" class="sg-btn primary" id="sgScenarioSave">SALVA SCENARIO</button><button type="button" class="sg-btn" id="sgScenarioSaveUpdate">AGGIORNA SELEZIONATO</button></div></div>'+
+              '<div class="sg-scenario-list">'+
+                '<div><label>Scenario salvato</label><select id="sgScenarioSelect"><option value="">Seleziona uno scenario</option>'+scenarioDisplayList().map(x=>'<option value="'+esc2(x.id)+'" '+(S.currentScenarioId===x.id?"selected":"")+'>'+esc2(x.name)+'</option>').join('')+'</select></div>'+
+                '<div class="sg-scenario-actions"><button type="button" class="sg-btn" id="sgScenarioLoad">CARICA</button><button type="button" class="sg-btn" id="sgScenarioDelete">ELIMINA</button></div>'+
+              '</div>'+
+              '<div class="sg-scenario-current">'+(S.currentScenarioId ? 'SCENARIO ATTIVO: <b>'+esc2(ensureScenarios().find(x=>x.id===S.currentScenarioId)?.name||"—")+'</b>' : 'NESSUNO SCENARIO SALVATO ATTIVO')+'</div>'+
+            '</div>'+
             '<div class="sg-card"><div class="sg-card-title"><b>Gestione sondaggi regionali · Senato</b><span><button type="button" class="sg-btn small" id="sgPropagateNational">PROPAGA NAZIONALE</button></span></div><div class="sg-note">'+(senateComplete?'Dati regionali completi: '+SENATE_PROP_REGIONS.length+'/'+SENATE_PROP_REGIONS.length+' regioni proporzionali valorizzate. ':'Dati regionali incompleti. ')+(senateCustomRegions?senateCustomRegions+' regioni personalizzate rispetto al nazionale. ':'Nessuna regione personalizzata rispetto al nazionale. ')+'Il pulsante PROPAGA NAZIONALE copia i valori del Senato nazionale in tutte le regioni proporzionali.</div><div class="sg-regional-status">'+SENATE_PROP_REGIONS.map(region=>{const info=senateRegionSeatInfo(region),custom=isRegionalCustom(region);return '<button type="button" class="sg-region-status '+(region===S.region?'active ':'')+(custom?'custom':'')+'" data-region-jump="'+esc2(region)+'"><span><b>'+esc2(region)+'</b><small>'+info.total+' seggi'+(info.premium?' · '+info.premium+' premio':'')+'</small></span><em>'+(custom?'PERSONALIZZATA':'NAZIONALE')+'</em></button>';}).join('')+'</div></div>'+
             '<div class="sg-card"><div class="sg-card-title"><b>Coalizioni preimpostate e modificabili</b><span><button type="button" class="sg-btn small" id="sgNewCoal">+ NUOVA COALIZIONE</button></span></div><div class="sg-note">Le coalizioni di base sono già caricate. Spunta un partito per aggiungerlo o togli la spunta per rimuoverlo; ogni partito può appartenere a una sola coalizione alla volta.</div>'+coalRows+'</div>'+
           '</div>'+
@@ -1913,6 +1996,35 @@ function installSondaggiModule(){
       save();render();
     }));
     document.getElementById("sgNewCoal").addEventListener("click",makeCoalition);
+    document.getElementById("sgScenarioSave")?.addEventListener("click",()=>{
+      const name=document.getElementById("sgScenarioName")?.value||"";
+      const result=saveNamedScenario(name);
+      if(!result.ok){alert("Inserisci un nome per lo scenario.");return;}
+      render();
+    });
+    document.getElementById("sgScenarioSaveUpdate")?.addEventListener("click",()=>{
+      const id=document.getElementById("sgScenarioSelect")?.value||S.currentScenarioId||"";
+      const rec=ensureScenarios().find(x=>x.id===id);
+      if(!rec){alert("Seleziona prima uno scenario da aggiornare.");return;}
+      const name=document.getElementById("sgScenarioName")?.value||rec.name;
+      const result=saveNamedScenario(name);
+      if(!result.ok){alert("Inserisci un nome per lo scenario.");return;}
+      S.currentScenarioId=result.id;
+      save();render();
+    });
+    document.getElementById("sgScenarioLoad")?.addEventListener("click",()=>{
+      const id=document.getElementById("sgScenarioSelect")?.value||"";
+      if(!id)return;
+      loadScenario(id);
+    });
+    document.getElementById("sgScenarioDelete")?.addEventListener("click",()=>{
+      const id=document.getElementById("sgScenarioSelect")?.value||"";
+      if(!id)return;
+      const rec=ensureScenarios().find(x=>x.id===id);
+      if(!rec)return;
+      if(confirm('Eliminare lo scenario "'+rec.name.replace(/"/g,'\"')+'"?'))deleteScenario(id);
+    });
+
     document.getElementById("sgSaveAll").addEventListener("click",()=>{save();alert("Scenario Sondaggi salvato.");});
     document.getElementById("sgReset").addEventListener("click",()=>{
       const keep={chamber:S.chamber,region:S.region,college:S.college};
@@ -1936,6 +2048,7 @@ function installSondaggiModule(){
 .sg-head h1{margin:4px 0 5px;font-size:26px;line-height:1.05;color:#fff}
 .sg-head p{margin:0;color:#9db3c3;font-size:10px;line-height:1.5;max-width:780px}
 .sg-btn{border:1px solid #2b4c65;background:#0b2034;color:#eaf4fb;border-radius:8px;padding:9px 11px;font-size:9px;font-weight:900;cursor:pointer}
+.sg-scenarios{margin-bottom:10px}.sg-scenario-editor,.sg-scenario-list{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;background:#0a1d30;border:1px solid #203d55;border-radius:9px;padding:9px;margin-top:8px}.sg-scenario-editor label,.sg-scenario-list label{display:block;color:#7f9ab0;font-size:6px;text-transform:uppercase;margin-bottom:4px}.sg-scenario-editor input,.sg-scenario-list select{width:100%;box-sizing:border-box;padding:7px 8px;background:#0e2941;color:#fff;border:1px solid #2a4b65;border-radius:7px}.sg-scenario-actions{display:flex;gap:6px}.sg-scenario-current{margin-top:8px;padding:7px 9px;border-radius:7px;background:#102a40;border:1px solid #274a64;color:#9eb7c7;font-size:7px}.sg-scenario-current b{color:#fff}@media(max-width:820px){.sg-scenario-editor,.sg-scenario-list{grid-template-columns:1fr}.sg-scenario-actions{flex-wrap:wrap}}
 .sg-btn.primary{background:#1c7ed0;border-color:#2b91e6;color:#fff}
 .sg-btn.small{padding:6px 8px;font-size:8px}
 .sg-special{margin-top:10px;padding:9px 11px;border-radius:9px;background:#102a40;border:1px solid #2b5a7d;color:#c7d8e5;font-size:8px;line-height:1.5}.sg-special b{color:#6cb7ff;font-size:8px}.sg-law{padding:9px 11px;margin-bottom:12px;border-radius:9px;background:#132c42;border:1px solid #2b4d67;color:#aac0d0;font-size:8px;line-height:1.45}
