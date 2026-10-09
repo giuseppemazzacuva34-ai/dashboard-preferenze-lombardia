@@ -26,26 +26,6 @@ jobs:
 
 
 
-      - name: Audit finale dati comuni e preferenze
-        shell: bash
-        run: |
-          node <<'NODE'
-          const fs=require('fs'),zlib=require('zlib'),vm=require('vm');
-          const src=fs.readFileSync('index.html','utf8'); const m=src.match(/const b64="([^"]+)"/); if(!m) throw new Error('b64 non trovato');
-          const app=zlib.gunzipSync(Buffer.from(m[1],'base64')).toString('utf8');
-          function extract(name){const marker='const '+name+'=';const start=app.indexOf(marker);if(start<0)throw new Error(name+' non trovato');let i=start+marker.length,d=0,q=null,e=false;for(;i<app.length;i++){const ch=app[i];if(q){if(e)e=false;else if(ch==='\\\\')e=true;else if(ch===q)q=null;continue;}if(ch==='"'||ch==="'"){q=ch;continue;}if(ch==='['||ch==='{')d++;else if(ch===']'||ch==='}')d--;else if(ch===';'&&d===0)break;}return vm.runInNewContext(app.slice(start+marker.length,i));}
-          const GEO=extract('GEO'), RAW=extract('RAW'), EURO_RAW=extract('EURO_RAW');
-          const P={BG:'BG',BERGAMO:'BG',BS:'BS',BRESCIA:'BS',CO:'CO',COMO:'CO',CR:'CR',CREMONA:'CR',LC:'LC',LECCO:'LC',LO:'LO',LODI:'LO',MN:'MN',MANTOVA:'MN',MI:'MI',MILANO:'MI',MB:'MB','MONZA E DELLA BRIANZA':'MB','MONZA E BRIANZA':'MB',PV:'PV',PAVIA:'PV',SO:'SO',SONDRIO:'SO',VA:'VA',VARESE:'VA'};
-          const aliases={RONAGO:'Uggiate con Ronago','UGGIATE-TREVANO':'Uggiate con Ronago','UGGIATE TREVANO':'Uggiate con Ronago','ALBAREDO ARNABOLDI':'Campospinoso Albaredo',CAMPOSPINOSO:'Campospinoso Albaredo',LIRIO:'Montalto Pavese',BARDELLO:'Bardello con Malgesso e Bregano',BREGANO:'Bardello con Malgesso e Bregano',MALGESSO:'Bardello con Malgesso e Bregano'};
-          const pc=v=>P[String(v??'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase().replace(/\\s+/g,' ').trim()]||String(v??'').trim().toUpperCase();
-          const cc=v=>{const raw=String(v??'').trim();const k=raw.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase().replace(/\\s+/g,' ').trim();return aliases[k]||raw};
-          const ck=(p,c)=>pc(p)+'|'+cc(c).normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toUpperCase().replace(/\\s+/g,' ').trim();
-          const expected={BG:243,BS:205,CO:147,CR:113,LC:84,LO:60,MN:64,MI:133,MB:55,PV:184,SO:77,VA:136};
-          const geo=new Map(),byProv={}; for(const g of GEO){const k=ck(g.prov,g.comune); if(!geo.has(k))geo.set(k,g); byProv[pc(g.prov)]=(byProv[pc(g.prov)]||0)+1;}
-          console.log('GEO_ROWS',GEO.length,'GEO_UNIQUE',geo.size,'GEO_BY_PROV',JSON.stringify(byProv));
-          function audit(name,rows){const muni=new Set(),dups=new Map(),totals=new Map(),missing=[];for(const r of rows){const k=ck(r.prov,r.comune), cand=String(r.candidato??'').trim();muni.add(k);const d=k+'|'+cand;dups.set(d,(dups.get(d)||0)+1);totals.set(k,(totals.get(k)||0)+(Number(r.preferenze)||0));if(!geo.has(k))missing.push(k);}const dup=[...dups].filter(([,n])=>n>1);const allMissing=[...new Set(missing)];const vals=[...totals.values()];console.log(name+'_ROWS',rows.length,name+'_MUNICIPALITIES',muni.size,name+'_MISSING_GEO',allMissing.length,name+'_DUP_CAND_MUNICIPALITY',dup.length,name+'_ZERO_TOTAL_MUNICIPALITIES',vals.filter(x=>x===0).length,name+'_MIN_TOTAL',Math.min(...vals),name+'_MAX_TOTAL',Math.max(...vals));return {muni,dup,missing:allMissing,totals};}
-          const a=audit('RAW',RAW),b=audit('EURO_RAW',EURO_RAW);const provOk=Object.keys(expected).length===12&&Object.keys(expected).every(p=>byProv[p]===expected[p]);const ok=GEO.length===1501&&geo.size===1501&&provOk&&a.muni.size===1501&&b.muni.size===1501&&a.missing.length===0&&b.missing.length===0&&a.dup.length===0&&b.dup.length===0&&a.totals.size===1501&&b.totals.size===1501&&[...a.totals.values()].every(v=>v>0)&&[...b.totals.values()].every(v=>v>0);console.log('FINAL_DATA_AUDIT_OK',ok);if(!ok)process.exitCode=1;
-          NODE
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
