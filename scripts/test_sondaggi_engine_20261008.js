@@ -113,7 +113,7 @@ const prizeSen={...prizeVals};
 r=run(prizeVals,prizeSen,{
   camera:{estero:{},valleDAosta:{FdI:1},trentinoAltoAdige:{FdI:7}},
   senato:{estero:{},valleDAosta:{FdI:1},trentinoAltoAdige:{FdI:6}}
-},capRegionalValues);
+});
 assert(r.bonus,"Premio attivo");
 assert.strictEqual(Object.values(r.cam.ordinarySeatsByParty).reduce((a,v)=>a+v,0),314);
 assert.strictEqual(Object.values(r.cam.prizeSeatsByParty).reduce((a,v)=>a+v,0),70);
