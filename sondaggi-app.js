@@ -23,6 +23,23 @@ function installSondaggiModule(){
     }
     return;
   }
+  if(!window.SONDAGGI_ELECTION_ENGINE_20261008){
+    const id="sondaggi-election-engine-20261008";
+    let s=document.getElementById(id);
+    if(!s){
+      s=document.createElement("script");
+      s.id=id;
+      s.src="sondaggi-election-engine-20261008.js?v=20261009-engine";
+      s.async=false;
+      s.addEventListener("load",()=>installSondaggiModule(),{once:true});
+      s.addEventListener("error",()=>console.error("Sondaggi: impossibile caricare il motore di riparto elettorale 2026."),{once:true});
+      (document.head||document.documentElement).appendChild(s);
+    }else if(!s.dataset.sondaggiRetry){
+      s.dataset.sondaggiRetry="1";
+      s.addEventListener("load",()=>installSondaggiModule(),{once:true});
+    }
+    return;
+  }
   const KEY="lombardia_sondaggi_2026";
 
   const REGIONS=[
@@ -1400,152 +1417,37 @@ function installSondaggiModule(){
     const senVals=Object.fromEntries(
       Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)])
     );
-    const bonus=bonusTarget();
 
-    const cam={
-      seats:{},
-      ordinarySeatsByParty:{},
-      prizeSeatsByParty:{},
-      eligible:[],
-      coalTotals:{}
-    };
-    const sen={
-      seats:{},
-      ordinarySeatsByParty:{},
-      prizeSeatsByParty:{},
-      eligible:[],
-      coalTotals:{}
-    };
-
-    const camPlan=allocationUnits(camVals,"camera");
-
-    let camTargetByUnit={};
-    let camPrizeByUnit={};
-
-    if(!bonus){
-      camTargetByUnit=hamilton(
-        camPlan.units.map(u=>({id:u.id,votes:u.votes})),
-        384
-      );
-    }else{
-      const base=hamilton(
-        camPlan.units.map(u=>({id:u.id,votes:u.votes})),
-        314
-      );
-      const winnerUnit=camPlan.units.find(u=>u.id===bonus.id)||null;
-      const winnerSpecial=winnerUnit
-        ?(winnerUnit.members||[]).reduce(
-          (sum,k)=>sum+specialNonEsteroPartySeats("camera",k),0
-        )
-        :0;
-      const baseWinner=Number(base[bonus.id]||0);
-
-      // Senza superamento del tetto: 314 ordinari + 70 premio.
-      const overflow=Math.max(0,baseWinner+winnerSpecial-150);
-
-      if(overflow>0&&winnerUnit){
-        const winnerTarget=Math.max(0,150-winnerSpecial);
-        camTargetByUnit[bonus.id]=winnerTarget;
-
-        const others=camPlan.units.filter(u=>u.id!==bonus.id);
-        const otherTargetSeats=Math.max(0,314-winnerTarget);
-        const otherAlloc=hamilton(
-          others.map(u=>({id:u.id,votes:u.votes})),
-          otherTargetSeats
-        );
-        Object.assign(camTargetByUnit,otherAlloc);
-        cam.ordinaryRedistributed=overflow;
-      }else{
-        camTargetByUnit=base;
-        cam.ordinaryRedistributed=0;
-      }
-
-      camPrizeByUnit[bonus.id]=70;
+    const engine=window.SONDAGGI_ELECTION_ENGINE_20261008;
+    if(!engine?.simulate){
+      throw new Error("Motore di riparto 08/10/2026 non disponibile.");
     }
 
-    const camCirc=distributeCameraCircoscrizioni(
-      camPlan,
-      camTargetByUnit,
-      !!bonus,
-      bonus?.id||null
-    );
-
-    camPlan.units.forEach(u=>{
-      const count=Number(camTargetByUnit[u.id]||0);
-      if(count>0){
-        const split=u.type==="coalition"
-          ?splitCoalitionSeats(u,count,camVals)
-          :{[u.members[0]]:count};
-        Object.entries(split).forEach(([k,v])=>{
-          cam.ordinarySeatsByParty[k]=(cam.ordinarySeatsByParty[k]||0)+v;
-        });
-      }
+    const regionalValuesByRegion={};
+    SENATE_PROP_REGIONS.forEach(region=>{
+      regionalValuesByRegion[region]=senateRegionalValues(region);
     });
 
-    if(bonus){
-      const winnerUnit=camPlan.units.find(u=>u.id===bonus.id)||null;
-      if(winnerUnit){
-        const split=winnerUnit.type==="coalition"
-          ?splitCoalitionSeats(winnerUnit,70,camVals)
-          :{[winnerUnit.members[0]]:70};
-        Object.entries(split).forEach(([k,v])=>{
-          cam.prizeSeatsByParty[k]=(cam.prizeSeatsByParty[k]||0)+v;
-        });
-      }
-    }
-
-    Object.assign(cam.seats,cam.ordinarySeatsByParty);
-    Object.entries(cam.prizeSeatsByParty).forEach(([k,v])=>{
-      cam.seats[k]=(cam.seats[k]||0)+v;
+    const result=engine.simulate({
+      law:window.SONDAGGI_LAW_20261008,
+      parties:S.parties,
+      coalitions:S.coalitions,
+      camera:{
+        nationalValues:camVals,
+        collegeValues:S.collegeValues?.camera||{},
+        collegeMap:CAM_COLLEGI
+      },
+      senato:{
+        nationalValues:senVals,
+        regionalValuesByRegion,
+        collegeMap:SEN_COLLEGI,
+        premiumByRegion:SENATE_PREMIO_REGIONI
+      },
+      specialSeats:S.specialSeats
     });
 
-    cam.premiumSeats=bonus?70:0;
-    cam.bonusSeats=bonus?70:0;
-    cam.prizeWinnerSeats=bonus?70:0;
-    cam.prizeRedistributed=0;
-    cam.ordinarySeats=bonus?314:384;
-    cam.circResults=camCirc;
-
-    cam.eligible=camPlan.units.flatMap(u=>u.members);
-    cam.units=camPlan.units;
-    cam.coalTotals=Object.fromEntries(
-      camPlan.coalStats.map(c=>[c.id,c.figure])
-    );
-
-    const senPlan=allocationUnits(senVals,"senato");
-    Object.assign(
-      sen,
-      simulateSenateRegions(!!bonus)
-    );
-    sen.eligible=senPlan.units.flatMap(u=>u.members);
-    sen.units=senPlan.units;
-    sen.coalTotals=Object.fromEntries(
-      senPlan.coalStats.map(c=>[c.id,c.figure])
-    );
-
-    if(!bonus){
-      sen.premiumSeats=0;
-      sen.bonusSeats=0;
-      sen.prizeWinnerSeats=0;
-      sen.prizeRedistributed=0;
-      sen.ordinarySeats=189;
-    }else{
-      sen.premiumSeats=35;
-      sen.bonusSeats=35;
-      sen.prizeWinnerSeats=35;
-      sen.prizeRedistributed=0;
-      sen.ordinarySeats=154;
-    }
-
-    return {
-      cam,
-      sen,
-      bonus,
-      special:{
-        camera:{...SPECIAL_SEATS.camera},
-        senato:{...SPECIAL_SEATS.senato}
-      }
-    };
+    // Manteniamo la forma dati attesa dall'interfaccia esistente.
+    return result;
   }
   function capilistaRecord(chamber,college,slug){
     const row=S.capilista?.[chamber]?.[college]?.[slug];
