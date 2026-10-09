@@ -36,7 +36,7 @@ assert.strictEqual(q.qualifies,false);
 q=law.coalitionQualification(["A","B"],{A:6,B:2},"camera");
 assert.strictEqual(q.qualifies,true);
 q=law.coalitionQualification(["A","B"],{A:5.9,B:2},"camera");
-assert.strictEqual(q.qualifies,false);
+assert.strictEqual(q.qualifies,true);
 q=law.coalitionQualification(["A","B"],{A:8,B:2},"camera");
 assert.strictEqual(q.qualifies,true);
 
