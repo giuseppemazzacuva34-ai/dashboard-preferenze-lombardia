@@ -582,19 +582,73 @@ function installSondaggiModule(){
 
     return {units,admittedByCoalition,coalStats};
   }
+  const POLL_VOTE_SCALE=1000000;
+
+  function pollVoteUnits(v){
+    const n=Number(v)||0;
+    return Math.max(0,Math.round(n*POLL_VOTE_SCALE));
+  }
+
+  function pollStableLot(key){
+    const str=String(key??"");
+    let h=2166136261;
+    for(let i=0;i<str.length;i++){
+      h^=str.charCodeAt(i);
+      h=Math.imul(h,16777619);
+    }
+    h^=h>>>13;
+    h=Math.imul(h,2246822519);
+    h^=h>>>16;
+    return (h>>>0)/4294967296;
+  }
+
   function hamilton(items,seats){
     const clean=(items||[]).filter(x=>(Number(x.votes)||0)>0);
     const out={};
     if(!clean.length||seats<=0)return out;
-    const total=clean.reduce((sum,x)=>sum+(Number(x.votes)||0),0);
-    if(total<=0)return out;
-    clean.forEach(x=>{out[x.id]=Math.floor(seats*(Number(x.votes)||0)/total);});
+
+    const totalUnits=clean.reduce((sum,x)=>sum+pollVoteUnits(x.votes),0);
+    if(totalUnits<=0)return out;
+
+    const quotaUnits=Math.floor(totalUnits/seats);
+    if(quotaUnits<=0){
+      const total=clean.reduce((sum,x)=>sum+(Number(x.votes)||0),0);
+      if(total<=0)return out;
+      clean.forEach(x=>{out[x.id]=Math.floor(seats*(Number(x.votes)||0)/total);});
+      let used=Object.values(out).reduce((sum,v)=>sum+v,0);
+      clean.map(x=>{
+        const q=seats*(Number(x.votes)||0)/total;
+        return {id:x.id,rest:q-Math.floor(q),votes:Number(x.votes)||0};
+      }).sort((a,b)=>b.rest-a.rest||b.votes-a.votes||pollStableLot(a.id)-pollStableLot(b.id))
+        .slice(0,Math.max(0,seats-used)).forEach(x=>{out[x.id]=(out[x.id]||0)+1;});
+      return out;
+    }
+
+    clean.forEach(x=>{
+      const units=pollVoteUnits(x.votes);
+      const q=units/quotaUnits;
+      out[x.id]=Math.floor(q);
+    });
+
     let used=Object.values(out).reduce((sum,v)=>sum+v,0);
+
     clean.map(x=>{
-      const q=seats*(Number(x.votes)||0)/total;
-      return {id:x.id,rest:q-Math.floor(q),votes:Number(x.votes)||0};
-    }).sort((a,b)=>b.rest-a.rest||b.votes-a.votes||String(a.id).localeCompare(String(b.id),"it"))
-      .slice(0,Math.max(0,seats-used)).forEach(x=>{out[x.id]=(out[x.id]||0)+1;});
+      const units=pollVoteUnits(x.votes);
+      const q=units/quotaUnits;
+      return {
+        id:x.id,
+        rest:q-Math.floor(q),
+        votes:units
+      };
+    }).sort((a,b)=>
+      b.rest-a.rest ||
+      b.votes-a.votes ||
+      pollStableLot(a.id)-pollStableLot(b.id) ||
+      String(a.id).localeCompare(String(b.id),"it")
+    )
+      .slice(0,Math.max(0,seats-used))
+      .forEach(x=>{out[x.id]=(out[x.id]||0)+1;});
+
     return out;
   }
 
@@ -688,12 +742,16 @@ function installSondaggiModule(){
     const clean=(items||[]).filter(x=>(Number(x.votes)||0)>0);
     const out={},remainders={},remainderWinners=new Set();
     if(!clean.length||seats<=0)return {seats:out,remainders,remainderWinners,total:0,quota:0};
-    const total=clean.reduce((sum,x)=>sum+(Number(x.votes)||0),0);
-    if(total<=0)return {seats:out,remainders,remainderWinners,total,quota:0};
 
-    const quota=total/seats;
+    const totalUnits=clean.reduce((sum,x)=>sum+pollVoteUnits(x.votes),0);
+    if(totalUnits<=0)return {seats:out,remainders,remainderWinners,total:0,quota:0};
+
+    const quotaUnits=Math.floor(totalUnits/seats);
+    if(quotaUnits<=0)return {seats:out,remainders,remainderWinners,total:totalUnits,quota:0};
+
+    const total=totalUnits;
     clean.forEach(x=>{
-      const exact=(Number(x.votes)||0)/quota;
+      const exact=pollVoteUnits(x.votes)/quotaUnits;
       out[x.id]=Math.floor(exact);
       remainders[x.id]=exact-Math.floor(exact);
     });
@@ -702,13 +760,14 @@ function installSondaggiModule(){
     clean.map(x=>({
       id:x.id,
       rest:remainders[x.id]||0,
-      national:Number(nationalTieValues?.[x.id]||x.votes||0),
-      votes:Number(x.votes)||0
+      national:pollVoteUnits(nationalTieValues?.[x.id]??x.votes),
+      votes:pollVoteUnits(x.votes)
     }))
       .sort((a,b)=>
         b.rest-a.rest ||
         b.national-a.national ||
         b.votes-a.votes ||
+        pollStableLot(a.id)-pollStableLot(b.id) ||
         String(a.id).localeCompare(String(b.id),"it")
       )
       .slice(0,Math.max(0,seats-used))
@@ -717,7 +776,7 @@ function installSondaggiModule(){
         remainderWinners.add(x.id);
       });
 
-    return {seats:out,remainders,remainderWinners,total,quota};
+    return {seats:out,remainders,remainderWinners,total,quota:quotaUnits};
   }
   function regionalSenateUnits(region,regionalValues,nationalPlan){
     const units=[];
@@ -888,6 +947,7 @@ function installSondaggiModule(){
             (rr.remainders[b.id]||0)-(rr.remainders[a.id]||0) ||
             (nationalTieValues[b.id]||0)-(nationalTieValues[a.id]||0) ||
             (b.votes||0)-(a.votes||0) ||
+            pollStableLot(a.id)-pollStableLot(b.id) ||
             String(a.id).localeCompare(String(b.id),"it")
           );
 
@@ -896,6 +956,7 @@ function installSondaggiModule(){
           chosen=alternatives.slice().sort((a,b)=>
             (b.votes||0)-(a.votes||0) ||
             (nationalTieValues[b.id]||0)-(nationalTieValues[a.id]||0) ||
+            pollStableLot(a.id)-pollStableLot(b.id) ||
             String(a.id).localeCompare(String(b.id),"it")
           )[0]||null;
         }
@@ -1145,18 +1206,18 @@ function installSondaggiModule(){
     const byCirc={},remainderByCirc={};
 
     const winnerTarget=winnerId?Number(targetByUnit[winnerId]||0):0;
-    const winnerQuota=winnerId&&winnerTarget>0
-      ?Number(nationalFigures[winnerId]||0)/winnerTarget
+    const winnerQuotaUnits=winnerId&&winnerTarget>0
+      ?Math.floor(pollVoteUnits(nationalFigures[winnerId])/winnerTarget)
       :0;
 
     const otherUnits=units.filter(u=>u.id!==winnerId);
     const otherSeats=otherUnits.reduce(
       (sum,u)=>sum+Number(targetByUnit[u.id]||0),0
     );
-    const otherFigure=otherUnits.reduce(
-      (sum,u)=>sum+Number(nationalFigures[u.id]||0),0
+    const otherFigureUnits=otherUnits.reduce(
+      (sum,u)=>sum+pollVoteUnits(nationalFigures[u.id]),0
     );
-    const minorityQuota=otherSeats>0?otherFigure/otherSeats:0;
+    const minorityQuotaUnits=otherSeats>0?Math.floor(otherFigureUnits/otherSeats):0;
 
     Object.entries(circs).forEach(([circ,rec])=>{
       const seats=Number(bonusActive?rec.bonusSeats:rec.noBonusSeats)||0;
@@ -1166,9 +1227,10 @@ function installSondaggiModule(){
 
       const preliminary=units.map(u=>{
         const figure=cameraUnitCircFigure(circ,u,bonusActive);
-        const quota=u.id===winnerId?winnerQuota:minorityQuota;
-        const index=quota>0
-          ?Math.floor((figure/quota)*1e6)/1e6
+        const figureUnits=pollVoteUnits(figure);
+        const quotaUnits=u.id===winnerId?winnerQuotaUnits:minorityQuotaUnits;
+        const index=quotaUnits>0
+          ?Math.floor((figureUnits/quotaUnits)*1e6)/1e6
           :0;
         return {id:u.id,index,figure};
       });
@@ -1196,6 +1258,7 @@ function installSondaggiModule(){
         b.rest-a.rest ||
         (nationalFigures[b.id]||0)-(nationalFigures[a.id]||0) ||
         (b.figure||0)-(a.figure||0) ||
+        pollStableLot(a.id)-pollStableLot(b.id) ||
         String(a.id).localeCompare(String(b.id),"it")
       )
         .slice(0,Math.max(0,seats-used))
