@@ -36,7 +36,7 @@ body{overflow-x:hidden}
     }catch(_){}
   }
   const params=new URLSearchParams(window.location.search);
-  const forceHome=params.get("view")==="home";
+  const forceHome=params.get("view")==="home" || params.get("v")==="20261009-1343";
   if(forceHome){
     try{sessionStorage.removeItem(VIEW_KEY);}catch(_){}
   }
