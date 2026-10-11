@@ -59,7 +59,7 @@ function installStyles(){
   const st=document.createElement("style");
   st.id="sg-dashboard-scenarios-style";
   st.textContent=
-    "#sgScenariPossibili{margin:10px 0;padding:11px;border:1px solid #2d6d9a;border-radius:10px;background:#0c3554;color:#eaf4fb;box-sizing:border-box}"+
+    "#sgScenariPossibili{display:block!important;clear:both!important;width:100%!important;box-sizing:border-box!important;margin:10px 0;padding:11px;border:1px solid #2d6d9a;border-radius:10px;background:#0c3554;color:#eaf4fb;box-sizing:border-box}"+
     "#sgScenariPossibili .sgds-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}"+
     "#sgScenariPossibili .sgds-head b{display:block;font-size:11px;letter-spacing:.3px}"+
     "#sgScenariPossibili .sgds-head small{display:block;margin-top:3px;color:#9ebdd0;font-size:7px}"+
@@ -81,24 +81,44 @@ function installStyles(){
   document.head.appendChild(st);
 }
 
+function visible(el){
+  try{
+    const cs=getComputedStyle(el);
+    const r=el.getBoundingClientRect();
+    return cs.display!=="none"&&cs.visibility!=="hidden"&&r.width>0&&r.height>0;
+  }catch(_){return false;}
+}
+
 function findSondaggiNav(){
   const all=[...document.querySelectorAll("button,a,[role='tab']")];
-  const anchor=all.find(el=>norm(el.textContent)==="SCENARIO NAZIONALE");
+  const visibleAll=all.filter(visible);
+  const exact=visibleAll.find(el=>norm(el.textContent)==="SCENARIO NAZIONALE");
+  const loose=visibleAll.find(el=>norm(el.textContent).includes("SCENARIO NAZIONALE"));
+  const anchor=exact||loose;
   if(!anchor)return null;
+
+  let nav=anchor.parentElement||anchor;
+  for(let i=0;i<7&&nav;i++,nav=nav.parentElement){
+    const t=norm(nav.textContent);
+    if(t.includes("ITALIA / REGIONI")&&
+       (t.includes("CALCOLO SEGGI LOMBARDIA")||t.includes("CALCOLO SEGGI")))return {anchor,nav};
+  }
   return {anchor,nav:anchor.parentElement||anchor};
 }
 
-function findSondaggiPanel(){
-  const nav=findSondaggiNav();
-  if(nav){
-    let el=nav.nav;
-    for(let i=0;i<6&&el;i++,el=el.parentElement){
-      const t=norm(el.textContent);
-      if(t.includes("CALCOLO SEGGI LOMBARDIA")||t.includes("CAPOLISTA E CANDIDATI ITALIA"))return el;
-    }
-    return nav.nav.parentElement||nav.nav;
+function findSondaggiFallback(){
+  const candidates=[...document.querySelectorAll("h1,h2,h3,h4,div,strong,span")].filter(visible);
+  const title=candidates.find(el=>{
+    const t=norm(el.textContent);
+    return t.includes("SONDAGGI")&&t.includes("NUOVO SISTEMA ELETTORALE");
+  });
+  if(!title)return null;
+  let host=title.parentElement||title;
+  for(let i=0;i<5&&host;i++,host=host.parentElement){
+    const t=norm(host.textContent);
+    if(t.includes("SCENARIO NAZIONALE")||t.includes("ITALIA / REGIONI"))return host;
   }
-  return document.getElementById("sg7")||document.querySelector('[id*="sg7"]');
+  return title.parentElement||title;
 }
 
 function testClick(test){
@@ -113,29 +133,40 @@ function testClick(test){
 function installScenarioBank(){
   if(document.getElementById("sgScenariPossibili"))return true;
   const found=findSondaggiNav();
-  if(!found)return false;
+  if(found){
+    installStyles();
+    const wrap=document.createElement("div");
+    wrap.innerHTML=scenarioMarkup();
+    const bank=wrap.firstElementChild;
+    found.nav.insertAdjacentElement("afterend",bank);
 
+    const tab=found.anchor.cloneNode(true);
+    tab.removeAttribute("id");tab.removeAttribute("href");tab.removeAttribute("name");tab.removeAttribute("data-tab");
+    tab.classList.add("sg-scenari-link");
+    tab.textContent="Scenari possibili";
+    tab.addEventListener("click",ev=>{
+      ev.preventDefault();ev.stopPropagation();
+      bank.scrollIntoView({behavior:"smooth",block:"start"});
+    });
+    found.nav.appendChild(tab);
+
+    bank.querySelectorAll("[data-sg-test]").forEach(btn=>{
+      btn.addEventListener("click",()=>testClick(btn.getAttribute("data-sg-test")||""));
+    });
+    return true;
+  }
+
+  const fallback=findSondaggiFallback();
+  if(!fallback)return false;
   installStyles();
-
   const wrap=document.createElement("div");
   wrap.innerHTML=scenarioMarkup();
   const bank=wrap.firstElementChild;
-
-  found.nav.insertAdjacentElement("afterend",bank);
-
-  const tab=found.anchor.cloneNode(true);
-  tab.removeAttribute("id");tab.removeAttribute("href");tab.removeAttribute("name");tab.removeAttribute("data-tab");
-  tab.classList.add("sg-scenari-link");
-  tab.textContent="Scenari possibili";
-  tab.addEventListener("click",ev=>{
-    ev.preventDefault();ev.stopPropagation();
-    bank.scrollIntoView({behavior:"smooth",block:"start"});
-  });
-  found.nav.appendChild(tab);
-
+  fallback.insertAdjacentElement("afterend",bank);
   bank.querySelectorAll("[data-sg-test]").forEach(btn=>{
     btn.addEventListener("click",()=>testClick(btn.getAttribute("data-sg-test")||""));
   });
+  return true;
 
   return true;
 }
