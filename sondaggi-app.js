@@ -486,7 +486,7 @@ function installSondaggiModule(){
       chamber:"camera",
       description:"Il soggetto arriva al 42,0% solo in una Camera.",
       expected:"Atteso: nessun premio in entrambe le Camere.",
-      camera:{FdI:26.9,PD:20,M5S:10,AVS:5,FI:6,LEGA:6,FN:2,AZ:2.5,IV:1.5,PIU:1.5,NM:3,ALTRI:16.6},
+      camera:{FdI:26.9,PD:20,M5S:10,AVS:5,FI:6,LEGA:6,FN:2,AZ:2.5,IV:1.5,PIU:1.5,NM:3,ALTRI:15.6},
       senate:{FdI:27,PD:20,M5S:10,AVS:5,FI:6,LEGA:6,FN:2,AZ:2.5,IV:1.5,PIU:1.5,NM:3,ALTRI:15.5},
       coalitions:defaultCoalitions()
     },
