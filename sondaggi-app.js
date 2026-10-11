@@ -458,6 +458,128 @@ function installSondaggiModule(){
   }
 
 
+
+  const TEST_SCENARIOS=[
+    {
+      id:"A",
+      name:"A — NESSUN PREMIO",
+      chamber:"camera",
+      description:"Vincitore diverso nelle due Camere: il premio non deve scattare.",
+      expected:"Atteso: premio 0 Camera · 0 Senato.",
+      camera:{FdI:40,PD:41.5,M5S:6,AVS:3,FI:3.5,LEGA:2,FN:1,AZ:1,IV:0.5,PIU:0.5,NM:0,ALTRI:1},
+      senate:{FdI:42,PD:40,M5S:5,AVS:2.5,FI:3,LEGA:2.5,FN:1,AZ:1,IV:1,PIU:0.5,NM:0.5,ALTRI:1},
+      coalitions:defaultCoalitions()
+    },
+    {
+      id:"B",
+      name:"B — PREMIO 42/42",
+      chamber:"camera",
+      description:"Stesso soggetto primo nelle due Camere e al 42,0% esatto.",
+      expected:"Atteso: premio 70 Camera + 35 Senato.",
+      camera:{FdI:27,PD:20,M5S:10,AVS:5,FI:6,LEGA:6,FN:2,AZ:2.5,IV:1.5,PIU:1.5,NM:3,ALTRI:15.5},
+      senate:{FdI:27,PD:20,M5S:10,AVS:5,FI:6,LEGA:6,FN:2,AZ:2.5,IV:1.5,PIU:1.5,NM:3,ALTRI:15.5},
+      coalitions:defaultCoalitions()
+    },
+    {
+      id:"C",
+      name:"C — 41,9 / 42,0",
+      chamber:"camera",
+      description:"Il soggetto arriva al 42,0% solo in una Camera.",
+      expected:"Atteso: nessun premio in entrambe le Camere.",
+      camera:{FdI:26.9,PD:20,M5S:10,AVS:5,FI:6,LEGA:6,FN:2,AZ:2.5,IV:1.5,PIU:1.5,NM:3,ALTRI:16.6},
+      senate:{FdI:27,PD:20,M5S:10,AVS:5,FI:6,LEGA:6,FN:2,AZ:2.5,IV:1.5,PIU:1.5,NM:3,ALTRI:15.5},
+      coalitions:defaultCoalitions()
+    },
+    {
+      id:"D",
+      name:"D — COALIZIONE 10,0%",
+      chamber:"camera",
+      description:"Coalizione esattamente al 10,0% con una lista al 3,0%.",
+      expected:"Atteso: coalizione qualificata al limite.",
+      camera:{FdI:7,PD:20,M5S:12,AVS:6,FI:10,LEGA:3,FN:7,AZ:5,IV:4,PIU:3,NM:2,ALTRI:21},
+      senate:{FdI:7,PD:20,M5S:12,AVS:6,FI:10,LEGA:3,FN:7,AZ:5,IV:4,PIU:3,NM:2,ALTRI:21},
+      coalitions:[{id:"C-TEST10",name:"Coalizione Test 10%",members:["FdI","LEGA"]}]
+    },
+    {
+      id:"E",
+      name:"E — LISTA 3,0%",
+      chamber:"camera",
+      description:"Una lista è al 3,0% e una a 2,9%, entrambe fuori da coalizioni.",
+      expected:"Atteso: lista al 3,0% ammessa · lista al 2,9% esclusa.",
+      camera:{FdI:25,PD:20,M5S:15,AVS:7,FI:7,LEGA:6,FN:4,AZ:3,IV:2.9,PIU:2,NM:1,ALTRI:7.1},
+      senate:{FdI:25,PD:20,M5S:15,AVS:7,FI:7,LEGA:6,FN:4,AZ:3,IV:2.9,PIU:2,NM:1,ALTRI:7.1},
+      coalitions:[]
+    },
+    {
+      id:"F",
+      name:"F — SENATO 20% REGIONALE",
+      chamber:"senato",
+      description:"Lista sotto il 3% nazionale ma al 20,0% in Lombardia.",
+      expected:"Atteso: in Lombardia la lista è ammessa per la deroga regionale del 20%.",
+      camera:{FdI:2.5,PD:25,M5S:15,AVS:7,FI:7,LEGA:6,FN:5,AZ:4,IV:3,PIU:2,NM:1,ALTRI:22.5},
+      senate:{FdI:2.5,PD:25,M5S:15,AVS:7,FI:7,LEGA:6,FN:5,AZ:4,IV:3,PIU:2,NM:1,ALTRI:22.5},
+      lombardiaSenate:{FdI:20,PD:25,M5S:15,AVS:7,FI:7,LEGA:6,FN:5,AZ:4,IV:3,PIU:2,NM:1,ALTRI:5},
+      coalitions:[]
+    }
+  ];
+
+  function testBackup(){
+    if(!localStorage.getItem(TEST_BACKUP_KEY)){
+      localStorage.setItem(TEST_BACKUP_KEY,JSON.stringify(S));
+    }
+  }
+
+  function applyTestScenario(id){
+    const preset=TEST_SCENARIOS.find(x=>x.id===id);
+    if(!preset)return false;
+    testBackup();
+    const next=cloneScenarioState(S);
+    next.chamber=preset.chamber;
+    next.region="Lombardia";
+    next.college=collegesFor(preset.chamber,"Lombardia")[0]?.name||"";
+    next.parties=cloneScenarioState(S.parties||{});
+    POLLS.forEach(p=>{
+      next.parties[p[0]]={...(next.parties[p[0]]||{}),name:p[1],camera:Number(preset.camera?.[p[0]]??p[2]),senate:Number(preset.senate?.[p[0]]??p[2])};
+    });
+    next.coalitions=cloneScenarioState(preset.coalitions||[]);
+    next.coalitionPresetVersion=COALITION_PRESET_VERSION;
+    next.specialSeats=specialSeatState();
+    next.capilista={camera:{},senato:{}};
+    next.capilistaSelectedParty="";
+    next.collegeValues={camera:{},senato:{}};
+    next.regionalCustom={};
+    next.regionalSenate={};
+    [...SENATE_PROP_REGIONS,"Valle d'Aosta","Trentino-Alto Adige/Südtirol"].forEach(region=>{
+      next.regionalSenate[region]=Object.fromEntries(POLLS.map(p=>[p[0],Number(preset.senate?.[p[0]]??p[2])]));
+      next.regionalCustom[region]=false;
+    });
+    if(preset.lombardiaSenate){
+      next.regionalSenate.Lombardia={...preset.lombardiaSenate};
+      next.regionalCustom.Lombardia=true;
+    }
+    next.currentScenarioId="";
+    S=next;
+    save();
+    render();
+    setTimeout(()=>document.getElementById("sgTests")?.scrollIntoView({behavior:"smooth",block:"start"}),0);
+    return true;
+  }
+
+  function restoreTestBackup(){
+    try{
+      const raw=localStorage.getItem(TEST_BACKUP_KEY);
+      if(!raw)return false;
+      const restored=JSON.parse(raw);
+      if(!restored||typeof restored!=="object")return false;
+      S=restored;
+      localStorage.removeItem(TEST_BACKUP_KEY);
+      save();
+      render();
+      return true;
+    }catch(_){return false;}
+  }
+
+
   function esc2(v){
     try{return typeof esc==="function"?esc(String(v??"")):String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
     catch(_){return String(v??"");}
