@@ -50,7 +50,7 @@ function ensure(){
       if(window.self!==window.top)return;
       ev.preventDefault();
       ev.stopPropagation();
-      window.location.href="sondaggi.html?v=20261011-state";
+      window.location.href="sondaggi.html?v=20261011-state&view=home";
     });
     side.appendChild(btn);
   }
