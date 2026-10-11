@@ -24,7 +24,7 @@ function loadMobileStyles(){
 }
 
 function loadLawEngine(){
-  loadScript("sondaggi-law-20261008","sondaggi-law-20261009-legal");
+  loadScript("sondaggi-law-20261008","sondaggi-law-20261008.js?v=20261009-legal");
 }
 
 function loadIntegrityGuard(){
