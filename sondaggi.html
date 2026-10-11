@@ -42,10 +42,10 @@ body{overflow-x:hidden}
   s.src="sondaggi-app.js?v=20261011-scenari3";
   s.async=false;
   s.addEventListener("load",()=>{
-    restoreView();
-    setTimeout(restoreView,80);
-    setTimeout(restoreView,250);
-    setTimeout(restoreView,700);
+    goTop();
+    setTimeout(goTop,80);
+    setTimeout(goTop,250);
+    setTimeout(goTop,700);
   });
   s.addEventListener("error",()=>{
     const host=document.getElementById("tab-sondaggi");
