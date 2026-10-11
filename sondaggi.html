@@ -8,12 +8,12 @@
 html,body{margin:0;padding:0;width:100%;min-height:100%;background:#061323;color:#eaf4fb;font-family:Arial,sans-serif}
 body{overflow-x:hidden}
 #page{width:100%;min-height:100vh;box-sizing:border-box;padding:12px}
-#topnav{display:flex;gap:8px;align-items:center;margin:0 0 10px;position:sticky;top:0;z-index:50;background:#061323;padding:6px 0}#back,#testsJump{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border:1px solid #2b4c65;border-radius:8px;background:#0b2034;color:#eaf4fb;font-size:10px;font-weight:900;cursor:pointer}#testsJump{border-color:#3b78a5;background:#123958}#testsJump:hover{background:#17496f}
+#topnav{display:flex;align-items:center;margin:0 0 10px;position:sticky;top:0;z-index:50;background:#061323;padding:6px 0}#back{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border:1px solid #2b4c65;border-radius:8px;background:#0b2034;color:#eaf4fb;font-size:10px;font-weight:900;cursor:pointer}
 #tab-sondaggi{display:block;width:100%;min-width:0}
 @media(max-width:700px){
   #page{padding:8px}
-  #topnav{display:grid;grid-template-columns:1fr 1fr}
-  #back,#testsJump{width:100%;min-height:42px;font-size:11px}
+  #topnav{display:block}
+  #back{width:100%;min-height:42px;font-size:11px}
 }
 </style>
 </head>
@@ -21,7 +21,6 @@ body{overflow-x:hidden}
 <div id="page">
   <div id="topnav">
     <button id="back" type="button">← TORNA ALLA DASHBOARD</button>
-    <button id="testsJump" type="button">SCENARI POSSIBILI</button>
   </div>
   <div id="tab-sondaggi"></div>
 </div>
@@ -29,56 +28,18 @@ body{overflow-x:hidden}
 (function(){
   "use strict";
   const back=document.getElementById("back");
-  const VIEW_KEY="sondaggi-dedicated-view-v1";
-  function saveView(){
-    try{
-      sessionStorage.setItem(VIEW_KEY,JSON.stringify({y:window.scrollY||0,at:Date.now()}));
-    }catch(_){}
+  if("scrollRestoration" in history)history.scrollRestoration="manual";
+  function goTop(){
+    try{window.scrollTo(0,0);}catch(_){}
   }
-  const params=new URLSearchParams(window.location.search);
-  const forceHome=params.get("view")==="home" || params.get("v")==="20261009-1343";
-  if(forceHome){
-    try{sessionStorage.removeItem(VIEW_KEY);}catch(_){}
-  }
-  function restoreView(){
-    if(forceHome)return;
-    try{
-      const raw=sessionStorage.getItem(VIEW_KEY);
-      if(!raw)return;
-      const s=JSON.parse(raw);
-      const y=Math.max(0,Number(s?.y)||0);
-      if(y>0)window.scrollTo(0,y);
-    }catch(_){}
-  }
-  let saveTick=0;
-  window.addEventListener("scroll",()=>{
-    if(saveTick)return;
-    saveTick=requestAnimationFrame(()=>{
-      saveTick=0;
-      saveView();
-    });
-  },{passive:true});
-  window.addEventListener("pagehide",saveView);
-  const testsJump=document.getElementById("testsJump");
-  testsJump.addEventListener("click",()=>{
-    const go=()=>{
-      const el=document.getElementById("sgTests");
-      if(el){el.scrollIntoView({behavior:"smooth",block:"start"});return true;}
-      return false;
-    };
-    if(!go()){
-      setTimeout(go,200);
-      setTimeout(go,700);
-      setTimeout(go,1400);
-    }
-  });
+  window.addEventListener("pageshow",goTop);
+  window.addEventListener("load",()=>{goTop();setTimeout(goTop,150);setTimeout(goTop,500);});
   back.addEventListener("click",()=>{
-    saveView();
     window.location.href="index.html?v=20261011-dashboard";
   });
   const s=document.createElement("script");
   s.id="sondaggi-app-standalone";
-  s.src="sondaggi-app.js?v=20261011-scenari2";
+  s.src="sondaggi-app.js?v=20261011-scenari3";
   s.async=false;
   s.addEventListener("load",()=>{
     restoreView();
