@@ -25,11 +25,44 @@ body{overflow-x:hidden}
 (function(){
   "use strict";
   const back=document.getElementById("back");
-  back.addEventListener("click",()=>window.location.href="index.html?v=20261011-dashboard");
+  const VIEW_KEY="sondaggi-dedicated-view-v1";
+  function saveView(){
+    try{
+      sessionStorage.setItem(VIEW_KEY,JSON.stringify({y:window.scrollY||0,at:Date.now()}));
+    }catch(_){}
+  }
+  function restoreView(){
+    try{
+      const raw=sessionStorage.getItem(VIEW_KEY);
+      if(!raw)return;
+      const s=JSON.parse(raw);
+      const y=Math.max(0,Number(s?.y)||0);
+      if(y>0)window.scrollTo(0,y);
+    }catch(_){}
+  }
+  let saveTick=0;
+  window.addEventListener("scroll",()=>{
+    if(saveTick)return;
+    saveTick=requestAnimationFrame(()=>{
+      saveTick=0;
+      saveView();
+    });
+  },{passive:true});
+  window.addEventListener("pagehide",saveView);
+  back.addEventListener("click",()=>{
+    saveView();
+    window.location.href="index.html?v=20261011-dashboard";
+  });
   const s=document.createElement("script");
   s.id="sondaggi-app-standalone";
   s.src="sondaggi-app.js?v=20261011-scenari";
   s.async=false;
+  s.addEventListener("load",()=>{
+    restoreView();
+    setTimeout(restoreView,80);
+    setTimeout(restoreView,250);
+    setTimeout(restoreView,700);
+  });
   s.addEventListener("error",()=>{
     const host=document.getElementById("tab-sondaggi");
     host.innerHTML='<div style="padding:16px;border:1px solid #7a3044;border-radius:10px;background:#321522;color:#ffd7df;font:600 13px/1.4 Arial,sans-serif">Impossibile caricare il modulo Sondaggi.</div>';
