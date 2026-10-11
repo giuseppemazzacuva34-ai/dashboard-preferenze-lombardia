@@ -35,7 +35,13 @@ body{overflow-x:hidden}
       sessionStorage.setItem(VIEW_KEY,JSON.stringify({y:window.scrollY||0,at:Date.now()}));
     }catch(_){}
   }
+  const params=new URLSearchParams(window.location.search);
+  const forceHome=params.get("view")==="home";
+  if(forceHome){
+    try{sessionStorage.removeItem(VIEW_KEY);}catch(_){}
+  }
   function restoreView(){
+    if(forceHome)return;
     try{
       const raw=sessionStorage.getItem(VIEW_KEY);
       if(!raw)return;
