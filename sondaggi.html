@@ -14,7 +14,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#061323}
 </head>
 <body>
 <div id="loading"><div>CARICAMENTO SONDAGGI…<small>Apro direttamente il modulo completo, con i dati e le quattro sezioni già configurate.</small></div></div>
-<iframe id="app" title="Sondaggi — Nuovo sistema elettorale" src="index.html?dedicated=sondaggi&v=20261009-1343"></iframe>
+<iframe id="app" title="Sondaggi — Nuovo sistema elettorale" src="index.html?dedicated=sondaggi&v=20261011-mobile-1"></iframe>
 
 <script>
 (function(){
@@ -34,6 +34,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#061323}
     if(done)return;
     loading.classList.add("error");
     loading.innerHTML="<div>Impossibile aprire il modulo Sondaggi.<small>Ricarica la pagina: il dashboard principale non è stato modificato.</small></div>";
+  }
+
+
+  function installMobilePolish(d){
+    if(!d||d.getElementById("sg7-mobile-polish"))return;
+    const s=d.createElement("style");
+    s.id="sg7-mobile-polish";
+    s.textContent=["@media(max-width:700px){","html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}","#sg7{width:100vw!important;max-width:100vw!important;min-width:0!important;overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;padding-bottom:max(12px,env(safe-area-inset-bottom))!important}","#sg7 .sg7w{width:100%!important;max-width:none!important;min-width:0!important;padding:10px 10px 24px!important}","#sg7 .sg7top{display:block!important;padding:14px!important;border-radius:13px!important}","#sg7 .sg7top h2{font-size:21px!important;line-height:1.12!important}","#sg7 .sg7sub{font-size:10px!important;line-height:1.45!important}","#sg7 .sg7top .sg7btn{width:100%!important;margin-top:10px!important;min-height:42px!important}","#sg7 .sg7tabs{display:flex!important;flex-wrap:wrap!important;gap:6px!important;margin:10px 0!important}","#sg7 .sg7tabs .sg7tab{flex:1 1 calc(50% - 6px)!important;min-width:0!important;min-height:42px!important;padding:9px 8px!important;font-size:10px!important;line-height:1.2!important;text-align:center!important}","#sg7 .sg7bar{display:grid!important;grid-template-columns:1fr!important;gap:7px!important}","#sg7 .sg7bar>*{width:100%!important;max-width:100%!important}","#sg7 .sg7select,#sg7 .sg7input,#sg7 .sg7num,#sg7 .sg7btn{min-height:42px!important;font-size:11px!important}","#sg7 .sg7grid{grid-template-columns:1fr!important;gap:9px!important}","#sg7 .sg7card,#sg7 .sg7section,#sg7 .sg7status{min-width:0!important;width:100%!important;padding:11px!important;border-radius:12px!important}","#sg7 .sg7mini{font-size:10px!important;line-height:1.55!important}","#sg7 .sg7partygrid{grid-template-columns:1fr 1fr!important;gap:7px!important}","#sg7 .sg7partybtn{min-height:44px!important;font-size:10px!important}","#sg7 .sg7regiongrid,#sg7 .sg7collegegrid{grid-template-columns:1fr!important;gap:7px!important}","#sg7 .sg7cols{max-height:none!important;min-width:0!important;overflow:visible!important}","#sg7 .sg7cands{grid-template-columns:1fr!important;gap:8px!important}","#sg7 .sg7row2{grid-template-columns:minmax(0,1fr) 82px!important}","#sg7 .sg7table-wrap,#sg7 .sg7table-scroll,#sg7 .sg7matrix{width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:visible!important;-webkit-overflow-scrolling:touch!important}","#sg7 .sg7table{min-width:700px!important;width:max-content!important;max-width:none!important}","#sg7 .sg7matrix .sg7table{min-width:640px!important;width:100%!important;table-layout:fixed!important}","#sg7 .sg7table th,#sg7 .sg7table td{font-size:9px!important;padding:7px 5px!important;line-height:1.25!important;white-space:normal!important;word-break:normal!important;overflow-wrap:break-word!important;hyphens:none!important}","#sg7 .sg7matrix .sg7table th,#sg7 .sg7matrix .sg7table td{font-size:8px!important;padding:6px 3px!important}","#sg7 .sg7matrix .sg7table th:first-child,#sg7 .sg7matrix .sg7table td:first-child{width:135px!important;min-width:135px!important;max-width:135px!important}","#sg7 .sg7matrix .sg7table td:first-child b{white-space:normal!important;word-break:normal!important;overflow-wrap:break-word!important}","#sg7 .sg7num{width:76px!important}","#sg7 .sg7btn.primary,#sg7 .sg7btn.gold{min-height:42px!important}","#sg7 .sg7circCard{padding:10px!important}","#sg7 .sg7circHead{display:block!important}","#sg7 .sg7seatStrip{margin-top:7px!important}","}","@media(max-width:420px){","#sg7 .sg7w{padding-left:8px!important;padding-right:8px!important}","#sg7 .sg7tabs .sg7tab{flex-basis:100%!important}","#sg7 .sg7partygrid{grid-template-columns:1fr!important}","#sg7 .sg7row2{grid-template-columns:1fr!important}","#sg7 .sg7num{width:100%!important}","}"].join("");
+    (d.head||d.documentElement).appendChild(s);
   }
 
   function boot(){
@@ -56,6 +65,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#061323}
       if(panel && !panel.classList.contains("open") && open){
         open.click();
       }
+
+      installMobilePolish(d);
 
       const content=d.getElementById("sg7content");
       if(panel && panel.classList.contains("open") && content && content.childElementCount){
