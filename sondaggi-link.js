@@ -75,7 +75,7 @@ function installStyles(){
     "#sgScenariPossibili .sgds-detail b{display:block;font-size:8px}"+
     "#sgScenariPossibili .sgds-detail span{display:block;margin-top:4px;color:#a0bacb;font-size:7px}"+
     ".sg-scenari-link{position:relative}"+
-    ".sg-scenari-link::after{content:"+"''";display:inline-block;width:5px;height:5px;border-radius:50%;margin-left:5px;background:#55b9ff;vertical-align:middle}"+
+    ".sg-scenari-link::after{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;margin-left:5px;background:#55b9ff;vertical-align:middle}"+
     "@media(max-width:820px){#sgScenariPossibili .sgds-grid{grid-template-columns:1fr 1fr}}"+
     "@media(max-width:520px){#sgScenariPossibili .sgds-grid{grid-template-columns:1fr}#sgScenariPossibili .sgds-head{display:block}#sgScenariPossibili .sgds-head strong{display:inline-block;margin-top:6px}}";
   document.head.appendChild(st);
