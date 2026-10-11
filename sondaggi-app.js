@@ -41,6 +41,7 @@ function installSondaggiModule(){
     return;
   }
   const KEY="lombardia_sondaggi_2026";
+  const TEST_BACKUP_KEY=KEY+"_test_backup";
 
   const REGIONS=[
     "Piemonte","Valle d'Aosta","Lombardia","Trentino-Alto Adige/Südtirol","Veneto",
