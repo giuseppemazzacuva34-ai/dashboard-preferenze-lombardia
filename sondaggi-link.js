@@ -14,6 +14,19 @@ function loadScript(id,src){
   }
 }
 
+function loadMobileStyles(){
+  try{
+    if(document.getElementById("dashboard-mobile-css"))return;
+    const link=document.createElement("link");
+    link.id="dashboard-mobile-css";
+    link.rel="stylesheet";
+    link.href="dashboard-mobile.css?v=20261011-1";
+    (document.head||document.documentElement).appendChild(link);
+  }catch(err){
+    console.error("Dashboard mobile styles",err);
+  }
+}
+
 function loadLawEngine(){
   loadScript("sondaggi-law-20261008","sondaggi-law-20261008.js?v=20261009-legal");
 }
@@ -43,6 +56,7 @@ function ensure(){
   }
 }
 
+loadMobileStyles();
 loadLawEngine();
 loadIntegrityGuard();
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",ensure,{once:true});
