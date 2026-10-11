@@ -8,17 +8,21 @@
 html,body{margin:0;padding:0;width:100%;min-height:100%;background:#061323;color:#eaf4fb;font-family:Arial,sans-serif}
 body{overflow-x:hidden}
 #page{width:100%;min-height:100vh;box-sizing:border-box;padding:12px}
-#back{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;padding:9px 12px;border:1px solid #2b4c65;border-radius:8px;background:#0b2034;color:#eaf4fb;font-size:10px;font-weight:900;cursor:pointer}
+#topnav{display:flex;gap:8px;align-items:center;margin:0 0 10px;position:sticky;top:0;z-index:50;background:#061323;padding:6px 0}#back,#testsJump{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border:1px solid #2b4c65;border-radius:8px;background:#0b2034;color:#eaf4fb;font-size:10px;font-weight:900;cursor:pointer}#testsJump{border-color:#3b78a5;background:#123958}#testsJump:hover{background:#17496f}
 #tab-sondaggi{display:block;width:100%;min-width:0}
 @media(max-width:700px){
   #page{padding:8px}
-  #back{width:100%;justify-content:center;min-height:42px;font-size:11px}
+  #topnav{display:grid;grid-template-columns:1fr 1fr}
+  #back,#testsJump{width:100%;min-height:42px;font-size:11px}
 }
 </style>
 </head>
 <body>
 <div id="page">
-  <button id="back" type="button">← TORNA ALLA DASHBOARD</button>
+  <div id="topnav">
+    <button id="back" type="button">← TORNA ALLA DASHBOARD</button>
+    <button id="testsJump" type="button">SCENARI POSSIBILI</button>
+  </div>
   <div id="tab-sondaggi"></div>
 </div>
 <script>
@@ -49,13 +53,26 @@ body{overflow-x:hidden}
     });
   },{passive:true});
   window.addEventListener("pagehide",saveView);
+  const testsJump=document.getElementById("testsJump");
+  testsJump.addEventListener("click",()=>{
+    const go=()=>{
+      const el=document.getElementById("sgTests");
+      if(el){el.scrollIntoView({behavior:"smooth",block:"start"});return true;}
+      return false;
+    };
+    if(!go()){
+      setTimeout(go,200);
+      setTimeout(go,700);
+      setTimeout(go,1400);
+    }
+  });
   back.addEventListener("click",()=>{
     saveView();
     window.location.href="index.html?v=20261011-dashboard";
   });
   const s=document.createElement("script");
   s.id="sondaggi-app-standalone";
-  s.src="sondaggi-app.js?v=20261011-scenari";
+  s.src="sondaggi-app.js?v=20261011-scenari2";
   s.async=false;
   s.addEventListener("load",()=>{
     restoreView();
