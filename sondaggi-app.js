@@ -467,7 +467,7 @@ function installSondaggiModule(){
       description:"Vincitore diverso nelle due Camere: il premio non deve scattare.",
       expected:"Atteso: premio 0 Camera · 0 Senato.",
       camera:{FdI:40,PD:41.5,M5S:6,AVS:3,FI:3.5,LEGA:2,FN:1,AZ:1,IV:0.5,PIU:0.5,NM:0,ALTRI:1},
-      senate:{FdI:42,PD:40,M5S:5,AVS:2.5,FI:3,LEGA:2.5,FN:1,AZ:1,IV:1,PIU:0.5,NM:0.5,ALTRI:1},
+      senate:{FdI:42,PD:34,M5S:3,AVS:2,FI:3.5,LEGA:3,FN:2,AZ:2,IV:1,PIU:1,NM:1.5,ALTRI:5},
       coalitions:defaultCoalitions()
     },
     {
