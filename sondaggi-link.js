@@ -42,7 +42,7 @@ function loadEngines(){
   loadScript("sondaggi-law-20261008","sondaggi-law-20261008.js?v=20261009-legal");
   loadScript("sondaggi-app-preview","sondaggi-app.js?v=20261012-preview4");
   loadScript("dashboard-runtime-integrity","dashboard-runtime-integrity.js?v=20261009-1");
-  loadScript("sondaggi-trend-2018-2022","sondaggi-trend-2018-2022.js?v=20261012-trend7");
+  loadScript("sondaggi-trend-2018-2022","sondaggi-trend-2018-2022.js?v=20261012-clean2");
 }
 
 function activeId(){try{return localStorage.getItem(TEST_ACTIVE_KEY)||"";}catch(_){return"";}}
@@ -181,53 +181,42 @@ function writeV7(v){
 }
 
 let SG_ACTIVE_VIEW="scenari";
+function trendApi(){return window.SONDAGGI_TREND_2018_2022||null;}
 function ensureAnalysisNav(){
-  const root=document.getElementById("sg7");
-  if(!root)return null;
-  const tabs=root.querySelector(".sg7tabs");
-  if(!tabs)return null;
+  const root=document.getElementById("sg7"),tabs=root?.querySelector(".sg7tabs");
+  if(!root||!tabs)return null;
   let nav=tabs.querySelector("#sgAnalysisNav");
   if(!nav){
-    nav=document.createElement("span");
-    nav.id="sgAnalysisNav";
-    nav.style.cssText="display:contents";
-    const mk=(view,label)=>{
-      const btn=document.createElement("button");
-      btn.type="button";
-      btn.className="sg7tab sg7analysisTab";
-      btn.dataset.sganView=view;
-      btn.textContent=label;
-      btn.addEventListener("click",()=>{
-        SG_ACTIVE_VIEW=view;
-        applyAnalysisView();
-      });
-      return btn;
+    nav=document.createElement("span");nav.id="sgAnalysisNav";nav.style.cssText="display:contents";
+    const make=(view,label)=>{
+      const b=document.createElement("button");
+      b.type="button";b.className="sg7tab sg7analysisTab";b.dataset.sganView=view;b.textContent=label;
+      b.addEventListener("click",ev=>{ev.preventDefault();ev.stopImmediatePropagation();SG_ACTIVE_VIEW=view;applyAnalysisView();},true);
+      return b;
     };
+    nav.appendChild(make("scenari","SCENARI POSSIBILI"));
+    nav.appendChild(make("trend","TREND"));
     tabs.appendChild(nav);
-    nav.appendChild(mk("scenari","SCENARI POSSIBILI"));
-    nav.appendChild(mk("trend","TREND"));
   }
   return nav;
 }
 function ensureAnalysisNavStyle(){
   if(document.getElementById("sgAnalysisNavStyle"))return;
-  const st=document.createElement("style");
-  st.id="sgAnalysisNavStyle";
-  st.textContent=[
-    "#sgAnalysisNav{display:contents!important}",
-    "#sg7 .sg7analysisTab{border-color:rgba(255,255,255,.28)!important;background:rgba(255,255,255,.10)!important;color:#fff!important}",
-    "#sg7 .sg7analysisTab.active{background:rgba(255,255,255,.28)!important;border-color:rgba(255,255,255,.48)!important}",
-    "#sg7 .sg7analysisTab:hover{background:rgba(255,255,255,.18)!important}"
-  ].join("");
+  const st=document.createElement("style");st.id="sgAnalysisNavStyle";
+  st.textContent="#sgAnalysisNav{display:contents!important}#sg7 .sg7analysisTab{border-color:rgba(255,255,255,.28)!important;background:rgba(255,255,255,.10)!important;color:#fff!important}#sg7 .sg7analysisTab.active{background:rgba(255,255,255,.28)!important;border-color:rgba(255,255,255,.48)!important;color:#fff!important}#sg7 .sg7analysisTab:hover{background:rgba(255,255,255,.18)!important}";
   document.head.appendChild(st);
 }
 function applyAnalysisView(){
-  const nav=ensureAnalysisNav();
-  if(nav)nav.querySelectorAll("[data-sgan-view]").forEach(btn=>btn.classList.toggle("active",btn.getAttribute("data-sgan-view")===SG_ACTIVE_VIEW));
-  const bank=document.getElementById("sgScenarioBankNative");
-  const trend=document.getElementById("sg-trend-module");
-  if(bank)bank.style.display=SG_ACTIVE_VIEW==="scenari"?"":"none";
-  if(trend)trend.style.display=SG_ACTIVE_VIEW==="trend"?"":"none";
+  ensureAnalysisNavStyle();
+  const nav=ensureAnalysisNav(),content=document.getElementById("sg7content"),bank=document.getElementById("sgScenarioBankNative"),trend=document.getElementById("sgTrendScreen"),estero=document.getElementById("sg7EsteroBox");
+  if(nav)nav.querySelectorAll("[data-sgan-view]").forEach(b=>b.classList.toggle("active",b.dataset.sganView===SG_ACTIVE_VIEW));
+  const isTrend=SG_ACTIVE_VIEW==="trend";
+  if(content)content.style.display=isTrend?"none":"";
+  if(bank)bank.style.display=isTrend?"none":"";
+  if(estero)estero.style.display=isTrend?"none":"";
+  if(isTrend&&!trend)trendApi()?.mount?.();
+  const current=document.getElementById("sgTrendScreen");
+  if(current)current.style.display=isTrend?"block":"none";
 }
 function styleAndMarkup(){
   const host=document.getElementById("sg7content");
@@ -337,20 +326,6 @@ function styleAndMarkup(){
   return true;
 }
 
-function forceTrendMount(){
-  let tries=0;
-  const tick=()=>{
-    if(window.__SG_TREND_FORCE_MOUNTED)return;
-    const api=window.SONDAGGI_TREND_2018_2022;
-    if(api?.mount){
-      window.__SG_TREND_FORCE_MOUNTED=true;
-      try{api.mount();}catch(err){console.error("Trend storico mount",err);}
-      return;
-    }
-    if(tries++<80)setTimeout(tick,200);
-  };
-  tick();
-}
 function run(){
   loadMobileStyles();
   loadEngines();
