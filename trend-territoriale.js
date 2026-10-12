@@ -176,13 +176,16 @@ function injectStyle(){
 }
 async function start(){
   injectStyle();
-  const host=document.createElement("section");host.id="sgTerritorialAnalysis";
-  const anchor=document.getElementById("tab-sondaggi");if(!anchor)return;
-  anchor.appendChild(host);
-  try{const r=await fetch(DATA_URL,{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);CORE=await r.json();}catch(err){host.innerHTML="<div class='sta'><b>Archivio territoriale non disponibile.</b><div class='sta-foot'>"+esc(err?.message||err)+"</div></div>";return;}
-  try{const r=await fetch(REGIONAL_URL,{cache:"no-store"});if(r.ok)REGIONALS=await r.json();}catch(_){REGIONALS=null;}
-  const ps=getParties(),rs=regions("camera");STATE.region=rs.includes("Lombardia")?"Lombardia":rs[0]||"";STATE.college=collegesForRegion("camera",STATE.region)[0]||"";
+  const anchor=document.getElementById("tab-sondaggi");
+  if(!anchor)return;
+  let host=document.getElementById("sgTerritorialAnalysis");
+  if(!host){host=document.createElement("section");host.id="sgTerritorialAnalysis";anchor.appendChild(host);}
+  if(!D||!D.collegeMaps){
+    host.innerHTML="<div class='sta'><b>Dataset territoriale non disponibile.</b></div>";
+    return;
+  }
   render();
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
+window.SG_TERRITORIAL_MODEL={version:"2026-10-12-model6",regionalScenario:regionScenario,collegeScenario,runSimulation:runSimulation};
 })();
