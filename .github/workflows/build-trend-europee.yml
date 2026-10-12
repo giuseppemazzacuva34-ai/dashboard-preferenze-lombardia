@@ -1,0 +1,46 @@
+name: Build TREND European data
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/build_trend_europee.py"
+      - ".github/workflows/build-trend-europee.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build compact data
+        run: python scripts/build_trend_europee.py
+
+      - name: Validate output
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("trend-data-europee.json").read_text(encoding="utf-8"))
+          assert d["version"] == "2026-10-12-europee-v1"
+          assert d["elections"]["2019"]["regions"]
+          assert d["elections"]["2024"]["regions"]
+          assert all(0 <= p["share"] <= 100 for y in d["elections"].values() for r in y["regions"] for p in r["parties"])
+          print("TREND European data validation: OK")
+          PY
+
+      - name: Commit generated dataset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add trend-data-europee.json
+          git diff --cached --quiet && exit 0
+          git commit -m "TREND: build compact European territorial dataset"
+          git push
