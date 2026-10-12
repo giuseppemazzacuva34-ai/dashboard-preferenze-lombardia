@@ -77,7 +77,7 @@ function installStyles(){
     ".sg-scenari-link{position:relative}"+
     ".sg-scenari-link::after{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;margin-left:5px;background:#55b9ff;vertical-align:middle}"+
     "@media(max-width:820px){#sgScenariPossibili .sgds-grid{grid-template-columns:1fr 1fr}}"+
-    "@media(max-width:520px){#sgScenariPossibili .sgds-grid{grid-template-columns:1fr}#sgScenariPossibili .sgds-head{display:block}#sgScenariPossibili .sgds-head strong{display:inline-block;margin-top:6px}}";
+    "@media(max-width:520px){#sgScenariPossibili .sgds-grid{grid-template-columns:1fr}#sgScenariPossibili .sgds-head{display:block}#sgScenariPossibili .sgds-head strong{display:inline-block;margin-top:6px}}#sgScenariPossibili .sgds-actions{margin-top:8px;display:flex;justify-content:flex-end}#sgScenariPossibili .sgds-actions button{border:1px solid #3c6e8f;border-radius:7px;background:#0a2942;color:#dcecf6;padding:7px 10px;font-size:7px;font-weight:900;cursor:pointer}#sgScenariPossibili .sgds-pass{padding:7px 9px;margin-bottom:6px;border:1px solid #2f9362;border-radius:7px;background:#123a2a;color:#bff0d0;font-size:9px;font-weight:900}#sgScenariPossibili .sgds-fail{padding:7px 9px;margin-bottom:6px;border:1px solid #9f4b57;border-radius:7px;background:#3a1d25;color:#ffd7de;font-size:9px;font-weight:900}#sgScenariPossibili .sgds-case.active-pass{border-color:#36a96f;background:#103c2c}#sgScenariPossibili .sgds-case.active-fail{border-color:#c15866;background:#3e1f28}#sgScenariPossibili .sgds-result{display:flex;gap:12px;flex-wrap:wrap;margin:7px 0}.sgds-result span{font-size:7px;color:#a9c2d2}.sgds-table-wrap{overflow:auto;margin-top:7px}.sgds-table-wrap table{width:100%;border-collapse:collapse;min-width:560px}.sgds-table-wrap th,.sgds-table-wrap td{border:1px solid #244b64;padding:5px;font-size:6.5px;text-align:left}.sgds-table-wrap th{color:#8dcfff;background:#0a2942}";
   document.head.appendChild(st);
 }
 
@@ -121,13 +121,84 @@ function findSondaggiFallback(){
   return title.parentElement||title;
 }
 
+function formatTestValue(v){
+  if(v===null||v===undefined)return "—";
+  if(typeof v==="object")return v.id||v.name||"presente";
+  if(typeof v==="number")return Number(v).toLocaleString("it-IT",{maximumFractionDigits:2});
+  if(typeof v==="boolean")return v?"SÌ":"NO";
+  return String(v);
+}
+
 function testClick(test){
   const detail=document.getElementById("sgScenariDetail");
   const item=TESTS.find(x=>x.id===test);
   if(!detail||!item)return;
+
+  const api=window.sondaggiTestAPI;
+  if(!api||typeof api.run!=="function"){
+    detail.style.display="block";
+    detail.innerHTML="<b>TEST "+item.id+" · "+item.name+"</b><span>Il motore Sondaggi non è ancora pronto. Riprovo automaticamente…</span>";
+    setTimeout(()=>testClick(test),700);
+    return;
+  }
+
   detail.style.display="block";
-  detail.innerHTML="<b>TEST "+item.id+" · "+item.name+"</b><span>"+item.desc+"</span><span style='margin-top:6px;color:#dcecf6;font-weight:900'>Atteso: "+item.expected+"</span>"+
-    "<span style='margin-top:7px;color:#83cfff'>Scenario pronto per essere applicato al simulatore. Il banco è separato dai dati reali della Dashboard.</span>";
+  detail.innerHTML="<b>TEST "+item.id+" · "+item.name+"</b><span>Caricamento scenario e ricalcolo del Parlamento…</span>";
+
+  setTimeout(()=>{
+    let result;
+    try{result=api.run(item.id);}catch(err){result={id:item.id,pass:false,error:String(err&&err.message||err)};}
+
+    if(!result||result.error){
+      detail.innerHTML="<div class='sgds-fail'>❌ TEST FALLITO</div><b>TEST "+item.id+" · "+item.name+"</b><span>"+(result&&result.error||"Errore durante il test.")+"</span>";
+      return;
+    }
+
+    const status=result.pass
+      ?"<div class='sgds-pass'>✅ TEST SUPERATO</div>"
+      :"<div class='sgds-fail'>❌ TEST FALLITO</div>";
+
+    const rows=(result.checks||[]).map(x=>
+      "<tr><td>"+x.label+"</td><td>"+formatTestValue(x.actual)+"</td><td>"+formatTestValue(x.expected)+"</td><td>"+(x.ok?"✅":"❌")+"</td></tr>"
+    ).join("");
+
+    detail.innerHTML=
+      status+
+      "<b>TEST "+item.id+" · "+item.name+"</b>"+
+      "<span>"+item.desc+"</span>"+
+      "<span style='margin-top:5px;color:#dcecf6;font-weight:900'>Atteso: "+item.expected+"</span>"+
+      "<div class='sgds-result'><span>Vincitore premio: <b>"+(result.winner||"nessuno")+"</b></span><span>Premio Camera: <b>"+result.cameraPrize+"</b> · Senato: <b>"+result.senatePrize+"</b></span></div>"+
+      "<div class='sgds-table-wrap'><table><thead><tr><th>Controllo</th><th>Calcolato</th><th>Atteso</th><th>Esito</th></tr></thead><tbody>"+rows+"</tbody></table></div>";
+
+    document.querySelectorAll("#sgScenariPossibili .sgds-case").forEach(b=>b.classList.remove("active","active-pass","active-fail"));
+    const active=document.querySelector('#sgScenariPossibili [data-sg-test="'+item.id+'"]');
+    if(active)active.classList.add(result.pass?"active-pass":"active-fail");
+  },20);
+}
+
+function wireScenarioBank(bank){
+  bank.querySelectorAll("[data-sg-test]").forEach(btn=>{
+    btn.addEventListener("click",()=>testClick(btn.getAttribute("data-sg-test")||""));
+  });
+  const restore=bank.querySelector("#sgScenariRestore");
+  if(restore){
+    restore.addEventListener("click",()=>{
+      const api=window.sondaggiTestAPI;
+      const detail=bank.querySelector("#sgScenariDetail");
+      if(!api||typeof api.restore!=="function"){
+        if(detail)detail.innerHTML="<b>Impossibile ripristinare</b><span>Il motore Sondaggi non è ancora pronto.</span>";
+        return;
+      }
+      const ok=api.restore();
+      bank.querySelectorAll(".sgds-case").forEach(x=>x.classList.remove("active","active-pass","active-fail"));
+      if(detail){
+        detail.style.display="block";
+        detail.innerHTML=ok
+          ?"<div class='sgds-pass'>✅ STATO PRE-TEST RIPRISTINATO</div><span>I dati precedenti al test sono stati recuperati.</span>"
+          :"<b>Nessun backup disponibile</b><span>Non c'è uno stato pre-test da ripristinare.</span>";
+      }
+    });
+  }
 }
 
 function installScenarioBank(){
@@ -150,9 +221,7 @@ function installScenarioBank(){
     });
     found.nav.appendChild(tab);
 
-    bank.querySelectorAll("[data-sg-test]").forEach(btn=>{
-      btn.addEventListener("click",()=>testClick(btn.getAttribute("data-sg-test")||""));
-    });
+    wireScenarioBank(bank);
     return true;
   }
 
@@ -163,9 +232,7 @@ function installScenarioBank(){
   wrap.innerHTML=scenarioMarkup();
   const bank=wrap.firstElementChild;
   fallback.insertAdjacentElement("afterend",bank);
-  bank.querySelectorAll("[data-sg-test]").forEach(btn=>{
-    btn.addEventListener("click",()=>testClick(btn.getAttribute("data-sg-test")||""));
-  });
+  wireScenarioBank(bank);
   return true;
 
   return true;
@@ -191,6 +258,7 @@ setTimeout(ensure,200);
 setTimeout(ensure,700);
 setTimeout(ensure,1500);
 setTimeout(ensure,3000);
+setTimeout(ensure,6000);
 setInterval(ensure,2500);
 
 try{
