@@ -181,17 +181,21 @@ function writeV7(v){
 }
 
 let SG_ACTIVE_VIEW="scenari";
-function ensureAnalysisNav(host){
-  if(!host)return null;
+function ensureAnalysisNav(){
+  const root=document.getElementById("sg7");
+  if(!root)return null;
   let nav=document.getElementById("sgAnalysisNav");
-  if(!nav||nav.parentElement!==host){
+  if(!nav||!root.contains(nav)){
+    if(nav)nav.remove();
     nav=document.createElement("div");
     nav.id="sgAnalysisNav";
     nav.innerHTML="<span class='sgan-title'>ANALISI</span><button type='button' data-sgan-view='scenari' class='active'>SCENARI POSSIBILI</button><button type='button' data-sgan-view='trend'>TREND</button>";
-    host.insertBefore(nav,host.firstChild);
+    const anchor=root.querySelector(".sg7top")||root.querySelector(".sg7tabs")||root.firstElementChild;
+    if(anchor&&anchor.parentElement===root)root.insertBefore(nav,anchor.nextSibling);
+    else root.insertBefore(nav,root.firstChild);
     nav.querySelectorAll("[data-sgan-view]").forEach(btn=>btn.addEventListener("click",()=>{
       SG_ACTIVE_VIEW=btn.getAttribute("data-sgan-view")==="trend"?"trend":"scenari";
-      applyAnalysisView(host);
+      applyAnalysisView();
     }));
   }
   return nav;
@@ -201,31 +205,23 @@ function ensureAnalysisNavStyle(){
   const st=document.createElement("style");
   st.id="sgAnalysisNavStyle";
   st.textContent=[
-    "#sgAnalysisNav{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 12px;padding:5px;border:1px solid rgba(255,255,255,.18);border-radius:11px;background:rgba(4,27,51,.68);box-sizing:border-box}",
-    "#sgAnalysisNav .sgan-title{font-size:6.5px;letter-spacing:.12em;color:#7595ab;font-weight:900;padding:0 5px}",
-    "#sgAnalysisNav button{border:1px solid #315f7e;background:#0b2941;color:#a9c7d9;border-radius:8px;padding:8px 12px;font-size:7px;font-weight:900;cursor:pointer;transition:.12s ease}",
+    "#sgAnalysisNav{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:10px 0 12px;padding:5px 6px;border:1px solid rgba(255,255,255,.18);border-radius:11px;background:rgba(4,27,51,.82);box-sizing:border-box;position:relative;z-index:2147483647}",
+    "#sgAnalysisNav .sgan-title{font-size:7px;letter-spacing:.12em;color:#7595ab;font-weight:900;padding:0 6px}",
+    "#sgAnalysisNav button{border:1px solid #315f7e;background:#0b2941;color:#a9c7d9;border-radius:8px;padding:8px 13px;font-size:7px;font-weight:900;cursor:pointer}",
     "#sgAnalysisNav button:hover{border-color:#4d8eb8;color:#fff}",
-    "#sgAnalysisNav button.active{background:#176ea5;border-color:#318bc5;color:#fff;box-shadow:0 0 0 1px rgba(49,139,197,.15)}",
+    "#sgAnalysisNav button.active{background:#176ea5;border-color:#318bc5;color:#fff}",
     "@media(max-width:520px){#sgAnalysisNav button{flex:1 1 calc(50% - 7px)}}"
   ].join("");
   document.head.appendChild(st);
 }
-function applyAnalysisView(host){
-  if(!host)return;
-  const nav=ensureAnalysisNav(host);
+function applyAnalysisView(){
+  const nav=ensureAnalysisNav();
   if(nav)nav.querySelectorAll("[data-sgan-view]").forEach(btn=>btn.classList.toggle("active",btn.getAttribute("data-sgan-view")===SG_ACTIVE_VIEW));
   const bank=document.getElementById("sgScenarioBankNative");
   const trend=document.getElementById("sg-trend-module");
-  if(bank&&bank.parentElement===host)bank.style.display=SG_ACTIVE_VIEW==="scenari"?"":"none";
-  if(trend&&trend.parentElement===host)trend.style.display=SG_ACTIVE_VIEW==="trend"?"":"none";
+  if(bank)bank.style.display=SG_ACTIVE_VIEW==="scenari"?"":"none";
+  if(trend)trend.style.display=SG_ACTIVE_VIEW==="trend"?"":"none";
 }
-function normalizeAnalysisOrder(host,nav,bank,trend){
-  if(!host||!nav)return;
-  host.insertBefore(nav,host.firstChild);
-  if(bank&&bank.parentElement===host)host.insertBefore(bank,nav.nextSibling);
-  if(trend&&trend.parentElement===host)host.insertBefore(trend,bank?bank.nextSibling:nav.nextSibling);
-}
-
 function styleAndMarkup(){
   const host=document.getElementById("sg7content");
   if(!host)return false;
@@ -329,10 +325,8 @@ function styleAndMarkup(){
   }
 
   ensureAnalysisNavStyle();
-  const nav=ensureAnalysisNav(host);
-  const bankNow=document.getElementById("sgScenarioBankNative");
-  const trendNow=document.getElementById("sg-trend-module");
-  normalizeAnalysisOrder(host,nav,bankNow,trendNow);
+  const analysisNav=ensureAnalysisNav();
+  applyAnalysisView();
   return true;
 }
 
