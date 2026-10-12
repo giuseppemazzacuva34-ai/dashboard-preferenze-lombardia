@@ -5,209 +5,169 @@
  */
 (function(){
 "use strict";
-const DATA_URL="data/trend-territoriale-core.json?v=20261012";
-const REGIONAL_URL="data/trend-regionali-generated.json?v=20261012";
-const APP_KEY="lombardia_sondaggi_2026";
+const APP_KEY="lombardia_sondaggi_v7";
+const D=window.SG_TERRITORIAL_DATA||{};
+const LAW=window.SONDAGGI_LAW_20261008;
+const ENGINE=window.SONDAGGI_ELECTION_ENGINE_20261008;
 const DEFAULTS={
  FdI:["Fratelli d'Italia",26.8],PD:["Partito Democratico",20.4],M5S:["Movimento 5 Stelle",12.8],
  FI:["Forza Italia",7.4],LEGA:["Lega",5.7],AVS:["Alleanza Verdi Sinistra",6.3],
  FN:["Futuro Nazionale",7.7],AZ:["Azione",3.2],IV:["Italia Viva",2.2],
  PIU:["+Europa",1.7],NM:["Noi Moderati",1.1],PLD:["Partito Liberaldemocratico",1.3],ALTRI:["Altri",3.4]
 };
-const WEIGHTS={politiche2022:.35,europee2019:.20,europee2024:.35,regionali:.10};
-const esc=v=>String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-const num=v=>{const x=Number(v);return Number.isFinite(x)?x:0};
-const norm=v=>String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9]+/g,"");
-const pct=v=>num(v).toFixed(1).replace(".",",");
-const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,num(v)));
-let CORE=null,REGIONALS=null,STATE={chamber:"camera",region:"",college:"",party:"FdI",strength:1,weights:{...WEIGHTS}};
+const REGION_CODE={"Piemonte":1,"Valle d'Aosta":2,"Lombardia":3,"Trentino-Alto Adige":4,"Trentino-Alto Adige/Südtirol":4,"Veneto":5,"Friuli-Venezia Giulia":6,"Liguria":7,"Emilia-Romagna":8,"Toscana":9,"Umbria":10,"Marche":11,"Lazio":12,"Abruzzo":13,"Molise":14,"Campania":15,"Puglia":16,"Basilicata":17,"Calabria":18,"Sicilia":19,"Sardegna":20};
+const WEIGHTS={politiche2018:.10,politiche2022:.30,europee2019:.20,europee2024:.40};
+let CORE=buildCore(),REGIONALS=null;
+let STATE={chamber:"camera",region:"Lombardia",college:"",party:"Fratelli d'Italia",strength:1,weights:{...WEIGHTS}};
+
+function esc(v){return String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
+function num(v){const x=Number(String(v??"").replace(",","."));return Number.isFinite(x)?x:0;}
+function pct(v){return num(v).toFixed(1).replace(".",",");}
 function appState(){try{const x=JSON.parse(localStorage.getItem(APP_KEY)||"null");return x&&typeof x==="object"?x:{};}catch(_){return{};}}
-function getParties(){
-  const a=appState(),o={};
-  Object.entries(DEFAULTS).forEach(([id,[name,v]])=>{const p=a.parties?.[id]||{};o[id]={name:String(p.name||name),camera:num(p.camera??v),senate:num(p.senate??v)};});
-  Object.entries(a.parties||{}).forEach(([id,p])=>{if(!o[id])o[id]={name:String(p?.name||id),camera:num(p?.camera),senate:num(p?.senate)};});
-  return o;
-}
-function keyCollege(v){return norm(v).replace(/^COLLEGIO/,"");}
-function collections(ch,election){return CORE?.[ch]?.[election]||{};}
-function item(ch,election,college){
-  const src=collections(ch,election),key=keyCollege(college);
-  for(const [k,v] of Object.entries(src))if(keyCollege(k)===key)return v;
-  return null;
-}
-function obs(ch,election,college,id){
-  const x=item(ch,election,college),v=x?.shares?.[id];
-  return v==null?null:num(v);
-}
-function regionForCollege(ch,college){return CORE?.[ch]?.seats?.[college]?.region||"";}
-function collegesForRegion(ch,region){
-  return Object.entries(CORE?.[ch]?.seats||{}).filter(([,v])=>v.region===region).map(([k])=>k).sort((a,b)=>a.localeCompare(b,"it"));
-}
-function regionObserved(ch,election,region,id){
-  const rows=Object.entries(CORE?.[ch]?.[election]||{}).filter(([,v])=>v.region===region&&v.totalVotes>0);
-  const T=rows.reduce((a,[,v])=>a+num(v.totalVotes),0);if(!T)return null;
-  let s=0,has=false;
-  rows.forEach(([,v])=>{const q=v.shares?.[id];if(q!=null){s+=num(v.totalVotes)*num(q);has=true;}});
-  return has?100*s/T:null;
-}
-function nationalObserved(ch,election,id){const v=CORE?.nationalShares?.[ch]?.[election]?.[id];return v==null?null:num(v);}
-function regionalSignals(chamber,region,id){
-  const base=regionObserved(chamber,"politiche2022",region,id);
-  const arr=REGIONALS?.byRegion?.[region]||[];
-  return arr.map(e=>({date:e.date,year:e.year,share:e.shares?.[id]??null,delta:base!=null&&e.shares?.[id]!=null?num(e.shares[id])-base:null}));
-}
-function baseNational(ch,id){
-  const p=getParties()[id];
-  return num(p?.[ch==="camera"?"camera":"senate"]);
-}
-function modelForCollege(ch,region,college){
-  const ps=getParties(),out={},diagnostic={};
-  const sources=[["politiche2022","politiche2022"],["europee2019","europee2019"],["europee2024","europee2024"]];
-  Object.keys(ps).forEach(id=>{
-    let weighted=0,totalW=0,parts=[];
-    for(const [key,label] of sources){
-      const local=obs(ch,keyCollegeElection(key),college,id), nat=nationalObserved(ch,label,id), w=num(STATE.weights[label]);
-      if(local!=null&&nat!=null&&w>0){weighted+=(local-nat)*w;totalW+=w;parts.push({label,local,national:nat,delta:local-nat,weight:w});}
-    }
-    const rs=regionalSignals(ch,region,id);
-    const rw=num(STATE.weights.regionali);
-    if(rw>0&&rs.length){rs.forEach(x=>{if(x.delta!=null){weighted+=x.delta*rw/rs.length;totalW+=rw/rs.length;parts.push({label:"regionali "+x.year,local:x.share,delta:x.delta,weight:rw/rs.length});}});}
-    const delta=totalW?weighted/totalW:0;
-    out[id]=clamp(baseNational(ch,id)+STATE.strength*delta);
-    diagnostic[id]={delta,parts};
+function norm(v){return String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9]+/g,"");}
+function regionCode(region){return String(REGION_CODE[region]||0).padStart(2,"0");}
+function cleanRegion(region){return region==="Trentino-Alto Adige/Südtirol"?"Trentino-Alto Adige":region;}
+
+function parseRows(map,source,ch){
+  const out={};
+  Object.entries(map||{}).forEach(([region,rows])=>{
+    const prefix=regionCode(region)+"-";
+    const codes=Object.keys(source||{}).filter(k=>String(k).startsWith(prefix)).sort((a,b)=>{
+      const aa=Number(String(a).split("-")[1]||0),bb=Number(String(b).split("-")[1]||0);return aa-bb;
+    });
+    let j=0;
+    (rows||[]).forEach(raw=>{
+      const p=String(raw).split("|"),name=p[0],special=String(p[3]||"").toUpperCase()==="SPECIAL";
+      if(special){out[name]={region:cleanRegion(region),noPrizeSeats:num(p[1]),withPrizeSeats:num(p[2]??p[1]),special:true,code:"",shares:{}};return;}
+      const code=codes[j++]||"";
+      out[name]={region:cleanRegion(region),noPrizeSeats:num(p[1]),withPrizeSeats:num(p[2]??p[1]),special:false,code,shares:source?.[code]||{}};
+    });
   });
-  const sum=Object.values(out).reduce((a,v)=>a+v,0)||1;
-  Object.keys(out).forEach(id=>out[id]=out[id]/sum*100);
-  return {shares:out,diagnostic};
-}
-function keyCollegeElection(x){return x;}
-function cameraMap(){
-  const grouped={};
-  Object.entries(CORE?.camera?.seats||{}).forEach(([name,v])=>{(grouped[v.region]??=[]).push([name,v]);});
-  return Object.fromEntries(Object.entries(grouped).map(([r,arr])=>[r,arr.map(([n,v])=>n+"|"+v.noPrizeSeats+"|"+v.withPrizeSeats+(v.special?"|SPECIAL":""))]));
-}
-function senateMap(){
-  const grouped={};
-  Object.entries(CORE?.senato?.seats||{}).forEach(([name,v])=>{(grouped[v.region]??=[]).push([name,v]);});
-  return Object.fromEntries(Object.entries(grouped).map(([r,arr])=>[r,arr.map(([n,v])=>n+"|"+v.noPrizeSeats+"|"+v.withPrizeSeats+(v.special?"|SPECIAL":""))]));
-}
-function scenarioAll(ch){
-  const ps=getParties(),out={};
-  for(const [name,meta] of Object.entries(CORE?.[ch]?.seats||{})){
-    if(meta.special)continue;
-    const r=meta.region;out[name]=modelForCollege(ch,r,name).shares;
-  }
   return out;
 }
-function currentSpecial(){
-  const a=appState();const base={camera:{estero:{},valleDAosta:{},trentinoAltoAdige:{}},senato:{estero:{},valleDAosta:{},trentinoAltoAdige:{}}};
+function buildCore(){
+  const cam=parseRows(D.collegeMaps?.camera,D.politiche?.[2022]?.camera,"camera");
+  const sen=parseRows(D.collegeMaps?.senato,D.politiche?.[2022]?.senato,"senato");
+  return {camera:{seats:Object.fromEntries(Object.entries(cam).map(([k,v])=>[k,{region:v.region,noPrizeSeats:v.noPrizeSeats,withPrizeSeats:v.withPrizeSeats,special:v.special}])) ,politiche2022:Object.fromEntries(Object.entries(cam).map(([k,v])=>[k,{region:v.region,shares:v.shares}]))},
+          senato:{seats:Object.fromEntries(Object.entries(sen).map(([k,v])=>[k,{region:v.region,noPrizeSeats:v.noPrizeSeats,withPrizeSeats:v.withPrizeSeats,special:v.special}])) ,politiche2022:Object.fromEntries(Object.entries(sen).map(([k,v])=>[k,{region:v.region,shares:v.shares}]))}};
+}
+const COLLEGE_RECORDS={camera:parseRows(D.collegeMaps?.camera,D.politiche?.[2022]?.camera,"camera"),senato:parseRows(D.collegeMaps?.senato,D.politiche?.[2022]?.senato,"senato")};
+
+function getParties(){
+  const a=appState(),out={};
+  Object.entries(DEFAULTS).forEach(([id,def])=>{
+    const p=a.parties?.[id]||{};
+    const name=String(p.name||def[0]);
+    const cam=a.nationalVotes?.camera?.[name]??a.nationalVotes?.camera?.[id]??p.camera??def[1];
+    const sen=a.nationalVotes?.senato?.[name]??a.nationalVotes?.senato?.[id]??p.senate??def[1];
+    out[id]={name,camera:num(cam),senate:num(sen)};
+  });
+  Object.entries(a.parties||{}).forEach(([id,p])=>{
+    if(!out[id])out[id]={name:String(p?.name||id),camera:num(a.nationalVotes?.camera?.[p?.name||id]??p?.camera),senate:num(a.nationalVotes?.senato?.[p?.name||id]??p?.senate)};
+  });
+  return out;
+}
+function currentNational(ch){
+  const ps=getParties(),out={};
+  Object.values(ps).forEach(p=>out[p.name]=num(p[ch==="camera"?"camera":"senate"]));
+  const total=Object.values(out).reduce((a,b)=>a+b,0)||1;
+  Object.keys(out).forEach(p=>out[p]=out[p]/total*100);
+  return out;
+}
+function baseNational(ch,partyName){return currentNational(ch)[partyName]||0;}
+function keyCollege(v){return norm(v).replace(/^COLLEGIO/,"");}
+function collegesForRegion(ch,region){return Object.entries(CORE?.[ch]?.seats||{}).filter(([,v])=>v.region===region&&!v.special).map(([k])=>k).sort((a,b)=>a.localeCompare(b,"it"));}
+function regions(ch){return [...new Set(Object.values(CORE?.[ch]?.seats||{}).map(v=>v.region).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"it"));}
+function collegeRecord(ch,college){const k=Object.keys(COLLEGE_RECORDS[ch]||{}).find(x=>keyCollege(x)===keyCollege(college));return k?COLLEGE_RECORDS[ch][k]:null;}
+function politicalRegion(ch,year,region,partyName){const v=D.politicheRegioni?.[ch]?.[year]?.[region]?.[partyName];return v==null?null:num(v);}
+function euroRegion(year,region,partyName){const v=D.europee?.[year]?.[region]?.[partyName];return v==null?null:num(v);}
+function eventValues(ch,event,partyName){return REGIONS.map(r=>event==="europee2019"?euroRegion(2019,r,partyName):event==="europee2024"?euroRegion(2024,r,partyName):politicalRegion(ch,event==="politiche2018"?2018:2022,r,partyName)).filter(v=>v!=null&&v>0);}
+function median(a){const x=a.slice().sort((a,b)=>a-b),m=Math.floor(x.length/2);return x.length?x.length%2?x[m]:(x[m-1]+x[m])/2:0;}
+function eventMedian(ch,event,partyName){return median(eventValues(ch,event,partyName));}
+function regionalMultiplier(ch,region,partyName){
+  const events=[
+    ["politiche2018",politicalRegion(ch,2018,region,partyName)],
+    ["politiche2022",politicalRegion(ch,2022,region,partyName)],
+    ["europee2019",euroRegion(2019,region,partyName)],
+    ["europee2024",euroRegion(2024,region,partyName)]
+  ];
+  let z=0,w=0,signals=[];
+  events.forEach(([event,v])=>{
+    const med=eventMedian(ch,event,partyName),ew=WEIGHTS[event];
+    if(v!=null&&v>0&&med>0){z+=ew*Math.log(v/med);w+=ew;signals.push({event,value:v,median:med,ratio:v/med,weight:ew});}
+  });
+  return {factor:w?Math.exp(z/w):1,signals};
+}
+function regionScenario(ch,region){
+  const nat=currentNational(ch),shares={},diagnostic={};
+  Object.keys(nat).forEach(p=>{
+    const m=regionalMultiplier(ch,region,p);
+    shares[p]=nat[p]*Math.pow(m.factor,0.90);
+    diagnostic[p]={factor:m.factor,signals:m.signals};
+  });
+  const total=Object.values(shares).reduce((a,b)=>a+b,0)||1;
+  Object.keys(shares).forEach(p=>shares[p]=shares[p]/total*100);
+  return {shares,diagnostic};
+}
+function collegeMultiplier(ch,region,college,partyName){
+  const rec=collegeRecord(ch,college),hist22=politicalRegion(ch,2022,region,partyName),local22=rec?.shares?.[partyName];
+  if(hist22>0&&local22>0)return {factor:local22/hist22,signals:[{event:"politiche2022 · collegio/regione",local:local22,region:hist22,ratio:local22/hist22}]};
+  return {factor:1,signals:[]};
+}
+function modelForCollege(ch,region,college){
+  const rs=regionScenario(ch,region),shares={},diagnostic={};
+  Object.keys(rs.shares).forEach(p=>{
+    const m=collegeMultiplier(ch,region,college,p);
+    shares[p]=rs.shares[p]*Math.pow(m.factor,0.80);
+    diagnostic[p]={region:rs.diagnostic[p],college:m.factor,signals:m.signals};
+  });
+  const total=Object.values(shares).reduce((a,b)=>a+b,0)||1;
+  Object.keys(shares).forEach(p=>shares[p]=shares[p]/total*100);
+  return {shares,diagnostic,regional:rs};
+}
+function obs(ch,event,college,partyName){
+  if(event==="politiche2022")return collegeRecord(ch,college)?.shares?.[partyName]??null;
+  if(event==="politiche2018")return politicalRegion(ch,2018,COLLEGE_RECORDS[ch]?.[college]?.region||"",partyName);
+  if(event==="europee2019")return euroRegion(2019,COLLEGE_RECORDS[ch]?.[college]?.region||"",partyName);
+  if(event==="europee2024")return euroRegion(2024,COLLEGE_RECORDS[ch]?.[college]?.region||"",partyName);
+  return null;
+}
+function nationalObserved(ch,event,partyName){return eventMedian(ch,event,partyName);}
+function regionalSignals(region,partyName){
+  return [];
+}
+function cameraMap(){return D.collegeMaps?.camera||{};}
+function senateMap(){return D.collegeMaps?.senato||{};}
+function appSpecial(){
+  const a=appState(),base={camera:{estero:{},valleDAosta:{},trentinoAltoAdige:{}},senato:{estero:{},valleDAosta:{},trentinoAltoAdige:{}}};
   ["camera","senato"].forEach(ch=>["estero","valleDAosta","trentinoAltoAdige"].forEach(cat=>base[ch][cat]={...(a.specialSeats?.[ch]?.[cat]||{})}));
   return base;
 }
-function currentNational(chamber){
-  const ps=getParties(),out={};
-  Object.keys(ps).forEach(id=>out[id]=baseNational(chamber,id));
-  const vals=Object.values(out).reduce((a,v)=>a+v,0)||1;
-  Object.keys(out).forEach(id=>out[id]=out[id]/vals*100);
-  return out;
-}
 function engineInput(){
-  const ps=getParties(),national=currentNational("camera"),senateNational=currentNational("senato"),camValues=scenarioAll("camera"),regional={};
-  const camMap=cameraMap(),senMap=senateMap();
-  Object.keys(CORE?.senato?.seats||{}).forEach(name=>{
-    const r=CORE.senato.seats[name].region;if(CORE.senato.seats[name].special)return;
-    regional[r]??={};
-    const row=camValues;void row;
-  });
-  const regions=[...new Set(Object.values(CORE?.senato?.seats||{}).map(v=>v.region))].filter(Boolean);
-  regions.forEach(region=>{
-    const cols=collegesForRegion("senato",region),weights=cols.map(c=>num(CORE.senato.seats[c]?.noPrizeSeats)||1),tw=weights.reduce((a,v)=>a+v,0)||1;
-    regional[region]={};
-    Object.keys(ps).forEach(id=>regional[region][id]=cols.reduce((a,c,i)=>a+((modelForCollege("senato",region,c).shares[id]||0)*weights[i]),0)/tw);
-  });
-  const partiesShape=Object.fromEntries(Object.entries(ps).map(([id,p])=>[id,{name:p.name,camera:p.camera,senate:p.senate}]));
+  const ps=getParties(),a=appState(),partiesShape=Object.fromEntries(Object.values(ps).map(p=>[p.name,{name:p.name,camera:p.camera,senate:p.senate}]));
+  const camValues={},senCollegeValues={};
+  Object.keys(COLLEGE_RECORDS.camera).forEach(col=>{const r=COLLEGE_RECORDS.camera[col].region;if(!COLLEGE_RECORDS.camera[col].special)camValues[col]=modelForCollege("camera",r,col).shares;});
+  Object.keys(COLLEGE_RECORDS.senato).forEach(col=>{const r=COLLEGE_RECORDS.senato[col].region;if(!COLLEGE_RECORDS.senato[col].special)senCollegeValues[col]=modelForCollege("senato",r,col).shares;});
+  const reg={};regions("senato").forEach(r=>reg[r]=regionScenario("senato",r).shares);
   return {
-    law:window.SONDAGGI_LAW_20261008,
-    parties:partiesShape,
-    coalitions:appState().coalitions||[],
-    specialSeats:currentSpecial(),
-    camera:{nationalValues:national,collegeValues:camValues,collegeWeights:{},collegeMap:camMap},
-    senato:{nationalValues:senateNational,regionalValuesByRegion:regional,collegeMap:senMap,premiumByRegion:window.SONDAGGI_LAW_20261008?.rules?.senatePremiumByRegion||{}}
+    law:LAW,parties:partiesShape,coalitions:Array.isArray(a.coalitions)?a.coalitions:[],specialSeats:appSpecial(),
+    camera:{nationalValues:currentNational("camera"),collegeValues:camValues,collegeWeights:{},collegeMap:cameraMap()},
+    senato:{nationalValues:currentNational("senato"),regionalValuesByRegion:reg,collegeValues:senCollegeValues,collegeWeights:{},collegeMap:senateMap(),premiumByRegion:LAW?.rules?.senatePremiumByRegion||{}}
   };
 }
-function runSeats(){
-  const engine=window.SONDAGGI_ELECTION_ENGINE_20261008;
-  if(!engine?.simulate||!window.SONDAGGI_LAW_20261008)return null;
-  try{return engine.simulate(engineInput());}catch(err){console.error("Territorial seat simulation",err);return {error:String(err?.message||err)};}
-}
-function cameraCollegeSeat(sim,college,id){
-  if(!sim?.cam)return 0;
+function runSeats(){if(!ENGINE?.simulate||!LAW)return null;try{return ENGINE.simulate(engineInput());}catch(err){console.error("Territorial seat engine",err);return{error:String(err?.message||err)};}}
+function cameraSeat(sim,college,partyName){
   const circ=String(college).replace(/\s-\sP\d+$/,"");
-  const ordinary=num(sim.cam.collegeResults?.ordinary?.[circ]?.[college]?.alloc?.[id]);
-  const prize=num(sim.cam.collegeResults?.prize?.[circ]?.[id]?.seats?.[college]);
-  return ordinary+prize;
+  return num(sim?.cam?.collegeResults?.ordinary?.[circ]?.[college]?.alloc?.[partyName])+num(sim?.cam?.collegeResults?.prize?.[circ]?.[partyName]?.seats?.[college]);
 }
-function senateCollegeSeat(sim,region,college,id){
-  return num(sim?.sen?.regions?.[region]?.collegeResults?.byList?.[id]?.[college]);
+function senateSeat(sim,region,college,partyName){return num(sim?.sen?.regions?.[region]?.collegeResults?.byList?.[partyName]?.[college]);}
+function selectedSeats(ch,sim,region,college,partyName){return ch==="camera"?cameraSeat(sim,college,partyName):senateSeat(sim,region,college,partyName);}
+function allRows(ch,region,partyName,sim){return collegesForRegion(ch,region).map(col=>({college:col,share:modelForCollege(ch,region,col).shares[partyName]||0,seats:selectedSeats(ch,sim,region,col,partyName)}));}
+function getHistorical(ch,region,year,id){
+ const map={FdI:"Fratelli d'Italia",PD:"Partito Democratico",M5S:"Movimento 5 Stelle",LEGA:"Lega",FI:"Forza Italia",PIU:"+Europa",AVS:"Alleanza Verdi Sinistra",NM:"Noi Moderati"};
+ const p=map[id];return p?politicalRegion(ch,year,region,p):null;
 }
-function allRows(ch,region,id,sim){
-  return collegesForRegion(ch,region).map(college=>{
-    const m=modelForCollege(ch,region,college),share=m.shares[id]??0;
-    const seats=ch==="camera"?cameraCollegeSeat(sim,college,id):senateCollegeSeat(sim,region,college,id);
-    return {college,share,seats};
-  });
-}
-function regions(ch){return [...new Set(Object.values(CORE?.[ch]?.seats||{}).map(v=>v.region))].filter(Boolean).sort((a,b)=>a.localeCompare(b,"it"));}
-function render(){
-  const host=document.getElementById("sgTerritorialAnalysis");if(!host||!CORE)return;
-  const ps=getParties(),rs=regions(STATE.chamber);if(!rs.includes(STATE.region))STATE.region=rs.includes("Lombardia")?"Lombardia":(rs[0]||"");
-  const cols=collegesForRegion(STATE.chamber,STATE.region);if(!cols.includes(STATE.college))STATE.college=cols[0]||"";
-  if(!ps[STATE.party])STATE.party="FdI";
-  const model=modelForCollege(STATE.chamber,STATE.region,STATE.college),p=ps[STATE.party]||ps.FdI;
-  const row=model.diagnostic[STATE.party]||{delta:0,parts:[]};
-  const obsRows=["politiche2022","europee2019","europee2024"].map(k=>({label:k,share:obs(STATE.chamber,k,STATE.college,STATE.party),nat:nationalObserved(STATE.chamber,k,STATE.party)}));
-  const regObs=regionalSignals(STATE.region,STATE.party);
-  const sim=runSeats(), rows=allRows(STATE.chamber,STATE.region,STATE.party,sim);
-  const selectedRow=rows.find(x=>keyCollege(x.college)===keyCollege(STATE.college))||{seats:0,share:model.shares[STATE.party]||0};
-  const totalSelected=rows.reduce((a,x)=>a+x.seats,0);
-  host.innerHTML=`
-  <section class="sta">
-    <div class="sta-head"><div><div class="sta-kicker">ANALISI TERRITORIALE</div><h2>Scenario per regione e collegio</h2><p>Modello statistico trasparente: parte dal valore nazionale corrente e applica gli scostamenti territoriali osservati nelle elezioni precedenti. Il risultato è uno <b>scenario</b>, non un dato elettorale già avvenuto.</p></div><div class="sta-badges"><span>Politiche 2022</span><span>Europee 2019</span><span>Europee 2024</span><span>Regionali</span></div></div>
-    <div class="sta-controls">
-      <label>Camera / Senato<select id="staCh"><option value="camera">Camera</option><option value="senato">Senato</option></select></label>
-      <label>Regione<select id="staReg">${rs.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join("")}</select></label>
-      <label>Collegio<select id="staCol">${cols.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("")}</select></label>
-      <label>Partito<select id="staParty">${Object.entries(ps).map(([id,x])=>`<option value="${esc(id)}">${esc(x.name)}</option>`).join("")}</select></label>
-      <label>Intensità territoriale<input id="staStrength" type="number" min="0" max="2" step="0.1" value="${STATE.strength.toFixed(1)}"><small>0 = solo nazionale · 1 = effetto pieno · 2 = effetto raddoppiato</small></label>
-    </div>
-    <div class="sta-card sta-main">
-      <div><div class="sta-overline">${esc(p.name)} · ${esc(STATE.region)} · ${esc(STATE.college)}</div><div class="sta-big">${pct(model.shares[STATE.party])}%</div><div class="sta-sub">quota stimata nello scenario territoriale</div></div>
-      <div class="sta-kpis">
-        <div><b>${pct(baseNational(STATE.chamber,STATE.party))}%</b><span>base nazionale</span></div>
-        <div><b>${row.delta>=0?"+":""}${pct(row.delta)} pt</b><span>aggiustamento territoriale</span></div>
-        <div><b>${selectedRow.seats}</b><span>seggi nel collegio selezionato</span><small style="display:block;margin-top:3px;color:#718da0;font-size:6px">${totalSelected} nella regione</small></div>
-      </div>
-    </div>
-    <div class="sta-grid">
-      <section class="sta-card"><div class="sta-title"><b>Dati osservati nel collegio</b><span>percentuali reali</span></div><table><thead><tr><th>Elezione</th><th>Collegio</th><th>Dato nazionale</th><th>Scostamento</th></tr></thead><tbody>${obsRows.map(x=>`<tr><td>${esc(x.label)}</td><td>${x.share==null?"—":pct(x.share)+"%"}</td><td>${x.nat==null?"—":pct(x.nat)+"%"}</td><td>${x.share==null||x.nat==null?"—":(x.share-x.nat>=0?"+":"")+pct(x.share-x.nat)+" pt"}</td></tr>`).join("")}</tbody></table>${regObs.length?`<div class="sta-note"><b>Regionali della regione:</b> ${regObs.map(x=>x.share==null?x.year+" —":x.year+" "+pct(x.share)+"%").join(" · ")}</div>`:"<div class='sta-note'>Dati Regionali in aggiornamento per questa regione.</div>"}</section>
-      <section class="sta-card"><div class="sta-title"><b>Seggi per collegio</b><span>${STATE.chamber==="camera"?"riparto Camera":"riparto Senato con lettura territoriale"}</span></div><div class="sta-bars">${rows.map(x=>`<div class="sta-bar"><div><b>${esc(x.college)}</b><span>${x.seats} seggi · ${pct(x.share)}%</span></div><div class="sta-track"><i style="width:${Math.max(2,Math.min(100,x.share))}%"></i></div></div>`).join("")}</div><div class="sta-note">${STATE.chamber==="camera"?"Per la Camera i seggi sono quelli restituiti dal motore di riparto statutario sullo scenario territoriale.":"Per il Senato la legge ripartisce i seggi a livello regionale; la colonna per collegio è una lettura territoriale di servizio, mentre il totale regionale proviene dal motore statutario."}</div></section>
-    </div>
-    <section class="sta-card"><div class="sta-title"><b>Come si forma la stima</b><span>pesi modificabili nel codice</span></div><table><thead><tr><th>Segnale</th><th>Peso</th><th>Disponibile</th><th>Effetto sul collegio</th></tr></thead><tbody>
-      <tr><td>Politiche 2022</td><td>${Math.round(STATE.weights.politiche2022*100)}%</td><td>${obs(STATE.chamber,"politiche2022",STATE.college,STATE.party)==null?"NO":"SI"}</td><td>${(()=>{const a=obs(STATE.chamber,"politiche2022",STATE.college,STATE.party),n=nationalObserved(STATE.chamber,"politiche2022",STATE.party);return a==null||n==null?"—":(a-n>=0?"+":"")+pct(a-n)+" pt"})()}</td></tr>
-      <tr><td>Europee 2019</td><td>${Math.round(STATE.weights.europee2019*100)}%</td><td>${obs(STATE.chamber,"europee2019",STATE.college,STATE.party)==null?"NO":"SI"}</td><td>${(()=>{const a=obs(STATE.chamber,"europee2019",STATE.college,STATE.party),n=nationalObserved(STATE.chamber,"europee2019",STATE.party);return a==null||n==null?"—":(a-n>=0?"+":"")+pct(a-n)+" pt"})()}</td></tr>
-      <tr><td>Europee 2024</td><td>${Math.round(STATE.weights.europee2024*100)}%</td><td>${obs(STATE.chamber,"europee2024",STATE.college,STATE.party)==null?"NO":"SI"}</td><td>${(()=>{const a=obs(STATE.chamber,"europee2024",STATE.college,STATE.party),n=nationalObserved(STATE.chamber,"europee2024",STATE.party);return a==null||n==null?"—":(a-n>=0?"+":"")+pct(a-n)+" pt"})()}</td></tr>
-      <tr><td>Regionali</td><td>${Math.round(STATE.weights.regionali*100)}%</td><td>${regObs.length?"SI":"NO"}</td><td>${regObs.length&&regObs.some(x=>x.delta!=null)?"SI":"—"}</td></tr>
-    </tbody></table>
-    </section>
-    <div class="sta-foot">Fonti: dati elettorali pubblici comunali e codici territoriali; le Europee 2019/2024 e le Politiche 2022 sono ricondotte ai collegi 2022 tramite identificazione comunale. Nessun risultato storico viene modificato.</div>
-  </section>`;
-  document.getElementById("staCh").value=STATE.chamber;document.getElementById("staReg").value=STATE.region;document.getElementById("staCol").value=STATE.college;document.getElementById("staParty").value=STATE.party;
-  document.getElementById("staCh").onchange=e=>{STATE.chamber=e.target.value;render();};
-  document.getElementById("staReg").onchange=e=>{STATE.region=e.target.value;STATE.college=collegesForRegion(STATE.chamber,STATE.region)[0]||"";render();};
-  document.getElementById("staCol").onchange=e=>{STATE.college=e.target.value;render();};
-  document.getElementById("staParty").onchange=e=>{STATE.party=e.target.value;render();};
-  document.getElementById("staStrength").onchange=e=>{STATE.strength=clamp(e.target.value,0,2);render();};
-}
+function cityScenario(){}
 function injectStyle(){
  if(document.getElementById("staStyle"))return;
  const st=document.createElement("style");st.id="staStyle";st.textContent=`
