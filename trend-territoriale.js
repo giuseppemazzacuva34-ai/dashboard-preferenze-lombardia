@@ -22,7 +22,25 @@ function pol(ch,y,r,p){var v=D.politicheRegioni&&D.politicheRegioni[ch]&&D.polit
 function euro(y,r,p){var v=D.europee&&D.europee[String(y)]&&D.europee[String(y)][r]&&D.europee[String(y)][r][p];return v==null?0:n(v);}
 function regionalHistory(r){return Array.isArray(D.regionali&&D.regionali[r])?D.regionali[r].slice().sort(function(a,b){return String(a.date).localeCompare(String(b.date));}):[];}
 function colleges(r,ch){var m=D.collegeMaps&&D.collegeMaps[ch]&&D.collegeMaps[ch][r]||[];return m.map(function(x){return String(x).split("|")[0];}).filter(Boolean);}
-function colObs(ch,col,p){var src=D.politiche&&D.politiche[2022]&&D.politiche[2022][ch]||{},keys=Object.keys(src),t=norm(col),k=keys.find(function(x){return norm(x)===t;})||col;return src[k]&&src[k][p]?n(src[k][p]):0;}
+function colObs(ch,col,p){
+  var src=D.politiche&&D.politiche[2022]&&D.politiche[2022][ch]||{};
+  var maps=D.collegeMaps&&D.collegeMaps[ch]||{};
+  var found=null;
+  Object.keys(maps).some(function(r){
+    var arr=maps[r]||[];
+    var idx=-1;
+    for(var i=0;i<arr.length;i++){if(String(arr[i]).split("|")[0]===col){idx=i;break;}}
+    if(idx<0)return false;
+    var prefix=String(REGION_CODE[r]||0).padStart(2,"0")+"-";
+    var keys=Object.keys(src).filter(function(k){return String(k).indexOf(prefix)===0;}).sort(function(a,b){
+      var aa=Number(String(a).split("-")[1]||0),bb=Number(String(b).split("-")[1]||0);return aa-bb;
+    });
+    found=keys[idx]||null;
+    return !!found;
+  });
+  var rec=found?src[found]:null;
+  return rec&&rec[p]!=null?n(rec[p]):0;
+}
 function median(a){var x=a.filter(function(v){return v>0;}).sort(function(a,b){return a-b;});if(!x.length)return 0;var m=Math.floor(x.length/2);return x.length%2?x[m]:(x[m-1]+x[m])/2;}
 function crossFactor(ch,r,p){var vals=[pol(ch,2018,r,p),pol(ch,2022,r,p),euro(2019,r,p),euro(2024,r,p)],m=median(vals),z=0,w=0,i;for(i=0;i<4;i++){var v=vals[i],ew=EVENTS[i][1];if(v>0&&m>0){z+=ew*Math.log(v/m);w+=ew;}}return w?Math.exp(z/w):1;}
 function regionalFactor(ch,r,p){var base=pol(ch,2022,r,p),h=regionalHistory(r),z=0,w=0,i; if(base<=0)return 1; h.slice(-2).forEach(function(e,idx){var v=n(e.shares&&e.shares[p]);if(v>0){var ew=idx===0?.06:.10;z+=ew*Math.log(v/base);w+=ew;}});return w?Math.exp(z/w):1;}
