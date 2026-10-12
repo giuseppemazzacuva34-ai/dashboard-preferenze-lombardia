@@ -690,20 +690,6 @@ function installSondaggiModule(){
       const valueMap=(ch)=>Object.fromEntries(partyKeys.map(k=>[
         k,num(ch==="camera"?S.parties[k].camera:S.parties[k].senate)
       ]));
-      const coalitionResults=(S.coalitions||[]).map(co=>{
-        const values=valueMap("camera");
-        const camFigure=coalitionFigure(co.members,values,"camera");
-        const senateValues=valueMap("senato");
-        const senFigure=coalitionFigure(co.members,senateValues,"senato");
-        const camSeats=(Object.entries(national?.cam?.seats||{}).filter(([k])=>(co.members||[]).includes(k)).reduce((a,[,v])=>a+Number(v||0),0));
-        const senSeats=(Object.entries(national?.sen?.seats||{}).filter(([k])=>(co.members||[]).includes(k)).reduce((a,[,v])=>a+Number(v||0),0));
-        return {
-          id:co.id,name:co.name,members:[...(co.members||[])].map(canonicalKey),
-          cameraPct:Number(camFigure.total)||0,senatePct:Number(senFigure.total)||0,
-          cameraQualified:!!camFigure.qualifies,senateQualified:!!senFigure.qualifies,
-          cameraSeats:camSeats,senateSeats:senSeats
-        };
-      });
       const canonicalKey=(key)=>{
         const s=String(key||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase();
         const aliases={
@@ -722,6 +708,20 @@ function installSondaggiModule(){
         };
         return aliases[s]||String(key||"");
       };
+      const coalitionResults=(S.coalitions||[]).map(co=>{
+        const values=valueMap("camera");
+        const camFigure=coalitionFigure(co.members,values,"camera");
+        const senateValues=valueMap("senato");
+        const senFigure=coalitionFigure(co.members,senateValues,"senato");
+        const camSeats=(Object.entries(national?.cam?.seats||{}).filter(([k])=>(co.members||[]).includes(k)).reduce((a,[,v])=>a+Number(v||0),0));
+        const senSeats=(Object.entries(national?.sen?.seats||{}).filter(([k])=>(co.members||[]).includes(k)).reduce((a,[,v])=>a+Number(v||0),0));
+        return {
+          id:co.id,name:co.name,members:[...(co.members||[])].map(canonicalKey),
+          cameraPct:Number(camFigure.total)||0,senatePct:Number(senFigure.total)||0,
+          cameraQualified:!!camFigure.qualifies,senateQualified:!!senFigure.qualifies,
+          cameraSeats:camSeats,senateSeats:senSeats
+        };
+      });
       const canonicalDisplay={
         FdI:"Fratelli d'Italia",PD:"Partito Democratico",M5S:"Movimento 5 Stelle",
         AVS:"Alleanza Verdi Sinistra",FI:"Forza Italia",LEGA:"Lega",FN:"Futuro Nazionale",
