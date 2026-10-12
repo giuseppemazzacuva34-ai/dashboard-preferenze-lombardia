@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-const SG_DASH_VERSION="20261012-dashboard-scenari-v9";
+const SG_DASH_VERSION="20261012-dashboard-scenari-v10";
 const TEST_ACTIVE_KEY="lombardia_sondaggi_v7_test_active";
 const SCENARIO_APPLY_DATA={
   A:{camera:{FdI:40,PD:41.5,M5S:6,AVS:3,FI:3.5,LEGA:2,FN:1,AZ:1,IV:0.5,PIU:0.5,NM:0,ALTRI:1},senate:{FdI:42,PD:34,M5S:3,AVS:2,FI:3.5,LEGA:3,FN:2,AZ:2,IV:1,PIU:1,NM:1.5,ALTRI:5},coalitions:[{id:"C-CD",name:"Centrodestra",members:["Fratelli d'Italia","Lega","Forza Italia","Noi Moderati"]},{id:"C-CS",name:"Centrosinistra",members:["Partito Democratico","Movimento 5 Stelle","Alleanza Verdi Sinistra","+Europa","Italia Viva"]}]},
@@ -42,7 +42,6 @@ function loadEngines(){
   loadScript("sondaggi-law-20261008","sondaggi-law-20261008.js?v=20261009-legal");
   loadScript("sondaggi-app-preview","sondaggi-app.js?v=20261012-preview4");
   loadScript("dashboard-runtime-integrity","dashboard-runtime-integrity.js?v=20261009-1");
-  loadScript("sondaggi-trend-2018-2022","sondaggi-trend-2018-2022.js?v=20261012-clean2");
 }
 
 function activeId(){try{return localStorage.getItem(TEST_ACTIVE_KEY)||"";}catch(_){return"";}}
@@ -181,25 +180,7 @@ function writeV7(v){
 }
 
 let SG_ACTIVE_VIEW="scenari";
-function trendApi(){return window.SONDAGGI_TREND_2018_2022||null;}
-function ensureAnalysisNav(){
-  const root=document.getElementById("sg7"),tabs=root?.querySelector(".sg7tabs");
-  if(!root||!tabs)return null;
-  let nav=tabs.querySelector("#sgAnalysisNav");
-  if(!nav){
-    nav=document.createElement("span");nav.id="sgAnalysisNav";nav.style.cssText="display:contents";
-    const make=(view,label)=>{
-      const b=document.createElement("button");
-      b.type="button";b.className="sg7tab sg7analysisTab";b.dataset.sganView=view;b.textContent=label;
-      b.addEventListener("click",ev=>{ev.preventDefault();ev.stopImmediatePropagation();SG_ACTIVE_VIEW=view;applyAnalysisView();},true);
-      return b;
-    };
-    nav.appendChild(make("scenari","SCENARI POSSIBILI"));
-    nav.appendChild(make("trend","TREND"));
-    tabs.appendChild(nav);
-  }
-  return nav;
-}
+
 function ensureAnalysisNavStyle(){
   if(document.getElementById("sgAnalysisNavStyle"))return;
   const st=document.createElement("style");st.id="sgAnalysisNavStyle";
@@ -208,15 +189,10 @@ function ensureAnalysisNavStyle(){
 }
 function applyAnalysisView(){
   ensureAnalysisNavStyle();
-  const nav=ensureAnalysisNav(),content=document.getElementById("sg7content"),bank=document.getElementById("sgScenarioBankNative"),trend=document.getElementById("sgTrendScreen"),estero=document.getElementById("sg7EsteroBox");
+  const nav=ensureAnalysisNav(),content=document.getElementById("sg7content"),bank=document.getElementById("sgScenarioBankNative");
   if(nav)nav.querySelectorAll("[data-sgan-view]").forEach(b=>b.classList.toggle("active",b.dataset.sganView===SG_ACTIVE_VIEW));
-  const isTrend=SG_ACTIVE_VIEW==="trend";
-  if(content)content.style.display=isTrend?"none":"";
-  if(bank)bank.style.display=isTrend?"none":"";
-  if(estero)estero.style.display=isTrend?"none":"";
-  if(isTrend&&!trend)trendApi()?.mount?.();
-  const current=document.getElementById("sgTrendScreen");
-  if(current)current.style.display=isTrend?"block":"none";
+  if(content)content.style.display="";
+  if(bank)bank.style.display="";
 }
 function styleAndMarkup(){
   const host=document.getElementById("sg7content");
