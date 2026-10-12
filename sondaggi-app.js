@@ -534,9 +534,13 @@ function installSondaggiModule(){
     next.chamber=preset.chamber;
     next.region="Lombardia";
     next.college=collegesFor(preset.chamber,"Lombardia")[0]?.name||"";
-    next.parties=cloneScenarioState((source||S).parties||{});
+    // Per i test usiamo esclusivamente gli slug canonici di POLLS.
+    // Questo evita che vecchie chiavi legacy (es. "Fratelli d'Italia")
+    // sopravvivano insieme allo slug "FdI" e vengano contate come due partiti.
+    next.parties={};
     POLLS.forEach(p=>{
-      next.parties[p[0]]={...(next.parties[p[0]]||{}),name:p[1],
+      const previous=(source||S).parties?.[p[0]]||{};
+      next.parties[p[0]]={...previous,name:p[1],
         camera:Number(preset.camera?.[p[0]]??p[2]),
         senate:Number(preset.senate?.[p[0]]??p[2])};
     });
