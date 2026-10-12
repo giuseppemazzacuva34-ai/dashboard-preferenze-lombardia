@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-if(window.__SG_ANALYSIS_LINK_V13||window.__SG_ANALYSIS_LINK_V12)return;
+if(window.__SG_ANALYSIS_LINK_V13)return;
 window.__SG_ANALYSIS_LINK_V13=true;
 window.__SG_ANALYSIS_LINK_V11=true;
 window.__SG_ANALYSIS_LINK_V10=true;
