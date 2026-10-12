@@ -180,9 +180,110 @@ function render(){
       const st=document.getElementById("sgtStatus");if(st)st.innerHTML="Regione <b>"+esc(r)+"</b> scritta nei Sondaggi.";
     }catch(err){alert("Scrittura non riuscita: "+(err?.message||err));}
   };
+  renderTerritorialModel();
   return true;
 }
+
+const T=window.SONDAGGI_TERRITORIAL_DATA||null;
+function territorialParties(){return getParties();}
+function territorialNat2022(ch,id){
+  const bucket=HIST?.[ch]?.[2022]||{};let a=0,b=0;
+  Object.values(bucket).forEach(x=>{
+    const raw=PARTY_MAP[id]?.y2022,t=Number(x?.total)||0,v=Number(x?.lists?.[raw]);
+    if(raw&&t>0&&Number.isFinite(v)){a+=t*v;b+=t;}
+  });
+  return b>0?a/b:null;
+}
+function territorialCurrentNational(ch,id){
+  const a=app(),ps=getParties(),name=ps[id]?.name,v=a.nationalVotes?.[ch]?.[name];
+  return Number.isFinite(Number(v))?Number(v):Number(ps[id]?.[ch==="camera"?"camera":"senato"]||0);
+}
+function territorialEstimate(ch,meta,id){
+  const reg=meta.region,base=T?.[ch+"2022"]?.[meta.id]?.parties?.[id];
+  const p18=historical(ch,2018,reg,id),p22=historical(ch,2022,reg,id);
+  const e19=T?.europee2019?.[reg]?.parties?.[id],e24=T?.europee2024?.[reg]?.parties?.[id];
+  const nat22=territorialNat2022(ch,id),natNow=territorialCurrentNational(ch,id);
+  let estimate=Number.isFinite(Number(base))?Number(base):Number.isFinite(Number(e24))?Number(e24):Number.isFinite(Number(p22))?Number(p22):natNow;
+  let signal=0,w=0;
+  if(e19!=null&&e24!=null){signal+=(e24-e19)*0.50;w+=0.50;}
+  if(p18!=null&&p22!=null){signal+=(p22-p18)*0.25;w+=0.25;}
+  if(e24!=null&&p22!=null){signal+=(e24-p22)*0.25;w+=0.25;}
+  if(w)estimate+=signal/w;
+  if(nat22!=null&&natNow!=null)estimate+=(natNow-nat22)*0.20;
+  const parts=[estimate];
+  if(e19!=null&&e24!=null)parts.push((Number(base)||estimate)+(e24-e19)*0.50);
+  if(p18!=null&&p22!=null)parts.push((Number(base)||estimate)+(p22-p18)*0.50);
+  const mean=parts.reduce((a,v)=>a+v,0)/parts.length;
+  const spread=Math.max(1,Math.sqrt(parts.reduce((a,v)=>a+Math.pow(v-mean,2),0)/parts.length));
+  return {estimate:clamp(estimate),low:clamp(estimate-1.96*spread),high:clamp(estimate+1.96*spread),base:base??null,p18:p18??null,p22:p22??null,e19:e19??null,e24:e24??null,currentNational:natNow};
+}
+function territorialMap(ch){return window.SONDAGGI_TERRITORIAL_COLLEGES?.[ch]||{};}
+function allTerritorialForecast(ch){
+  const map=territorialMap(ch),ps=getParties(),out={};
+  Object.values(map).filter(m=>!m.special).forEach(meta=>{
+    const vals={};Object.keys(ps).forEach(id=>vals[id]=territorialEstimate(ch,meta,id).estimate);
+    const sum=Object.values(vals).reduce((a,v)=>a+Math.max(0,v),0)||1;
+    Object.keys(vals).forEach(id=>vals[id]=100*Math.max(0,vals[id])/sum);
+    out[meta.id]={id:meta.id,name:meta.name,region:meta.region,values:vals};
+  });
+  return out;
+}
+function territorialInput(){
+  const engine=window.SONDAGGI_ELECTION_ENGINE_20261008,law=window.SONDAGGI_LAW_20261008;
+  if(!engine||!law)return null;
+  const ps=getParties(),cam=allTerritorialForecast("camera"),sen=allTerritorialForecast("senato");
+  const names=Object.fromEntries(Object.keys(ps).map(id=>[id,ps[id].name]));
+  function values(f){const o={};Object.values(f).forEach(m=>o[m.name]=Object.fromEntries(Object.keys(ps).map(id=>[names[id],m.values[id]||0])));return o;}
+  function national(f,ch){
+    const o={};Object.keys(ps).forEach(id=>{let s=0,w=0;Object.values(f).forEach(m=>{const meta=territorialMap(ch)[m.id],wt=meta?(meta.withPrizeSeats||meta.noPrizeSeats||1):1;s+=(m.values[id]||0)*wt;w+=wt;});o[names[id]]=w?s/w:territorialCurrentNational(ch,id);});return o;
+  }
+  function rawMap(ch){
+    const o={};Object.values(territorialMap(ch)).forEach(m=>{(o[m.region]??=[]).push(m.name+"|"+m.noPrizeSeats+"|"+m.withPrizeSeats+(m.special?"|SPECIAL":""));});return o;
+  }
+  return {
+    law:law,
+    parties:Object.fromEntries(Object.keys(ps).map(id=>[names[id],{name:names[id],camera:ps[id].camera,senate:ps[id].senato}])),
+    coalitions:Array.isArray(app().coalitions)?app().coalitions:[],
+    specialSeats:app().specialSeats||{},
+    camera:{nationalValues:national(cam,"camera"),collegeValues:values(cam),collegeWeights:{},collegeMap:rawMap("camera")},
+    senato:{nationalValues:national(sen,"senato"),regionalValuesByRegion:Object.fromEntries(REGIONS.map(r=>[r,Object.fromEntries(Object.keys(ps).map(id=>[names[id],territorialCurrentNational("senato",id)]))])),collegeMap:rawMap("senato"),premiumByRegion:{}}
+  };
+}
+function territorialSeatResult(ch,id,college){
+  try{
+    const input=territorialInput(),sim=window.SONDAGGI_ELECTION_ENGINE_20261008.simulate(input),name=getParties()[id]?.name;
+    if(!sim)return 0;
+    if(ch==="camera")return sim.cam?.collegeByList?.[name]?.[college]||0;
+    return sim.sen?.regions?.[college]?.targets?.[name]||0;
+  }catch(_){return 0;}
+}
+function renderTerritorialModel(){
+  const old=document.getElementById("sgTerritorialModel");if(old)old.remove();
+  const map=territorialMap(S.chamber),entries=Object.values(map).filter(m=>!m.special);
+  if(!HOST||!entries.length)return;
+  const ps=getParties(),cid=S.territorialCollege||entries[0].id,pid=S.territorialParty||Object.keys(ps)[0],meta=map[cid]||entries[0];
+  S.territorialCollege=meta.id;S.territorialParty=pid;
+  const selected=territorialEstimate(S.chamber,meta,pid);
+  const seats=territorialSeatResult(S.chamber,pid,S.chamber==="camera"?meta.name:meta.region);
+  if(!document.getElementById("sgTerritorialStyle")){
+    const st=document.createElement("style");st.id="sgTerritorialStyle";
+    st.textContent=".sgtm-title{font-size:11px;font-weight:900;color:#fff}.sgtm-sub{font-size:7px;color:#8fa9ba;line-height:1.45}.sgtm-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:9px}.sgtm-kpi{padding:9px;border:1px solid #294b62;border-radius:8px;background:#0b2539}.sgtm-kpi b{display:block;color:#fff;font-size:16px}.sgtm-kpi span{display:block;color:#7893a5;font-size:7px;text-transform:uppercase;margin-top:2px}.sgtm-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:9px 0}.sgtm-actions select{width:100%;height:34px;background:#091827;color:#fff;border:1px solid #31536a;border-radius:8px;padding:6px 8px;font-size:9px}.sgtm-table{width:100%;border-collapse:collapse;min-width:680px}.sgtm-table th,.sgtm-table td{padding:6px;border-bottom:1px solid #1b394e;text-align:left;font-size:7px}.sgtm-table th{color:#7895a7;text-transform:uppercase}.sgtm-table td{color:#d7e9f1}.sgtm-foot{margin-top:8px;font-size:7px;color:#7590a1;line-height:1.5}@media(max-width:700px){.sgtm-kpis{grid-template-columns:1fr 1fr}.sgtm-actions{grid-template-columns:1fr}.sgtm-table{min-width:620px}}";
+    document.head.appendChild(st);
+  }
+  const rows=Object.entries(ps).map(([id,p])=>{
+    const x=territorialEstimate(S.chamber,meta,id);
+    return "<tr><td><b>"+esc(p.name)+"</b></td><td>"+pct(x.estimate)+"%</td><td>"+pct(x.low)+"–"+pct(x.high)+"%</td><td>"+(x.base==null?"—":pct(x.base)+"%")+"</td><td>"+(x.e19==null?"—":pct(x.e19)+"%")+"</td><td>"+(x.e24==null?"—":pct(x.e24)+"%")+"</td></tr>";
+  }).join("");
+  const box=document.createElement("section");box.id="sgTerritorialModel";box.className="sgt";
+  box.innerHTML="<div class='sgtm-title'>MODELLO TERRITORIALE · STIMA PER COLLEGIO</div><div class='sgtm-sub'>Politiche 2022 come base locale + Europee 2019/2024 + ancoraggio nazionale presente. Il range è un intervallo del modello, non una probabilità dell'esito.</div><div class='sgtm-actions'><select id='sgtmCollege'>"+entries.map(m=>"<option value='"+esc(m.id)+"'>"+esc(m.name)+"</option>").join("")+"</select><select id='sgtmParty'>"+Object.entries(ps).map(([id,p])=>"<option value='"+esc(id)+"'>"+esc(p.name)+"</option>").join("")+"</select><select id='sgtmChamber'><option value='camera'>Camera</option><option value='senato'>Senato</option></select></div><div class='sgtm-kpis'><div class='sgtm-kpi'><b>"+pct(selected.estimate)+"%</b><span>stima</span></div><div class='sgtm-kpi'><b>"+pct(selected.low)+"–"+pct(selected.high)+"%</b><span>range modello</span></div><div class='sgtm-kpi'><b>"+String(seats)+"</b><span>seggi</span></div><div class='sgtm-kpi'><b>"+(selected.base==null?"—":pct(selected.base)+"%")+"</b><span>base 2022</span></div></div><section class='sgt-card' style='margin-top:9px'><div class='sgt-card-top'><h3>"+esc(meta.name)+"</h3><span class='sgt-muted'>"+esc(meta.region)+"</span></div><div class='sgt-table-wrap'><table class='sgtm-table'><thead><tr><th>Partito</th><th>Stima</th><th>Range</th><th>Pol. 2022</th><th>Eur. 2019</th><th>Eur. 2024</th></tr></thead><tbody>"+rows+"</tbody></table></div></section><div class='sgtm-foot'>Dati territoriali: Politiche 2022 per collegio; Europee 2019/2024 per regione. La componente Regionali non viene riempita con dati non verificati.</div>";
+  HOST.appendChild(box);
+  document.getElementById("sgtmCollege").value=meta.id;document.getElementById("sgtmParty").value=pid;document.getElementById("sgtmChamber").value=S.chamber;
+  document.getElementById("sgtmCollege").onchange=e=>{S.territorialCollege=e.target.value;save();renderTerritorialModel();};
+  document.getElementById("sgtmParty").onchange=e=>{S.territorialParty=e.target.value;save();renderTerritorialModel();};
+  document.getElementById("sgtmChamber").onchange=e=>{S.chamber=e.target.value==="senato"?"senato":"camera";const first=Object.values(territorialMap(S.chamber)).find(m=>!m.special);S.territorialCollege=first?.id;save();render();};
+}
+
 function mount(){style();HOST=ensureHost();return HOST?render():false;}
-window.SONDAGGI_TREND_2018_2022={version:"2026-10-12-clean3",getState:()=>JSON.parse(JSON.stringify(S)),getHistorical:historical,mount};
+window.SONDAGGI_TREND_2018_2022={version:"2026-10-12-clean5",getState:()=>JSON.parse(JSON.stringify(S)),getHistorical:historical,mount};
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mount,{once:true});else mount();
 })();
