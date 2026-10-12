@@ -82,18 +82,6 @@ function scenarioValue(chamber,region,id){
 function activeValue(chamber,region,id){return clamp(S.manual?.[region]?.[id]??scenarioValue(chamber,region,id));}
 function ensureHost(){
   let el=document.getElementById("sgTrendScreen");
-  const root=document.getElementById("sg7"),tabs=root?.querySelector(".sg7tabs");
-  if(root&&tabs){
-    if(!el){
-      el=document.createElement("section");
-      el.id="sgTrendScreen";
-      el.setAttribute("aria-label","Trend elettorale 2018 2022");
-      tabs.insertAdjacentElement("afterend",el);
-    }else if(el.parentElement!==root){
-      tabs.insertAdjacentElement("afterend",el);
-    }
-    return el;
-  }
   const page=document.getElementById("page"),anchor=document.getElementById("tab-sondaggi");
   if(page&&anchor){
     if(!el){
@@ -195,6 +183,6 @@ function render(){
   return true;
 }
 function mount(){style();HOST=ensureHost();return HOST?render():false;}
-window.SONDAGGI_TREND_2018_2022={version:"2026-10-12-clean2",getState:()=>JSON.parse(JSON.stringify(S)),getHistorical:historical,mount};
+window.SONDAGGI_TREND_2018_2022={version:"2026-10-12-clean3",getState:()=>JSON.parse(JSON.stringify(S)),getHistorical:historical,mount};
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mount,{once:true});else mount();
 })();
