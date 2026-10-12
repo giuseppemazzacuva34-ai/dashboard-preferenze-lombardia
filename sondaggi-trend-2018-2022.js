@@ -283,7 +283,48 @@ function renderTerritorialModel(){
   document.getElementById("sgtmChamber").onchange=e=>{S.chamber=e.target.value==="senato"?"senato":"camera";const first=Object.values(territorialMap(S.chamber)).find(m=>!m.special);S.territorialCollege=first?.id;save();render();};
 }
 
-function mount(){style();HOST=ensureHost();return HOST?render():false;}
-window.SONDAGGI_TREND_2018_2022={version:"2026-10-12-clean5",getState:()=>JSON.parse(JSON.stringify(S)),getHistorical:historical,mount};
+let EUROPEAN_HISTORY=null;
+let EUROPEAN_HISTORY_LOADING=false;
+function renderEuropeanHistory(){
+  if(!HOST)return;
+  const old=document.getElementById("sgEuropeanHistory");if(old)old.remove();
+  if(!EUROPEAN_HISTORY)return;
+  const region=S.region, ps=getParties();
+  const available=EUROPEAN_HISTORY.parties||[];
+  const core=Object.entries(ps).filter(([id])=>{
+    const idx={FdI:"Fratelli d'Italia",PD:"Partito Democratico",M5S:"Movimento 5 Stelle",LEGA:"Lega",FI:"Forza Italia",AVS:"Alleanza Verdi Sinistra",AZ:"Azione",PIU:"+Europa",NM:"Noi Moderati",FN:"Futuro Nazionale",IV:"Italia Viva",ALTRI:"Altri"}[id];
+    return idx&&available.includes(idx);
+  });
+  const e19=EUROPEAN_HISTORY.elections?.["2019"]?.[region]||{};
+  const e24=EUROPEAN_HISTORY.elections?.["2024"]?.[region]||{};
+  const rows=core.map(([id,p])=>{
+    const label={FdI:"Fratelli d'Italia",PD:"Partito Democratico",M5S:"Movimento 5 Stelle",LEGA:"Lega",FI:"Forza Italia",AVS:"Alleanza Verdi Sinistra",AZ:"Azione",PIU:"+Europa",NM:"Noi Moderati",FN:"Futuro Nazionale",IV:"Italia Viva",ALTRI:"Altri"}[id]||p.name;
+    const a=Number(e19[label]),b=Number(e24[label]);
+    const ok=Number.isFinite(a)&&Number.isFinite(b);
+    return "<tr><td><b>"+esc(label)+"</b></td><td>"+(Number.isFinite(a)?pct(a)+"%":"—")+"</td><td>"+(Number.isFinite(b)?pct(b)+"%":"—")+"</td><td>"+(ok?signed(b-a)+" pt":"—")+"</td></tr>";
+  }).join("");
+  const box=document.createElement("section");
+  box.id="sgEuropeanHistory";
+  box.className="sgt";
+  box.style.marginTop="10px";
+  box.innerHTML="<div class='sgtm-title'>STORICO EUROPEE · "+esc(region)+"</div><div class='sgtm-sub'>Risultati comunali aggregati regionalmente. 2019 e 2024 sono osservazioni reali; la variazione non è una previsione.</div><div class='sgtm-kpis'><div class='sgtm-kpi'><b>"+String(Object.keys(e19).length)+"</b><span>liste 2019</span></div><div class='sgtm-kpi'><b>"+String(Object.keys(e24).length)+"</b><span>liste 2024</span></div><div class='sgtm-kpi'><b>2019 → 2024</b><span>periodo</span></div><div class='sgtm-kpi'><b>comune → regione</b><span>aggregazione</span></div></div><section class='sgt-card' style='margin-top:9px'><div class='sgt-card-top'><h3>Confronto partiti normalizzati</h3><span class='sgt-muted'>benchmark storico</span></div><div class='sgt-table-wrap'><table class='sgtm-table'><thead><tr><th>Partito</th><th>Europee 2019</th><th>Europee 2024</th><th>Δ</th></tr></thead><tbody>"+rows+"</tbody></table></div></section><div class='sgtm-foot'>Fonte 2019: dati comunali Ministero dell'Interno/Eligendo pubblicati da onData/guenter. Fonte 2024: dati comunali estratti da Eligendo e pubblicati da onData. Alcune liste composte sono trattate come proxy di continuità e sono indicate nel dataset.</div>";
+  HOST.appendChild(box);
+}
+async function loadEuropeanHistory(){
+  if(EUROPEAN_HISTORY_LOADING||EUROPEAN_HISTORY)return;
+  EUROPEAN_HISTORY_LOADING=true;
+  try{
+    const res=await fetch("trend-history-regional.json?v=20261012-regional1",{cache:"no-store"});
+    if(!res.ok)throw new Error("HTTP "+res.status);
+    EUROPEAN_HISTORY=await res.json();
+    renderEuropeanHistory();
+  }catch(err){
+    console.error("Trend history loader",err);
+  }finally{
+    EUROPEAN_HISTORY_LOADING=false;
+  }
+}
+function mount(){style();HOST=ensureHost();if(!HOST)return false;render();loadEuropeanHistory();return true;}
+window.SONDAGGI_TREND_2018_2022={version:"2026-10-12-clean6",getState:()=>JSON.parse(JSON.stringify(S)),getHistorical:historical,mount};
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mount,{once:true});else mount();
 })();
