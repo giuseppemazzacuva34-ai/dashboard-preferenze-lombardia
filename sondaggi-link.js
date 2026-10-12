@@ -194,7 +194,7 @@ function ensureAnalysisNav(){
     const mk=(view,label)=>{
       const btn=document.createElement("button");
       btn.type="button";
-      btn.className="sg7tab sg7analysisTab";
+      btn.className="sg7analysisTab";
       btn.dataset.sganView=view;
       btn.textContent=label;
       btn.addEventListener("click",()=>{
@@ -215,8 +215,8 @@ function ensureAnalysisNavStyle(){
   st.id="sgAnalysisNavStyle";
   st.textContent=[
     "#sgAnalysisNav{display:contents!important}",
-    "#sg7 .sg7analysisTab{border-color:rgba(255,255,255,.28)!important;background:rgba(255,255,255,.10)!important;color:#fff!important}",
-    "#sg7 .sg7analysisTab.active{background:rgba(255,255,255,.28)!important;border-color:rgba(255,255,255,.48)!important}",
+    "#sg7 .sg7analysisTab{position:relative!important;z-index:2147483647!important;pointer-events:auto!important;touch-action:manipulation!important;border:1px solid rgba(255,255,255,.28)!important;background:rgba(255,255,255,.10)!important;color:#fff!important;border-radius:10px!important;padding:10px 13px!important;font-weight:800!important;cursor:pointer!important}",
+    "#sg7 .sg7analysisTab.active{background:rgba(255,255,255,.24)!important;border-color:rgba(255,255,255,.48)!important}",
     "#sg7 .sg7analysisTab:hover{background:rgba(255,255,255,.18)!important}"
   ].join("");
   document.head.appendChild(st);
