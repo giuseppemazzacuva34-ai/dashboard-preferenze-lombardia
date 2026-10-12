@@ -1,6 +1,7 @@
 (function(){
 "use strict";
 
+window.__SG_ANALYSIS_LINK_V10=true;
 const SG_DASH_VERSION="20261012-dashboard-scenari-v10";
 const TEST_ACTIVE_KEY="lombardia_sondaggi_v7_test_active";
 const SCENARIO_APPLY_DATA={
