@@ -52,7 +52,10 @@ window.SG_TERRITORIAL_COMPACT_READY=(async function(){
   for(const [region,items] of Object.entries(bundle.byRegion||{})){
     out[region]=(items||[]).map(x=>({
       date:x.date,year:Number(x.year)||Number(String(x.date||"").slice(0,4)),
-      shares:x.shares||{},totalVotes:Number(x.totalVotes)||0,
+      shares:Object.fromEntries(Object.entries(x.shares||{}).map(function(pair){
+        var key=pair[0], value=pair[1];
+        return [partyNames[key]||key,Number(value)||0];
+      })),totalVotes:Number(x.totalVotes)||0,
       turnout:x.turnout==null?null:Number(x.turnout),source:x.source||""
     })).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
   }
