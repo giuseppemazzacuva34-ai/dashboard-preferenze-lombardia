@@ -42,7 +42,7 @@ function loadEngines(){
   loadScript("sondaggi-law-20261008","sondaggi-law-20261008.js?v=20261009-legal");
   loadScript("sondaggi-app-preview","sondaggi-app.js?v=20261012-preview4");
   loadScript("dashboard-runtime-integrity","dashboard-runtime-integrity.js?v=20261009-1");
-  loadScript("sondaggi-trend-2018-2022","sondaggi-trend-2018-2022.js?v=20261012-trend6");
+  loadScript("sondaggi-trend-2018-2022","sondaggi-trend-2018-2022.js?v=20261012-trend7");
 }
 
 function activeId(){try{return localStorage.getItem(TEST_ACTIVE_KEY)||"";}catch(_){return"";}}
@@ -285,9 +285,24 @@ function styleAndMarkup(){
   return true;
 }
 
+function forceTrendMount(){
+  let tries=0;
+  const tick=()=>{
+    if(window.__SG_TREND_FORCE_MOUNTED)return;
+    const api=window.SONDAGGI_TREND_2018_2022;
+    if(api?.mount){
+      window.__SG_TREND_FORCE_MOUNTED=true;
+      try{api.mount();}catch(err){console.error("Trend storico mount",err);}
+      return;
+    }
+    if(tries++<80)setTimeout(tick,200);
+  };
+  tick();
+}
 function run(){
   loadMobileStyles();
   loadEngines();
+  forceTrendMount();
   let tries=0;
   const install=()=>{
     if(styleAndMarkup())return;
