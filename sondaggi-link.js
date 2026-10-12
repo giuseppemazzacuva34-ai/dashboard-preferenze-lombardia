@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-const SG_DASH_VERSION="20261012-dashboard-scenari-v8";
+const SG_DASH_VERSION="20261012-dashboard-scenari-v9";
 const TEST_ACTIVE_KEY="lombardia_sondaggi_v7_test_active";
 const TESTS={
   A:{id:"A",name:"NESSUN PREMIO",desc:"Vincitore diverso nelle due Camere.",expected:"Premio 0 Camera · 0 Senato.",coalitions:["Centrodestra","Centrosinistra"]},
@@ -119,7 +119,8 @@ function resultsMarkup(result,item){
 function ensureObject(v){return v&&typeof v==="object"?v:{};}
 function applyScenarioToManual(id){
   const t=TESTS[id];
-  if(!t)return false;
+  const data=SCENARIO_APPLY_DATA[id];
+  if(!t||!data)return false;
   let current=readV7();
   if(!localStorage.getItem("lombardia_sondaggi_2026_test_backup")){
     localStorage.setItem("lombardia_sondaggi_2026_test_backup",JSON.stringify(current));
@@ -127,23 +128,30 @@ function applyScenarioToManual(id){
   current=ensureObject(current);
   current.parties=ensureObject(current.parties);
   current.nationalVotes=ensureObject(current.nationalVotes);
-  current.nationalVotes.camera=clone(t.camera||{});
-  current.nationalVotes.senato=clone(t.senate||{});
-  Object.assign(current.parties,t.camera||{},t.senate||{});
-  current.coalitions=clone(t.coalitions||[]);
+  current.nationalVotes.camera=clone(data.camera);
+  current.nationalVotes.senato=clone(data.senate);
+
+  const displayNameMap={
+    FdI:"Fratelli d'Italia",PD:"Partito Democratico",M5S:"Movimento 5 Stelle",
+    AVS:"Alleanza Verdi Sinistra",FI:"Forza Italia",LEGA:"Lega",FN:"Futuro Nazionale",
+    AZ:"Azione",IV:"Italia Viva",PIU:"+Europa",NM:"Noi Moderati",ALTRI:"Altri"
+  };
+  Object.keys(displayNameMap).forEach(slug=>{
+    current.parties[displayNameMap[slug]]=Number(data.camera?.[slug]??data.senate?.[slug]??0);
+  });
+
+  current.coalitions=clone(data.coalitions||[]);
   current.circVotes=ensureObject(current.circVotes);
   current.circVotes.camera=ensureObject(current.circVotes.camera);
   current.circVotes.senato=ensureObject(current.circVotes.senato);
-  const circCam=Object.keys(current.circVotes.camera);
-  circCam.forEach(k=>current.circVotes.camera[k]=clone(t.camera||{}));
-  const circSen=Object.keys(current.circVotes.senato);
-  circSen.forEach(k=>current.circVotes.senato[k]=clone(t.senate||{}));
-  current.circVotes.senato.Lombardia=clone(t.lombardiaSenate||t.senate||{});
+  Object.keys(current.circVotes.camera).forEach(k=>current.circVotes.camera[k]=clone(data.camera));
+  Object.keys(current.circVotes.senato).forEach(k=>current.circVotes.senato[k]=clone(data.senate));
+  current.circVotes.senato.Lombardia=clone(data.lombardiaSenate||data.senate);
   current.collegeVotes=ensureObject(current.collegeVotes);
   current.collegeVotes.camera=ensureObject(current.collegeVotes.camera);
   current.collegeVotes.senato=ensureObject(current.collegeVotes.senato);
-  Object.keys(current.collegeVotes.camera).forEach(k=>current.collegeVotes.camera[k]=clone(t.camera||{}));
-  Object.keys(current.collegeVotes.senato).forEach(k=>current.collegeVotes.senato[k]=clone(t.senate||{}));
+  Object.keys(current.collegeVotes.camera).forEach(k=>current.collegeVotes.camera[k]=clone(data.camera));
+  Object.keys(current.collegeVotes.senato).forEach(k=>current.collegeVotes.senato[k]=clone(data.senate));
   current.meta=ensureObject(current.meta);
   current.meta.v7TestId=id;
   current.meta.v7TestUpdatedAt=new Date().toISOString();
@@ -167,6 +175,7 @@ function styleAndMarkup(){
   const host=document.getElementById("sg7content");
   if(!host)return false;
   let bank=document.getElementById("sgScenarioBankNative");
+  if(bank && bank.dataset.sgVersion!==SG_DASH_VERSION){ bank.remove(); bank=null; }
   if(!bank){
     const st=document.createElement("style");
     st.id="sgScenarioBankNativeStyle";
@@ -209,6 +218,7 @@ function styleAndMarkup(){
 
     bank=document.createElement("section");
     bank.id="sgScenarioBankNative";
+    bank.dataset.sgVersion=SG_DASH_VERSION;
     bank.innerHTML=
       "<div class='sgsn-head'><b>SCENARI POSSIBILI</b><span>PREVIEW NON DISTRUTTIVA · 6 TEST</span></div>"+
       "<div class='sgsn-note'>Cliccando un test visualizzi il risultato senza perdere l'inserimento manuale. I valori vengono applicati al modulo manuale soltanto con il comando dedicato.</div>"+
