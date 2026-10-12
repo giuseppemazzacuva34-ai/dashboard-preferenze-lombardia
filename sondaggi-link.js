@@ -58,6 +58,53 @@ function resultsMarkup(result,item){
     "<div class='sgsn-section'><b>Controlli del test</b><div class='sgsn-scroll'><table><thead><tr><th>Controllo</th><th>Calcolato</th><th>Atteso</th><th></th></tr></thead><tbody>"+checks+"</tbody></table></div></div>";
 }
 
+function ensureObject(v){return v&&typeof v==="object"?v:{};}
+function applyScenarioToManual(id){
+  const t=TESTS[id];
+  if(!t)return false;
+  let current=readV7();
+  if(!localStorage.getItem("lombardia_sondaggi_2026_test_backup")){
+    localStorage.setItem("lombardia_sondaggi_2026_test_backup",JSON.stringify(current));
+  }
+  current=ensureObject(current);
+  current.parties=ensureObject(current.parties);
+  current.nationalVotes=ensureObject(current.nationalVotes);
+  current.nationalVotes.camera=clone(t.camera||{});
+  current.nationalVotes.senato=clone(t.senate||{});
+  Object.assign(current.parties,t.camera||{},t.senate||{});
+  current.coalitions=clone(t.coalitions||[]);
+  current.circVotes=ensureObject(current.circVotes);
+  current.circVotes.camera=ensureObject(current.circVotes.camera);
+  current.circVotes.senato=ensureObject(current.circVotes.senato);
+  const circCam=Object.keys(current.circVotes.camera);
+  circCam.forEach(k=>current.circVotes.camera[k]=clone(t.camera||{}));
+  const circSen=Object.keys(current.circVotes.senato);
+  circSen.forEach(k=>current.circVotes.senato[k]=clone(t.senate||{}));
+  current.circVotes.senato.Lombardia=clone(t.lombardiaSenate||t.senate||{});
+  current.collegeVotes=ensureObject(current.collegeVotes);
+  current.collegeVotes.camera=ensureObject(current.collegeVotes.camera);
+  current.collegeVotes.senato=ensureObject(current.collegeVotes.senato);
+  Object.keys(current.collegeVotes.camera).forEach(k=>current.collegeVotes.camera[k]=clone(t.camera||{}));
+  Object.keys(current.collegeVotes.senato).forEach(k=>current.collegeVotes.senato[k]=clone(t.senate||{}));
+  current.meta=ensureObject(current.meta);
+  current.meta.v7TestId=id;
+  current.meta.v7TestUpdatedAt=new Date().toISOString();
+  writeV7(current);
+  localStorage.setItem(TEST_ACTIVE_KEY,id);
+  setTimeout(()=>location.reload(),80);
+  return true;
+}
+function readV7(){
+  try{
+    const raw=JSON.parse(localStorage.getItem("lombardia_sondaggi_v7")||"{}");
+    return raw&&typeof raw==="object"?raw:{};
+  }catch(_){return {};}
+}
+function writeV7(v){
+  localStorage.setItem("lombardia_sondaggi_v7",JSON.stringify(v||{}));
+  window.dispatchEvent(new CustomEvent("sondaggi-v7-updated"));
+}
+
 function styleAndMarkup(){
   const host=document.getElementById("sg7content");
   if(!host)return false;
@@ -144,8 +191,9 @@ function styleAndMarkup(){
     if(apply)apply.addEventListener("click",()=>{
       const id=apply.dataset.id||"";
       const api=window.sondaggiTestAPI;
-      if(!id||!api?.run)return;
-      api.run(id);
+      if(!id)return;
+      if(api?.preview)applyScenarioToManual(id);
+      else applyScenarioToManual(id);
     });
     const manual=bank.querySelector("#sgsnManual");
     if(manual)manual.addEventListener("click",()=>{
