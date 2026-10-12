@@ -649,7 +649,8 @@ function installSondaggiModule(){
       const qs=law?.coalitionScores?.(co.members,sen,"senato");
       add("Coalizione qualificata Camera",!!qc?.qualifies,true,!!qc?.qualifies);
       add("Coalizione qualificata Senato",!!qs?.qualifies,true,!!qs?.qualifies);
-      add("Cifra Camera",Number(qc?.totalAll||0),10,Math.abs(Number(qc?.totalAll||0)-10)<1e-9);
+      const cameraCoalitionFigure=Number(qc?.allocationFigure ?? qc?.premiumFigure ?? qc?.totalAll ?? 0);
+      add("Cifra Camera",cameraCoalitionFigure,10,Math.abs(cameraCoalitionFigure-10)<1e-9);
       add("Lista al 3% (gate)",Number(cam.LEGA||0),3,Number(cam.LEGA||0)===3);
     }else if(id==="E"){
       const az=law?.listNationallyEligible?.(cam.AZ);
