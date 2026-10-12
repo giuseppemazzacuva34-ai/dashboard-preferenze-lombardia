@@ -2546,9 +2546,29 @@ installSondaggiModule();
     return "";
   }
 
-  // This handler is installed by the Sondaggi app itself, before any second
-  // cached bridge can register, so a stale link script cannot take the event.
+  function normalizeAnalysisButtons(){
+    const root=document.getElementById("sg7");
+    const tabs=root?.querySelector(".sg7tabs");
+    if(!tabs)return;
+    tabs.querySelectorAll("button").forEach(btn=>{
+      const t=String(btn.textContent||"").trim().toUpperCase();
+      if(t==="TREND"){
+        btn.setAttribute("data-sgan-view","trend");
+        btn.classList.remove("sg7tab");
+        btn.classList.add("sg7analysisTab");
+      }else if(t==="SCENARI POSSIBILI"){
+        btn.setAttribute("data-sgan-view","scenari");
+        btn.classList.remove("sg7tab");
+        btn.classList.add("sg7analysisTab");
+      }
+    });
+  }
+
+  // Install at WINDOW capture level: this executes before document-capture
+  // listeners from stale/cached bridge copies and therefore cannot be
+  // cancelled by the old v9 handler.
   const guard=ev=>{
+    normalizeAnalysisButtons();
     const view=getView(ev.target);
     if(!view)return;
     ev.preventDefault();
@@ -2559,12 +2579,20 @@ installSondaggiModule();
       let tries=0;
       const timer=setInterval(()=>{
         tries++;
+        normalizeAnalysisButtons();
         const ok=trendMode("trend");
         if(ok||tries>40)clearInterval(timer);
       },100);
     }
   };
+  ["pointerdown","mousedown","click"].forEach(type=>window.addEventListener(type,guard,true));
   ["pointerdown","mousedown","click"].forEach(type=>document.addEventListener(type,guard,true));
+
+  const normalizeTimer=setInterval(()=>{
+    normalizeAnalysisButtons();
+    if(document.getElementById("sg7")?.classList.contains("sg7TrendViewActive"))trendMode("trend");
+  },250);
+  window.addEventListener("unload",()=>clearInterval(normalizeTimer),{once:true});
 
   // Remove the old v9 cache bridge. The current link is already loaded by the
   // dashboard; when it is not, load the current v10 bridge only once.
