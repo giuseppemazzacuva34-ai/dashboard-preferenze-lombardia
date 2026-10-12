@@ -181,6 +181,38 @@ function writeV7(v){
 
 let SG_ACTIVE_VIEW="scenari";
 
+function ensureAnalysisNav(){
+  const root=document.getElementById("sg7"),tabs=root?.querySelector(".sg7tabs");
+  if(!root||!tabs)return null;
+  let nav=tabs.querySelector("#sgAnalysisNav");
+  if(!nav){
+    nav=document.createElement("span");
+    nav.id="sgAnalysisNav";
+    nav.style.cssText="display:contents";
+    const make=(view,label)=>{
+      const b=document.createElement("button");
+      b.type="button";
+      b.className="sg7tab sg7analysisTab";
+      b.dataset.sganView=view;
+      b.textContent=label;
+      b.addEventListener("click",ev=>{
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        if(view==="trend"){
+          window.location.href="trend.html?v=20261012-clean3";
+          return;
+        }
+        SG_ACTIVE_VIEW=view;
+        applyAnalysisView();
+      },true);
+      return b;
+    };
+    nav.appendChild(make("scenari","SCENARI POSSIBILI"));
+    nav.appendChild(make("trend","TREND"));
+    tabs.appendChild(nav);
+  }
+  return nav;
+}
 function ensureAnalysisNavStyle(){
   if(document.getElementById("sgAnalysisNavStyle"))return;
   const st=document.createElement("style");st.id="sgAnalysisNavStyle";
