@@ -1028,34 +1028,27 @@
     if(territorialSeats!==ordinaryTarget)
       errors.push("Riparto territoriale Camera: "+territorialSeats+" != "+ordinaryTarget);
 
-    const listByCirc={};
-    const splitRemainders={};
-    Object.entries(ordinaryCirc.byCirc||{}).forEach(([circId,unitMap])=>{
-      listByCirc[circId]={};
-      splitRemainders[circId]={};
-      Object.entries(unitMap||{}).forEach(([unitId,count])=>{
-        const unit=nationalUnitById(units,unitId);
-        const nSeats=Math.floor(cleanPositive(count));
-        if(!unit||!nSeats)return;
-        if(unit.type==="list"){
-          const k=unit.members[0];
-          listByCirc[circId][k]=(listByCirc[circId][k]||0)+nSeats;
-        }else{
-          const split=quotientAllocate(
-            unit.members.map(k=>({
-              id:k,
-              votes:calcCircListFigures(circData[circId],k)
-            })),
-            nSeats,
-            k=>cleanPositive(nationalValues[k])
-          );
-          Object.entries(split.seats).forEach(([k,v])=>{
-            listByCirc[circId][k]=(listByCirc[circId][k]||0)+v;
-          });
-          splitRemainders[circId][unitId]=split;
-        }
-      });
+    /*
+     * La legge vigente prima determina il numero nazionale di seggi spettanti
+     * a ciascuna lista (lettera g) e solo dopo porta questi seggi nelle singole
+     * circoscrizioni. Per una coalizione, quindi, non basta dividere ogni
+     * circoscrizione in modo indipendente: i totali nazionali delle liste
+     * devono rimanere esattamente quelli determinati dal riparto nazionale.
+     */
+    const nationalListPlan=nationalListTargets(final.seats,units,nationalValues);
+    const listDistribution=distributeSimpleListsToCircs({
+      listTargets:nationalListPlan.listTargets,
+      units,
+      unitCirc:ordinaryCirc,
+      circData,
+      circum,
+      bonusActive:!!premium,
+      parties,
+      collegeValues
     });
+    const listByCirc=listDistribution.listByCirc||{};
+    const splitRemainders={};
+
 
     function allocateColleges(listMap,circId){
       const circ=circum[circId];
@@ -1401,6 +1394,28 @@
     Object.values(listByCirc).forEach(m=>Object.entries(m).forEach(([k,v])=>{
       if(k!=="__group")ordinaryByParty[k]=(ordinaryByParty[k]||0)+Math.floor(cleanPositive(v));
     }));
+
+    /*
+     * Controllo forte: nessuna compensazione territoriale può alterare i
+     * seggi nazionali già assegnati alle singole liste.
+     */
+    Object.entries(nationalListPlan.listTargets||{}).forEach(([k,target])=>{
+      const got=Math.floor(cleanPositive(ordinaryByParty[k]||0));
+      const expected=Math.floor(cleanPositive(target||0));
+      if(got!==expected){
+        errors.push(
+          "Riparto nazionale lista Camera "+k+" "+got+" != "+expected
+        );
+      }
+    });
+    Object.entries(ordinaryByParty).forEach(([k,got])=>{
+      if(!Object.prototype.hasOwnProperty.call(nationalListPlan.listTargets||{},k) &&
+         Math.floor(cleanPositive(got))!==0){
+        errors.push(
+          "Lista Camera non prevista dal riparto nazionale: "+k+"="+Math.floor(cleanPositive(got))
+        );
+      }
+    });
 
     const prizeByCirc={},prizeByParty={},prizeCollegeByList={},prizeCollegeDetail={};
     if(premium&&winnerUnit){
@@ -2193,7 +2208,7 @@
   }
 
   root.SONDAGGI_ELECTION_ENGINE_20261008=Object.freeze({
-    version:"2026-10-08-seat-engine-v1",
+    version:"2026-10-08-seat-engine-v2",
     SCALE,
     trunc6,
     quotientAllocate,
