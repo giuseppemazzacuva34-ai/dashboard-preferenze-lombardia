@@ -620,10 +620,7 @@
           return;
         }
 
-        const members=(unit.members||[])
-          .filter(k=>Math.floor(cleanPositive(listTargets?.[k]||0))>0)
-          .filter(k=>cleanPositive(circData?.[circId]?.figures?.[collegesKeyForCirc?.(circId)]?.[k]||0)>=0);
-        const eligible=(unit.members||[])
+            const eligible=(unit.members||[])
           .filter(k=>Math.floor(cleanPositive(listTargets?.[k]||0))>0)
           .map(k=>({
             id:k,
