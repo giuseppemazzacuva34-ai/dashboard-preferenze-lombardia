@@ -222,30 +222,13 @@ function enforceAnalysisView(view){
     if(root)root.classList.remove("sg7TrendViewActive");
     stopTrendLatch();
   }
-  const apply=()=>{
-    applyAnalysisView();
-    const content=document.getElementById("sg7content");
-    const bank=document.getElementById("sgScenarioBankNative");
-    const trend=document.getElementById("sg-trend-module");
-    if(content)content.style.setProperty("display",isTrend?"none":"block","important");
-    if(bank)bank.style.setProperty("display",isTrend?"none":"block","important");
-    if(trend)trend.style.setProperty("display",isTrend?"block":"none","important");
-  };
-  apply();
+  applyAnalysisView();
   if(isTrend){
-    stopTrendLatch();
-    let tries=0;
-    sgTrendLatchTimer=setInterval(()=>{
-      const api=window.SONDAGGI_TREND_2018_2022;
-      let mounted=!!document.getElementById("sg-trend-module");
-      if(!mounted && api?.mount){
-        try{api.mount();}catch(err){console.error("Trend mount",err);}
-        mounted=!!document.getElementById("sg-trend-module");
-      }
-      apply();
-      tries++;
-      if((mounted && document.getElementById("sg-trend-module")?.dataset?.sgTrendStarted) || tries>40)stopTrendLatch();
-    },120);
+    const api=window.SONDAGGI_TREND_2018_2022;
+    if(api?.mount && !document.getElementById("sg-trend-module")){
+      try{api.mount();}catch(err){console.error("Trend mount",err);}
+    }
+    applyAnalysisView();
   }
 }
 function ensureAnalysisNav(){
