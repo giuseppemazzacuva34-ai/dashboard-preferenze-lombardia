@@ -47,7 +47,23 @@ window.SG_TERRITORIAL_COMPACT_READY=(async function(){
       }
     }
   }
-  function mergeEuropean(bundle){
+  function mergeRegional(bundle){
+  const out={};
+  for(const [region,items] of Object.entries(bundle.byRegion||{})){
+    out[region]=(items||[]).map(x=>({
+      date:x.date,year:Number(x.year)||Number(String(x.date||"").slice(0,4)),
+      shares:x.shares||{},totalVotes:Number(x.totalVotes)||0,
+      turnout:x.turnout==null?null:Number(x.turnout),source:x.source||""
+    })).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  }
+  D.regionali=out;
+  D.regionaliMeta={
+    version:bundle.version||"",
+    methodology:bundle.methodology||"",
+    specialRegions:bundle.specialRegions||{}
+  };
+}
+function mergeEuropean(bundle){
     D.europee=D.europee||{};
     for(const year of ["2019","2024"]){
       const src=bundle.elections?.[year]?.regions||[];
@@ -64,18 +80,21 @@ window.SG_TERRITORIAL_COMPACT_READY=(async function(){
     }
   }
   try{
-    const [pRes,eRes]=await Promise.all([
+    const [pRes,eRes,rRes]=await Promise.all([
       fetch("trend-data-politiche.json?v=20261012-politiche-v1",{cache:"no-store"}),
-      fetch("trend-data-europee.json?v=20261012-europee-v1",{cache:"no-store"})
+      fetch("trend-data-europee.json?v=20261012-europee-v1",{cache:"no-store"}),
+      fetch("data/trend-regionali-generated.json?v=20261012-regionali-v1",{cache:"no-store"})
     ]);
-    if(!pRes.ok||!eRes.ok)throw new Error("HTTP "+pRes.status+"/"+eRes.status);
-    const [p,e]=await Promise.all([pRes.json(),eRes.json()]);
+    if(!pRes.ok||!eRes.ok||!rRes.ok)throw new Error("HTTP "+pRes.status+"/"+eRes.status+"/"+rRes.status);
+    const [p,e,r]=await Promise.all([pRes.json(),eRes.json(),rRes.json()]);
     if(p.version!=="2026-10-12-politiche-v1")throw new Error("dataset Politiche non riconosciuto");
     if(e.version!=="2026-10-12-europee-v1")throw new Error("dataset Europee non riconosciuto");
+    if(r.version!=="2026-10-12-regionali1")throw new Error("dataset Regionali non riconosciuto");
     mergePolitical(p);
     mergeEuropean(e);
+    mergeRegional(r);
     D.compactSourcesLoaded=true;
-    D.compactVersions={politiche:p.version,europee:e.version};
+    D.compactVersions={politiche:p.version,europee:e.version,regionali:r.version};
     window.SG_TERRITORIAL_DATA=D;
     return {ok:true,politiche:p.version,europee:e.version};
   }catch(err){
