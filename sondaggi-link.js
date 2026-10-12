@@ -184,15 +184,16 @@ let SG_ACTIVE_VIEW="scenari";
 function ensureAnalysisNav(){
   const root=document.getElementById("sg7");
   if(!root)return null;
+  const shell=root.querySelector(".sg7w")||root;
   let nav=document.getElementById("sgAnalysisNav");
-  if(!nav||!root.contains(nav)){
+  if(!nav||!shell.contains(nav)){
     if(nav)nav.remove();
     nav=document.createElement("div");
     nav.id="sgAnalysisNav";
     nav.innerHTML="<span class='sgan-title'>ANALISI</span><button type='button' data-sgan-view='scenari' class='active'>SCENARI POSSIBILI</button><button type='button' data-sgan-view='trend'>TREND</button>";
-    const anchor=root.querySelector(".sg7top")||root.querySelector(".sg7tabs")||root.firstElementChild;
-    if(anchor&&anchor.parentElement===root)root.insertBefore(nav,anchor.nextSibling);
-    else root.insertBefore(nav,root.firstChild);
+    const anchor=shell.querySelector(".sg7top")||shell.querySelector(".sg7tabs")||shell.firstElementChild;
+    if(anchor&&anchor.parentElement===shell)shell.insertBefore(nav,anchor.nextSibling);
+    else shell.insertBefore(nav,shell.firstChild);
     nav.querySelectorAll("[data-sgan-view]").forEach(btn=>btn.addEventListener("click",()=>{
       SG_ACTIVE_VIEW=btn.getAttribute("data-sgan-view")==="trend"?"trend":"scenari";
       applyAnalysisView();
