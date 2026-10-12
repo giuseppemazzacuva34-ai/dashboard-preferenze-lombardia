@@ -29,7 +29,7 @@ function installSondaggiModule(){
     if(!s){
       s=document.createElement("script");
       s.id=id;
-      s.src="sondaggi-election-engine-20261008.js?v=20261009-engine";
+      s.src="sondaggi-election-engine-20261008.js?v=20261012-engine-v2";
       s.async=false;
       s.addEventListener("load",()=>installSondaggiModule(),{once:true});
       s.addEventListener("error",()=>console.error("Sondaggi: impossibile caricare il motore di riparto elettorale 2026."),{once:true});
