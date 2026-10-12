@@ -55,16 +55,21 @@ function buildCore(){
 const COLLEGE_RECORDS={camera:parseRows(D.collegeMaps?.camera,D.politiche?.[2022]?.camera,"camera"),senato:parseRows(D.collegeMaps?.senato,D.politiche?.[2022]?.senato,"senato")};
 
 function getParties(){
-  const a=appState(),out={};
+  const a=appState(),out={},knownNames=new Set();
   Object.entries(DEFAULTS).forEach(([id,def])=>{
-    const p=a.parties?.[id]||{};
-    const name=String(p.name||def[0]);
-    const cam=a.nationalVotes?.camera?.[name]??a.nationalVotes?.camera?.[id]??p.camera??def[1];
-    const sen=a.nationalVotes?.senato?.[name]??a.nationalVotes?.senato?.[id]??p.senate??def[1];
+    const defaultName=def[0];
+    const stored=a.parties?.[defaultName] ?? a.parties?.[id] ?? {};
+    const name=String(stored?.name||defaultName);
+    const cam=a.nationalVotes?.camera?.[name]??a.nationalVotes?.camera?.[defaultName]??stored?.camera??def[1];
+    const sen=a.nationalVotes?.senato?.[name]??a.nationalVotes?.senato?.[defaultName]??stored?.senate??def[1];
     out[id]={name,camera:num(cam),senate:num(sen)};
+    knownNames.add(name);knownNames.add(defaultName);
   });
-  Object.entries(a.parties||{}).forEach(([id,p])=>{
-    if(!out[id])out[id]={name:String(p?.name||id),camera:num(a.nationalVotes?.camera?.[p?.name||id]??p?.camera),senate:num(a.nationalVotes?.senato?.[p?.name||id]??p?.senate)};
+  Object.entries(a.parties||{}).forEach(([key,p])=>{
+    const name=String(p?.name||key);
+    if(knownNames.has(key)||knownNames.has(name)||Object.values(out).some(x=>x.name===name))return;
+    out[key]={name,camera:num(a.nationalVotes?.camera?.[name]??p?.camera),senate:num(a.nationalVotes?.senato?.[name]??p?.senate)};
+    knownNames.add(name);
   });
   return out;
 }
