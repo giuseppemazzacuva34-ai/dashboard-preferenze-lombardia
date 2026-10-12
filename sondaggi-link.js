@@ -1,260 +1,183 @@
 (function(){
 "use strict";
 
-const SG_DASH_VERSION="20261012-dashboard-scenari-v5";
-const V7_KEY="lombardia_sondaggi_v7";
-const TEST_BACKUP_KEY=V7_KEY+"_test_backup";
-const TEST_ACTIVE_KEY=V7_KEY+"_test_active";
-
+const SG_DASH_VERSION="20261012-dashboard-scenari-v6";
+const TEST_ACTIVE_KEY="lombardia_sondaggi_v7_test_active";
 const TESTS={
-  A:{
-    id:"A",
-    name:"NESSUN PREMIO",
-    desc:"Vincitore diverso nelle due Camere.",
-    expected:"Premio 0 Camera · 0 Senato.",
-    camera:{"Fratelli d'Italia":40,"Partito Democratico":41.5,"Movimento 5 Stelle":6,"Alleanza Verdi Sinistra":3,"Forza Italia":3.5,"Lega":2,"Futuro Nazionale":1,"Azione":1,"Italia Viva":0.5,"+Europa":0.5,"Noi Moderati":0,"Partito Liberaldemocratico":0,"Altri":1},
-    senate:{"Fratelli d'Italia":42,"Partito Democratico":34,"Movimento 5 Stelle":3,"Alleanza Verdi Sinistra":2,"Forza Italia":3.5,"Lega":3,"Futuro Nazionale":2,"Azione":2,"Italia Viva":1,"+Europa":1,"Noi Moderati":1.5,"Partito Liberaldemocratico":0,"Altri":5},
-    coalitions:[
-      {id:"V7-CD",name:"Centrodestra",members:["Fratelli d'Italia","Lega","Forza Italia","Noi Moderati"]},
-      {id:"V7-CS",name:"Centrosinistra",members:["Partito Democratico","Movimento 5 Stelle","Alleanza Verdi Sinistra","+Europa","Italia Viva"]}
-    ]
-  },
-  B:{
-    id:"B",
-    name:"PREMIO 42/42",
-    desc:"Stesso soggetto primo nelle due Camere e al 42,0% esatto.",
-    expected:"Premio 70 Camera + 35 Senato.",
-    camera:{"Fratelli d'Italia":27,"Partito Democratico":20,"Movimento 5 Stelle":10,"Alleanza Verdi Sinistra":5,"Forza Italia":6,"Lega":6,"Futuro Nazionale":2,"Azione":2.5,"Italia Viva":1.5,"+Europa":1.5,"Noi Moderati":3,"Partito Liberaldemocratico":0,"Altri":15.5},
-    senate:{"Fratelli d'Italia":27,"Partito Democratico":20,"Movimento 5 Stelle":10,"Alleanza Verdi Sinistra":5,"Forza Italia":6,"Lega":6,"Futuro Nazionale":2,"Azione":2.5,"Italia Viva":1.5,"+Europa":1.5,"Noi Moderati":3,"Partito Liberaldemocratico":0,"Altri":15.5},
-    coalitions:[
-      {id:"V7-CD",name:"Centrodestra",members:["Fratelli d'Italia","Lega","Forza Italia","Noi Moderati"]},
-      {id:"V7-CS",name:"Centrosinistra",members:["Partito Democratico","Movimento 5 Stelle","Alleanza Verdi Sinistra","+Europa","Italia Viva"]}
-    ]
-  },
-  C:{
-    id:"C",
-    name:"41,9 / 42,0",
-    desc:"Il soggetto arriva al 42,0% solo in una Camera.",
-    expected:"Nessun premio in entrambe le Camere.",
-    camera:{"Fratelli d'Italia":26.9,"Partito Democratico":20,"Movimento 5 Stelle":10,"Alleanza Verdi Sinistra":5,"Forza Italia":6,"Lega":6,"Futuro Nazionale":2,"Azione":2.5,"Italia Viva":1.5,"+Europa":1.5,"Noi Moderati":3,"Partito Liberaldemocratico":0,"Altri":15.6},
-    senate:{"Fratelli d'Italia":27,"Partito Democratico":20,"Movimento 5 Stelle":10,"Alleanza Verdi Sinistra":5,"Forza Italia":6,"Lega":6,"Futuro Nazionale":2,"Azione":2.5,"Italia Viva":1.5,"+Europa":1.5,"Noi Moderati":3,"Partito Liberaldemocratico":0,"Altri":15.5},
-    coalitions:[
-      {id:"V7-CD",name:"Centrodestra",members:["Fratelli d'Italia","Lega","Forza Italia","Noi Moderati"]},
-      {id:"V7-CS",name:"Centrosinistra",members:["Partito Democratico","Movimento 5 Stelle","Alleanza Verdi Sinistra","+Europa","Italia Viva"]}
-    ]
-  },
-  D:{
-    id:"D",
-    name:"COALIZIONE 10,0%",
-    desc:"Coalizione esattamente al 10,0% con una lista al 3,0%.",
-    expected:"Coalizione qualificata al limite.",
-    camera:{"Fratelli d'Italia":7,"Partito Democratico":20,"Movimento 5 Stelle":12,"Alleanza Verdi Sinistra":6,"Forza Italia":10,"Lega":3,"Futuro Nazionale":7,"Azione":5,"Italia Viva":4,"+Europa":3,"Noi Moderati":2,"Partito Liberaldemocratico":0,"Altri":21},
-    senate:{"Fratelli d'Italia":7,"Partito Democratico":20,"Movimento 5 Stelle":12,"Alleanza Verdi Sinistra":6,"Forza Italia":10,"Lega":3,"Futuro Nazionale":7,"Azione":5,"Italia Viva":4,"+Europa":3,"Noi Moderati":2,"Partito Liberaldemocratico":0,"Altri":21},
-    coalitions:[
-      {id:"C-TEST10",name:"Coalizione Test 10%",members:["Fratelli d'Italia","Lega"]}
-    ]
-  },
-  E:{
-    id:"E",
-    name:"LISTA 3,0%",
-    desc:"Una lista è al 3,0% e una a 2,9%, entrambe fuori da coalizioni.",
-    expected:"3,0% ammesso · 2,9% escluso.",
-    camera:{"Fratelli d'Italia":25,"Partito Democratico":20,"Movimento 5 Stelle":15,"Alleanza Verdi Sinistra":7,"Forza Italia":7,"Lega":6,"Futuro Nazionale":4,"Azione":3,"Italia Viva":2.9,"+Europa":2,"Noi Moderati":1,"Partito Liberaldemocratico":0,"Altri":7.1},
-    senate:{"Fratelli d'Italia":25,"Partito Democratico":20,"Movimento 5 Stelle":15,"Alleanza Verdi Sinistra":7,"Forza Italia":7,"Lega":6,"Futuro Nazionale":4,"Azione":3,"Italia Viva":2.9,"+Europa":2,"Noi Moderati":1,"Partito Liberaldemocratico":0,"Altri":7.1},
-    coalitions:[]
-  },
-  F:{
-    id:"F",
-    name:"SENATO 20% REGIONALE",
-    desc:"Lista sotto il 3% nazionale ma al 20,0% in Lombardia.",
-    expected:"Ammessa in Lombardia per la deroga regionale.",
-    camera:{"Fratelli d'Italia":2.5,"Partito Democratico":25,"Movimento 5 Stelle":15,"Alleanza Verdi Sinistra":7,"Forza Italia":7,"Lega":6,"Futuro Nazionale":5,"Azione":4,"Italia Viva":3,"+Europa":2,"Noi Moderati":1,"Partito Liberaldemocratico":0,"Altri":22.5},
-    senate:{"Fratelli d'Italia":2.5,"Partito Democratico":25,"Movimento 5 Stelle":15,"Alleanza Verdi Sinistra":7,"Forza Italia":7,"Lega":6,"Futuro Nazionale":5,"Azione":4,"Italia Viva":3,"+Europa":2,"Noi Moderati":1,"Partito Liberaldemocratico":0,"Altri":22.5},
-    lombardiaSenate:{"Fratelli d'Italia":20,"Partito Democratico":25,"Movimento 5 Stelle":15,"Alleanza Verdi Sinistra":7,"Forza Italia":7,"Lega":6,"Futuro Nazionale":5,"Azione":4,"Italia Viva":3,"+Europa":2,"Noi Moderati":1,"Partito Liberaldemocratico":0,"Altri":5},
-    coalitions:[]
-  }
+  A:{id:"A",name:"NESSUN PREMIO",desc:"Vincitore diverso nelle due Camere.",expected:"Premio 0 Camera · 0 Senato.",coalitions:["Centrodestra","Centrosinistra"]},
+  B:{id:"B",name:"PREMIO 42/42",desc:"Stesso soggetto primo nelle due Camere e al 42,0% esatto.",expected:"Premio 70 Camera + 35 Senato.",coalitions:["Centrodestra","Centrosinistra"]},
+  C:{id:"C",name:"41,9 / 42,0",desc:"Il soggetto arriva al 42,0% solo in una Camera.",expected:"Nessun premio in entrambe le Camere.",coalitions:["Centrodestra","Centrosinistra"]},
+  D:{id:"D",name:"COALIZIONE 10,0%",desc:"Coalizione esattamente al 10,0% con una lista al 3,0%.",expected:"Coalizione qualificata al limite.",coalitions:["Coalizione Test 10%"]},
+  E:{id:"E",name:"LISTA 3,0%",desc:"Una lista è al 3,0% e una a 2,9%.",expected:"3,0% ammesso · 2,9% escluso.",coalitions:[]},
+  F:{id:"F",name:"SENATO 20% REGIONALE",desc:"Lista sotto il 3% nazionale ma al 20,0% in Lombardia.",expected:"Ammessa in Lombardia per la deroga regionale.",coalitions:[]}
 };
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const fmt=v=>Number(v||0).toLocaleString("it-IT",{minimumFractionDigits:1,maximumFractionDigits:1});
+const fmt0=v=>Math.round(Number(v||0)).toLocaleString("it-IT");
 
-function clone(x){return JSON.parse(JSON.stringify(x));}
-function esc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
-function readState(){
+function loadScript(id,src){
   try{
-    const raw=JSON.parse(localStorage.getItem(V7_KEY)||"{}");
-    return raw&&typeof raw==="object"?raw:{};
-  }catch(_){return {};}
-}
-function loadIntegrityGuard(){
-  try{
-    if(document.getElementById("dashboard-runtime-integrity"))return;
+    if(document.getElementById(id))return;
     const s=document.createElement("script");
-    s.id="dashboard-runtime-integrity";
-    s.src="dashboard-runtime-integrity.js?v=20261009-1";
-    s.async=false;
+    s.id=id;s.src=src;s.async=false;
     (document.head||document.documentElement).appendChild(s);
-  }catch(err){console.error("Dashboard integrity guard",err);}
+  }catch(err){console.error("Sondaggi loader",err);}
 }
-function writeState(state){
-  localStorage.setItem(V7_KEY,JSON.stringify(state));
-  window.dispatchEvent(new CustomEvent("sondaggi-v7-updated"));
+function loadMobileStyles(){
+  if(document.getElementById("dashboard-mobile-css"))return;
+  const link=document.createElement("link");
+  link.id="dashboard-mobile-css";link.rel="stylesheet";
+  link.href="dashboard-mobile.css?v=20261011-1";
+  (document.head||document.documentElement).appendChild(link);
 }
-function ensureContainers(s){
-  s.parties=s.parties&&typeof s.parties==="object"?s.parties:{};
-  s.nationalVotes=s.nationalVotes&&typeof s.nationalVotes==="object"?s.nationalVotes:{camera:{},senato:{}};
-  s.nationalVotes.camera=s.nationalVotes.camera&&typeof s.nationalVotes.camera==="object"?s.nationalVotes.camera:{};
-  s.nationalVotes.senato=s.nationalVotes.senato&&typeof s.nationalVotes.senato==="object"?s.nationalVotes.senato:{};
-  s.circVotes=s.circVotes&&typeof s.circVotes==="object"?s.circVotes:{camera:{},senato:{}};
-  s.circVotes.camera=s.circVotes.camera&&typeof s.circVotes.camera==="object"?s.circVotes.camera:{};
-  s.circVotes.senato=s.circVotes.senato&&typeof s.circVotes.senato==="object"?s.circVotes.senato:{};
-  s.collegeVotes=s.collegeVotes&&typeof s.collegeVotes==="object"?s.collegeVotes:{camera:{},senato:{}};
-  s.collegeVotes.camera=s.collegeVotes.camera&&typeof s.collegeVotes.camera==="object"?s.collegeVotes.camera:{};
-  s.collegeVotes.senato=s.collegeVotes.senato&&typeof s.collegeVotes.senato==="object"?s.collegeVotes.senato:{};
-  return s;
+function loadEngines(){
+  loadScript("sondaggi-law-20261008","sondaggi-law-20261008.js?v=20261009-legal");
+  loadScript("sondaggi-app-preview","sondaggi-app.js?v=20261012-preview");
+  loadScript("dashboard-runtime-integrity","dashboard-runtime-integrity.js?v=20261009-1");
 }
-function applyTest(id){
-  const t=TESTS[id];
-  if(!t)return false;
-  const current=readState();
-  if(!localStorage.getItem(TEST_BACKUP_KEY)){
-    localStorage.setItem(TEST_BACKUP_KEY,JSON.stringify(current));
-  }
-  const next=ensureContainers(clone(current));
-  next.parties=next.parties||{};
-  Object.keys(t.camera).forEach(name=>{
-    next.parties[name]=Number(t.camera[name]);
-  });
-  Object.keys(t.senate).forEach(name=>{
-    next.parties[name]=Number(t.senate[name]);
-  });
-  next.nationalVotes.camera=clone(t.camera);
-  next.nationalVotes.senato=clone(t.senate);
-  next.coalitions=clone(t.coalitions);
-  next.meta=next.meta&&typeof next.meta==="object"?next.meta:{};
-  next.meta.v7TestId=id;
-  next.meta.v7TestUpdatedAt=new Date().toISOString();
 
-  // Rendo coerenti anche i dati territoriali esistenti con il nazionale.
-  Object.keys(next.circVotes.camera).forEach(k=>{next.circVotes.camera[k]=clone(t.camera);});
-  Object.keys(next.circVotes.senato).forEach(k=>{next.circVotes.senato[k]=clone(t.senate);});
-  next.circVotes.senato.Lombardia=clone(t.lombardiaSenate||t.senate);
-  Object.keys(next.collegeVotes.camera).forEach(k=>{next.collegeVotes.camera[k]=clone(t.camera);});
-  Object.keys(next.collegeVotes.senato).forEach(k=>{next.collegeVotes.senato[k]=clone(t.senate);});
-
-  localStorage.setItem(TEST_ACTIVE_KEY,id);
-  writeState(next);
-
-  // Il dashboard storico legge il file v7 all'avvio: un reload è intenzionale
-  // per aggiornare anche le variabili interne non esposte dalla pagina.
-  setTimeout(()=>location.reload(),80);
-  return true;
-}
-function restoreTest(){
-  const raw=localStorage.getItem(TEST_BACKUP_KEY);
-  if(!raw)return false;
-  try{
-    const restored=JSON.parse(raw);
-    localStorage.setItem(TEST_ACTIVE_KEY,"");
-    localStorage.removeItem(TEST_BACKUP_KEY);
-    writeState(restored);
-    setTimeout(()=>location.reload(),80);
-    return true;
-  }catch(_){return false;}
+function activeId(){try{return localStorage.getItem(TEST_ACTIVE_KEY)||"";}catch(_){return"";}}
+function resultsMarkup(result,item){
+  if(!result)return "<div class='sgsn-loading'>Calcolo scenario…</div>";
+  if(result.error)return "<div class='sgsn-fail'>❌ "+esc(result.error)+"</div>";
+  const checks=(result.checks||[]).map(x=>
+    "<tr><td>"+esc(x.label)+"</td><td>"+esc(typeof x.actual==="object"?(x.actual?.name||x.actual?.id||"presente"):x.actual)+"</td><td>"+esc(typeof x.expected==="object"?(x.expected?.name||x.expected?.id||"presente"):x.expected)+"</td><td>"+(x.ok?"✅":"❌")+"</td></tr>"
+  ).join("");
+  const coal=(result.coalitions||[]).map(c=>
+    "<div class='sgsn-coal-row'><div><b>"+esc(c.name)+"</b><small>"+esc((c.members||[]).join(" · "))+"</small></div>"+
+    "<span>Camera "+fmt(c.cameraPct)+"% · "+fmt0(c.cameraSeats)+" seggi<br>Senato "+fmt(c.senatePct)+"% · "+fmt0(c.senateSeats)+" seggi</span></div>"
+  ).join("")||"<div class='sgsn-empty'>Nessuna coalizione prevista per questo test.</div>";
+  const rows=(title,data)=>
+    "<div class='sgsn-seat-block'><b>"+title+"</b><div class='sgsn-seat-grid'>"+
+    (data||[]).map(r=>"<span>"+esc(r.name)+" <strong>"+fmt0(r.seats)+"</strong></span>").join("")+
+    "</div></div>";
+  return (result.pass?"<div class='sgsn-pass'>✅ TEST SUPERATO</div>":"<div class='sgsn-fail'>❌ TEST FALLITO</div>")+
+    "<div class='sgsn-summary'><span>Premio Camera: <b>"+fmt0(result.cameraPrize)+"</b></span><span>Premio Senato: <b>"+fmt0(result.senatePrize)+"</b></span><span>Vincitore: <b>"+esc(result.winner||"nessuno")+"</b></span></div>"+
+    "<div class='sgsn-section'><b>Coalizioni nello scenario</b>"+coal+"</div>"+
+    rows("Distribuzione Camera",result.cameraRows)+rows("Distribuzione Senato",result.senateRows)+
+    "<div class='sgsn-section'><b>Controlli del test</b><div class='sgsn-scroll'><table><thead><tr><th>Controllo</th><th>Calcolato</th><th>Atteso</th><th></th></tr></thead><tbody>"+checks+"</tbody></table></div></div>";
 }
 
 function styleAndMarkup(){
-  if(document.getElementById("sgScenarioBankNative"))return;
-  if(!document.getElementById("sg7content"))return;
-
-  const st=document.createElement("style");
-  st.id="sgScenarioBankNativeStyle";
-  st.textContent=[
-    "#sgScenarioBankNative{margin:0 0 12px;padding:12px;border:1px solid #2b6790;border-radius:11px;background:#0b2338;color:#eaf4fb;box-sizing:border-box}",
-    "#sgScenarioBankNative .sgsn-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}",
-    "#sgScenarioBankNative .sgsn-head b{font-size:12px;letter-spacing:.04em}",
-    "#sgScenarioBankNative .sgsn-head span{font-size:7px;color:#7fb6d6}",
-    "#sgScenarioBankNative .sgsn-note{font-size:7px;line-height:1.45;color:#9fb8c9;margin-bottom:8px}",
-    "#sgScenarioBankNative .sgsn-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}",
-    "#sgScenarioBankNative .sgsn-case{border:1px solid #295776;background:#0a1d30;color:#fff;border-radius:9px;padding:9px;text-align:left;cursor:pointer;min-width:0}",
-    "#sgScenarioBankNative .sgsn-case:hover{border-color:#5ab8ef;background:#123b59}",
-    "#sgScenarioBankNative .sgsn-case.active{border-color:#57b7ef;background:#12415f;box-shadow:0 0 0 1px rgba(87,183,239,.22) inset}",
-    "#sgScenarioBankNative .sgsn-code{display:block;color:#72c5ff;font-size:7px;font-weight:900}",
-    "#sgScenarioBankNative .sgsn-name{display:block;margin-top:3px;font-size:9px;font-weight:900}",
-    "#sgScenarioBankNative .sgsn-desc{display:block;margin-top:4px;color:#a8c1d1;font-size:6.5px;line-height:1.35}",
-    "#sgScenarioBankNative .sgsn-expected{display:block;margin-top:5px;color:#e1edf5;font-size:6.5px;font-weight:800;line-height:1.35}",
-    "#sgScenarioBankNative .sgsn-coal{display:block;margin-top:5px;color:#70c7ff;font-size:6.5px;font-weight:900;line-height:1.35}",
-    "#sgScenarioBankNative .sgsn-footer{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}",
-    "#sgScenarioBankNative .sgsn-status{font-size:7px;color:#9fb8c9}",
-    "#sgScenarioBankNative .sgsn-restore{border:1px solid #365e78;background:#0a1d30;color:#dcecf6;border-radius:7px;padding:7px 9px;font-size:7px;font-weight:900;cursor:pointer}",
-    "#sgScenarioBankNative .sgsn-result{display:none;margin-top:8px;padding:8px;border-radius:8px;background:#102f48;border:1px solid #2d6688;font-size:7px;line-height:1.4}",
-    "@media(max-width:820px){#sgScenarioBankNative .sgsn-grid{grid-template-columns:1fr 1fr}}",
-    "@media(max-width:520px){#sgScenarioBankNative .sgsn-grid{grid-template-columns:1fr}#sgScenarioBankNative .sgsn-head{display:block}.sgsn-footer{display:grid!important;grid-template-columns:1fr}.sgsn-restore{width:100%}}"
-  ].join("");
-
-  document.head.appendChild(st);
-
-  const bank=document.createElement("section");
-  bank.id="sgScenarioBankNative";
-  const active=localStorage.getItem(TEST_ACTIVE_KEY)||"";
-  bank.innerHTML=
-    "<div class='sgsn-head'><b>SCENARI POSSIBILI</b><span>6 TEST DI CONTROLLO</span></div>"+
-    "<div class='sgsn-note'>Ogni pulsante carica uno scenario sintetico direttamente nel modulo Sondaggi nazionale. I dati correnti vengono salvati prima del primo test e possono essere ripristinati.</div>"+
-    "<div class='sgsn-grid'>"+
-      Object.values(TESTS).map(t=>{
-        const coal=t.coalitions.length?t.coalitions.map(c=>c.name).join(" · "):"nessuna";
-        return "<button type='button' class='sgsn-case "+(active===t.id?"active":"")+"' data-sgtest='"+t.id+"'>"+
-          "<span class='sgsn-code'>TEST "+t.id+"</span>"+
-          "<span class='sgsn-name'>"+esc(t.name)+"</span>"+
-          "<span class='sgsn-desc'>"+esc(t.desc)+"</span>"+
-          "<span class='sgsn-expected'>"+esc(t.expected)+"</span>"+
-          "<span class='sgsn-coal'>Coalizioni: "+esc(coal)+"</span>"+
-        "</button>";
-      }).join("")+
-    "</div>"+
-    "<div id='sgsnResult' class='sgsn-result'></div>"+
-    "<div class='sgsn-footer'><span id='sgsnStatus' class='sgsn-status'>"+
-      (active&&TESTS[active]?"TEST "+active+" ATTIVO · "+TESTS[active].name:"NESSUN TEST ATTIVO")+
-    "</span><button type='button' id='sgsnRestore' class='sgsn-restore'>RIPRISTINA STATO PRE-TEST</button></div>";
-
   const host=document.getElementById("sg7content");
-  host.insertAdjacentElement("afterbegin",bank);
+  if(!host)return false;
+  let bank=document.getElementById("sgScenarioBankNative");
+  if(!bank){
+    const st=document.createElement("style");
+    st.id="sgScenarioBankNativeStyle";
+    st.textContent=[
+      "#sgScenarioBankNative{margin:0 0 12px;padding:12px;border:1px solid #2d719f;border-radius:12px;background:#091f33;color:#eaf4fb;box-sizing:border-box}",
+      "#sgScenarioBankNative .sgsn-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}",
+      "#sgScenarioBankNative .sgsn-head b{font-size:12px}.sgsn-head span{font-size:7px;color:#7fb9d8}",
+      "#sgScenarioBankNative .sgsn-note{font-size:7px;line-height:1.5;color:#9db8c9;margin-bottom:9px}",
+      "#sgScenarioBankNative .sgsn-actions-top{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}",
+      "#sgScenarioBankNative button{border:1px solid #315f7e;background:#0a2941;color:#dcecf6;border-radius:7px;padding:7px 9px;font-size:7px;font-weight:900;cursor:pointer}",
+      "#sgScenarioBankNative .sgsn-manual{background:#176ea5;border-color:#318bc5;color:#fff}",
+      "#sgScenarioBankNative .sgsn-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}",
+      "#sgScenarioBankNative .sgsn-case{min-width:0;text-align:left}",
+      "#sgScenarioBankNative .sgsn-case.active{border-color:#61c0f2;background:#103d5a}",
+      "#sgScenarioBankNative .sgsn-code{display:block;color:#6fc5ff;font-size:7px}",
+      "#sgScenarioBankNative .sgsn-name{display:block;margin-top:3px;font-size:9px}",
+      "#sgScenarioBankNative .sgsn-desc{display:block;margin-top:4px;color:#a4bdcd;font-size:6.5px;line-height:1.35}",
+      "#sgScenarioBankNative .sgsn-expected,#sgScenarioBankNative .sgsn-coal{display:block;margin-top:5px;font-size:6.5px;line-height:1.35}",
+      "#sgScenarioBankNative .sgsn-expected{color:#e0edf5;font-weight:800}.sgsn-coal{color:#70c6ff;font-weight:900}",
+      "#sgScenarioBankNative .sgsn-result{display:none;margin-top:8px;padding:9px;border:1px solid #2d6586;border-radius:9px;background:#0a263c}",
+      "#sgScenarioBankNative .sgsn-pass{padding:7px 9px;border:1px solid #329365;border-radius:7px;background:#12392a;color:#bcefd0;font-size:8px;font-weight:900}",
+      "#sgScenarioBankNative .sgsn-fail{padding:7px 9px;border:1px solid #a84e5c;border-radius:7px;background:#3d1f27;color:#ffd9df;font-size:8px;font-weight:900}",
+      "#sgScenarioBankNative .sgsn-loading{color:#9db8c9;font-size:7px}",
+      "#sgScenarioBankNative .sgsn-summary{display:flex;gap:12px;flex-wrap:wrap;margin:7px 0;font-size:7px;color:#a9c2d2}",
+      "#sgScenarioBankNative .sgsn-summary b{color:#fff}",
+      "#sgScenarioBankNative .sgsn-section{margin-top:8px;padding-top:7px;border-top:1px solid rgba(255,255,255,.08);font-size:7px}",
+      "#sgScenarioBankNative .sgsn-coal-row{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:6px;padding:6px 7px;border:1px solid #294f68;border-radius:7px;background:#0b2940}",
+      "#sgScenarioBankNative .sgsn-coal-row b{display:block;font-size:8px}.sgsn-coal-row small{display:block;margin-top:2px;color:#799caf;font-size:6px}",
+      "#sgScenarioBankNative .sgsn-coal-row>span{text-align:right;color:#add5e9;font-size:6.5px;line-height:1.45;white-space:nowrap}",
+      "#sgScenarioBankNative .sgsn-seat-block{margin-top:6px}.sgsn-seat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-top:5px}",
+      "#sgScenarioBankNative .sgsn-seat-grid span{display:flex;justify-content:space-between;gap:6px;padding:5px 6px;background:#0b2940;border:1px solid #294f68;border-radius:6px;color:#bcd0dc;font-size:6.5px}",
+      "#sgScenarioBankNative .sgsn-seat-grid strong{color:#fff}",
+      "#sgScenarioBankNative .sgsn-scroll{overflow:auto;margin-top:5px}.sgsn-scroll table{width:100%;min-width:520px;border-collapse:collapse}.sgsn-scroll th,.sgsn-scroll td{border:1px solid #244961;padding:5px;font-size:6px;text-align:left}.sgsn-scroll th{color:#83caff}",
+      "#sgScenarioBankNative .sgsn-footer{display:flex;justify-content:space-between;gap:7px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}",
+      "#sgScenarioBankNative .sgsn-status{font-size:7px;color:#9db8c9}",
+      "@media(max-width:820px){#sgScenarioBankNative .sgsn-grid{grid-template-columns:1fr 1fr}}",
+      "@media(max-width:520px){#sgScenarioBankNative .sgsn-grid{grid-template-columns:1fr}#sgScenarioBankNative .sgsn-footer{display:grid}.sgsn-coal-row{display:block!important}.sgsn-coal-row>span{display:block;text-align:left!important;margin-top:4px}}"
+    ].join("");
+    document.head.appendChild(st);
 
-  bank.querySelectorAll("[data-sgtest]").forEach(btn=>{
-    btn.addEventListener("click",()=>applyTest(btn.getAttribute("data-sgtest")));
-  });
-  const restore=bank.querySelector("#sgsnRestore");
-  if(restore)restore.addEventListener("click",()=>{
-    restoreTest();
-  });
+    bank=document.createElement("section");
+    bank.id="sgScenarioBankNative";
+    bank.innerHTML=
+      "<div class='sgsn-head'><b>SCENARI POSSIBILI</b><span>PREVIEW NON DISTRUTTIVA · 6 TEST</span></div>"+
+      "<div class='sgsn-note'>Cliccando un test visualizzi il risultato senza perdere l'inserimento manuale. I valori vengono applicati al modulo manuale soltanto con il comando dedicato.</div>"+
+      "<div class='sgsn-actions-top'><button type='button' class='sgsn-manual' id='sgsnManual'>INSERIMENTO MANUALE</button></div>"+
+      "<div class='sgsn-grid'>"+
+        Object.values(TESTS).map(t=>"<button type='button' class='sgsn-case' data-sgtest='"+t.id+"'>"+
+          "<span class='sgsn-code'>TEST "+t.id+"</span><span class='sgsn-name'>"+esc(t.name)+"</span>"+
+          "<span class='sgsn-desc'>"+esc(t.desc)+"</span><span class='sgsn-expected'>"+esc(t.expected)+"</span>"+
+          "<span class='sgsn-coal'>Coalizioni: "+esc(t.coalitions.length?t.coalitions.join(" · "):"nessuna")+"</span></button>").join("")+
+      "</div><div id='sgsnResult' class='sgsn-result'></div>"+
+      "<div class='sgsn-footer'><span id='sgsnStatus' class='sgsn-status'>NESSUN TEST SELEZIONATO</span>"+
+      "<button type='button' id='sgsnApply' disabled>APPLICA SCENARIO AL MODULO</button></div>";
 
-  if(active&&TESTS[active]){
-    const r=document.getElementById("sgsnResult");
-    if(r){
-      r.style.display="block";
-      r.innerHTML="<b>TEST "+esc(active)+" · "+esc(TESTS[active].name)+"</b><br>Atteso: "+esc(TESTS[active].expected)+"<br>Coalizioni previste: "+esc(TESTS[active].coalitions.length?TESTS[active].coalitions.map(c=>c.name).join(" · "):"nessuna")+"<br><span>Il risultato numerico completo è riportato nel pannello Sondaggi subito sotto.</span>";
-    }
+    host.insertAdjacentElement("afterbegin",bank);
+
+    bank.querySelectorAll("[data-sgtest]").forEach(btn=>{
+      btn.addEventListener("click",async()=>{
+        const id=btn.getAttribute("data-sgtest");
+        document.querySelectorAll("#sgScenarioBankNative [data-sgtest]").forEach(x=>x.classList.remove("active"));
+        btn.classList.add("active");
+        const out=document.getElementById("sgsnResult"),status=document.getElementById("sgsnStatus"),apply=document.getElementById("sgsnApply");
+        if(out){out.style.display="block";out.innerHTML="<div class='sgsn-loading'>Calcolo dello scenario…</div>";}
+        if(status)status.textContent="TEST "+id+" · CALCOLO IN CORSO";
+        if(apply){apply.disabled=true;apply.dataset.id=id;}
+        const api=window.sondaggiTestAPI;
+        if(!api?.preview){
+          if(out)out.innerHTML="<div class='sgsn-fail'>Motore scenari in caricamento. Riprova tra un secondo.</div>";
+          return;
+        }
+        const result=api.preview(id);
+        if(out){out.innerHTML=resultsMarkup(result,TESTS[id]);out.scrollIntoView({behavior:"smooth",block:"nearest"});}
+        if(status)status.textContent="TEST "+id+" · "+(result.pass?"SUPERATO":"FALLITO");
+        if(apply){apply.disabled=false;apply.dataset.id=id;}
+      });
+    });
+
+    const apply=bank.querySelector("#sgsnApply");
+    if(apply)apply.addEventListener("click",()=>{
+      const id=apply.dataset.id||"";
+      const api=window.sondaggiTestAPI;
+      if(!id||!api?.run)return;
+      api.run(id);
+    });
+    const manual=bank.querySelector("#sgsnManual");
+    if(manual)manual.addEventListener("click",()=>{
+      const target=document.querySelector("#sg7content .sg7bar")||document.getElementById("sg7content");
+      if(target)target.scrollIntoView({behavior:"smooth",block:"start"});
+    });
   }
+
+  return true;
 }
 
 function run(){
-  // Non carichiamo il vecchio modulo Sondaggi separato qui: il dashboard principale
-  // possiede già il modulo nativo #sg7, che deve essere l'unica interfaccia.
-  const start=()=>{
-    styleAndMarkup();
+  loadMobileStyles();
+  loadEngines();
+  let tries=0;
+  const install=()=>{
+    if(styleAndMarkup())return;
+    if(tries++<40)setTimeout(install,250);
+  };
+  install();
+
+  try{
     const root=document.getElementById("sg7");
-    if(root&&root.__sgScenarioObserver)return;
     if(root){
       const obs=new MutationObserver(()=>{
-        if(document.getElementById("sg7content"))styleAndMarkup();
+        // renderScenario ricrea #sg7content: il banco deve essere reinserito senza
+        // duplicarsi e senza interferire con i campi manuali.
+        styleAndMarkup();
       });
       obs.observe(root,{subtree:true,childList:true});
-      root.__sgScenarioObserver=obs;
     }
-  };
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});
-  else start();
-  setTimeout(start,150);
-  setTimeout(start,600);
-  setTimeout(start,1400);
-  setTimeout(start,2500);
+  }catch(err){console.error("Sondaggi scenario observer",err);}
 }
 run();
 })();
