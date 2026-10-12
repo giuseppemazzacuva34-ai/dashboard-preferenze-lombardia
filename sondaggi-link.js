@@ -27,6 +27,13 @@ function loadLawEngine(){
   loadScript("sondaggi-law-20261008","sondaggi-law-20261008.js?v=20261009-legal");
 }
 
+function loadSondaggiApp(){
+  // Sul dashboard principale il motore Sondaggi nuovo deve essere caricato
+  // esplicitamente: il banco scenari usa la stessa API del modulo dedicato.
+  if(document.getElementById("sondaggi-app-20261012"))return;
+  loadScript("sondaggi-app-20261012","sondaggi-app.js?v=20261012-scenari");
+}
+
 function loadIntegrityGuard(){
   loadScript("dashboard-runtime-integrity","dashboard-runtime-integrity.js?v=20261009-1");
 }
@@ -173,8 +180,7 @@ function testClick(test){
 
   const api=window.sondaggiTestAPI;
   if(!api||typeof api.run!=="function"){
-    if(detail)detail.innerHTML="<b>TEST "+item.id+" · "+item.name+"</b><span>Il motore Sondaggi non è ancora pronto. Riprovo automaticamente…</span>";
-    setTimeout(()=>testClick(test),700);
+    if(detail)detail.innerHTML="<b>TEST "+item.id+" · "+item.name+"</b><span>Motore Sondaggi in caricamento. Attendi un istante e premi di nuovo il test.</span>";
     return;
   }
 
@@ -282,6 +288,7 @@ function ensure(){
 
 loadMobileStyles();
 loadLawEngine();
+loadSondaggiApp();
 loadIntegrityGuard();
 
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",ensure,{once:true});
