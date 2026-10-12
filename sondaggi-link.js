@@ -299,7 +299,7 @@ function installAnalysisCapture(){
     try{ev.stopPropagation();}catch(_){}
     enforceAnalysisView(view);
   };
-  ["pointerdown","mousedown","mouseup","click"].forEach(type=>window.addEventListener(type,handler,true));
+  window.addEventListener("click",handler,true);
 }
 function applyAnalysisView(){
   const nav=ensureAnalysisNav();
