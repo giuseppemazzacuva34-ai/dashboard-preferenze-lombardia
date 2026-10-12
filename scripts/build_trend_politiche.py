@@ -88,8 +88,8 @@ def aggregate(parsed):
             d["parties"]=[{"partyId":pk,"votes":int(v),"share":round(v/total*100,6) if total else 0} for pk,v in sorted(vals.items(),key=lambda x:(-x[1],x[0]))]
             out.append(d)
         return sorted(out,key=lambda x:(x["regionCode"],x.get("collegeId","")))
-    return {"colleges":make_group(((rc,col,pk),v) for (rc,col,pk),v in c.items(),True),
-            "regions":make_group(((rc,"",pk),v) for (rc,pk),v in rg.items(),False)}
+    return {"colleges":make_group([((rc,col,pk),v) for (rc,col,pk),v in c.items()],True),
+            "regions":make_group([((rc,"",pk),v) for (rc,pk),v in rg.items()],False)}
 
 def main():
     data={"version":"2026-10-12-politiche-v1","method":{"type":"observed_results","shareDefinition":"voti lista / somma voti delle liste presenti nel file sorgente","note":"Dati osservati; non sono previsioni."},"sources":[],"elections":{},"validation":{}}
