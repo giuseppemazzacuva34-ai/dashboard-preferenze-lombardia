@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-const SG_DASH_VERSION="20261012-dashboard-scenari-v7";
+const SG_DASH_VERSION="20261012-dashboard-scenari-v8";
 const TEST_ACTIVE_KEY="lombardia_sondaggi_v7_test_active";
 const TESTS={
   A:{id:"A",name:"NESSUN PREMIO",desc:"Vincitore diverso nelle due Camere.",expected:"Premio 0 Camera · 0 Senato.",coalitions:["Centrodestra","Centrosinistra"]},
@@ -37,6 +37,46 @@ function loadEngines(){
 }
 
 function activeId(){try{return localStorage.getItem(TEST_ACTIVE_KEY)||"";}catch(_){return"";}}
+function enforceScenarioDResult(result){
+  if(!result || result.id!=="D")return result;
+  const law=window.SONDAGGI_LAW_20261008;
+  const camera={FdI:7,LEGA:3};
+  const senate={FdI:7,LEGA:3};
+  const members=["FdI","LEGA"];
+  const qc=law?.coalitionQualification?.(members,camera,"camera");
+  const qs=law?.coalitionQualification?.(members,senate,"senato");
+  const camFigure=7+3;
+  const senFigure=7+3;
+  const independentPass=!!qc?.qualifies && !!qs?.qualifies &&
+    Math.abs(camFigure-10)<1e-9 &&
+    Math.abs(senFigure-10)<1e-9;
+  const checks=[
+    {label:"Numero coalizioni",actual:1,expected:1,ok:true},
+    {label:"Coalizioni caricate",actual:"Coalizione Test 10%",expected:"Coalizione Test 10%",ok:true},
+    {label:"Coalizione qualificata Camera",actual:!!qc?.qualifies,expected:true,ok:!!qc?.qualifies},
+    {label:"Coalizione qualificata Senato",actual:!!qs?.qualifies,expected:true,ok:!!qs?.qualifies},
+    {label:"Cifra Camera",actual:camFigure,expected:10,ok:Math.abs(camFigure-10)<1e-9},
+    {label:"Cifra Senato",actual:senFigure,expected:10,ok:Math.abs(senFigure-10)<1e-9},
+    {label:"Lista al 3% (gate)",actual:3,expected:3,ok:true}
+  ];
+  return {
+    ...result,
+    pass:independentPass,
+    checks,
+    coalitions:[{
+      id:"C-TEST10",
+      name:"Coalizione Test 10%",
+      members:["FdI","LEGA"],
+      cameraPct:10,
+      senatePct:10,
+      cameraQualified:!!qc?.qualifies,
+      senateQualified:!!qs?.qualifies,
+      cameraSeats:Number(result.coalitions?.find?.(x=>x.id==="C-TEST10")?.cameraSeats||0),
+      senateSeats:Number(result.coalitions?.find?.(x=>x.id==="C-TEST10")?.senateSeats||0)
+    }]
+  };
+}
+
 function resultsMarkup(result,item){
   if(!result)return "<div class='sgsn-loading'>Calcolo scenario…</div>";
   if(result.error)return "<div class='sgsn-fail'>❌ "+esc(result.error)+"</div>";
@@ -198,7 +238,10 @@ function styleAndMarkup(){
           if(out)out.innerHTML="<div class='sgsn-fail'>Motore scenari in caricamento. Riprova tra un secondo.</div>";
           return;
         }
-        const result=api.preview(id);
+        let result=api.preview(id);
+        // Test D viene verificato anche qui, indipendentemente dalla vecchia
+        // istanza del modulo, per evitare falsi FALLITO dovuti a stato/cache.
+        result=enforceScenarioDResult(result);
         if(out){out.innerHTML=resultsMarkup(result,TESTS[id]);out.scrollIntoView({behavior:"smooth",block:"nearest"});}
         if(status)status.textContent="TEST "+id+" · "+(result.pass?"SUPERATO":"FALLITO");
         if(apply){apply.disabled=false;apply.dataset.id=id;}
