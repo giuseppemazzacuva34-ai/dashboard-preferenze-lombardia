@@ -175,38 +175,20 @@ function applyToExisting(regions){
   }catch(err){alert("Applicazione non riuscita: "+(err?.message||err));}
 }
 function ensureTrendHost(){
-  const dashboardHost=document.getElementById("sg7content");
-  const page=document.getElementById("page");
-  const anchor=document.getElementById("tab-sondaggi");
+  const root=document.getElementById("sg7");
+  const shell=root?.querySelector(".sg7w");
+  const content=document.getElementById("sg7content");
   let current=document.getElementById("sg-trend-module");
-
-  /* Il Trend appartiene alla schermata Sondaggi: deve vivere dentro #sg7content.
-     La precedente priorità a #page lo collocava fuori dal contenitore visibile. */
-  if(dashboardHost){
-    if(!current){
-      current=document.createElement("section");
-      current.id="sg-trend-module";
-      current.setAttribute("aria-label","Trend storico 2018 2022 e scenario regionale");
-      dashboardHost.insertBefore(current,dashboardHost.firstChild);
-    }else if(current.parentElement!==dashboardHost || current!==dashboardHost.firstElementChild){
-      dashboardHost.insertBefore(current,dashboardHost.firstChild);
-    }
-    return current;
+  if(!root||!shell||!content)return null;
+  if(!current){
+    current=document.createElement("section");
+    current.id="sg-trend-module";
+    current.setAttribute("aria-label","Trend storico 2018 2022 e scenario regionale");
+    shell.insertBefore(current,content.nextSibling);
+  }else if(current.parentElement!==shell || current.previousElementSibling!==content){
+    shell.insertBefore(current,content.nextSibling);
   }
-
-  if(page&&anchor){
-    if(!current){
-      current=document.createElement("section");
-      current.id="sg-trend-module";
-      current.setAttribute("aria-label","Trend storico 2018 2022 e scenario regionale");
-      page.insertBefore(current,anchor);
-    }else if(current.parentElement!==page||current.nextElementSibling!==anchor){
-      page.insertBefore(current,anchor);
-    }
-    return current;
-  }
-
-  return null;
+  return current;
 }
 let sgTrendObserverInstalled=false;
 function installTrendObserver(){if(sgTrendObserverInstalled)return;sgTrendObserverInstalled=true;const root=document.documentElement||document.body;if(!root)return;let queued=false;const ensure=()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;const host=ensureTrendHost();if(host&&!host.dataset.sgTrendStarted){host.dataset.sgTrendStarted="1";render();}});};new MutationObserver(ensure).observe(root,{subtree:true,childList:true});ensure();setTimeout(ensure,250);setTimeout(ensure,750);setTimeout(ensure,1500);}
