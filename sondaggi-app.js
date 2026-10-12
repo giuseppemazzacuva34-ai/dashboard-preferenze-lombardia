@@ -2500,3 +2500,19 @@ function installSondaggiModule(){
 
 installSondaggiModule();
 })();
+
+
+/* ===== SONDAGGI LINK CACHE BRIDGE v9 ===== */
+(function(){
+  "use strict";
+  if(window.__SG_SCENARIO_LINK_BRIDGE_V9)return;
+  window.__SG_SCENARIO_LINK_BRIDGE_V9=true;
+  try{
+    if(!document.getElementById("sg7content"))return;
+    const s=document.createElement("script");
+    s.id="sondaggi-link-v9-bridge";
+    s.src="sondaggi-link.js?v=20261012-v9";
+    s.async=false;
+    (document.head||document.documentElement).appendChild(s);
+  }catch(err){console.error("Sondaggi link bridge",err);}
+})();
