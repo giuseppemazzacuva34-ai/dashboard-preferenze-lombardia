@@ -195,10 +195,13 @@ function stopTrendLatch(){
 }
 
 function getAnalysisViewFromTarget(target){
-  const btn=target?.closest?.("[data-sgan-view]");
-  if(btn){
-    const v=btn.getAttribute("data-sgan-view");
+  const el=target?.closest?.("[data-sgan-view],button,a");
+  if(el){
+    const v=el.getAttribute("data-sgan-view");
     if(v==="trend"||v==="scenari")return v;
+    const text=String(el.textContent||"").trim().toUpperCase();
+    if(text==="TREND")return "trend";
+    if(text==="SCENARI POSSIBILI")return "scenari";
   }
   const text=String(target?.textContent||"").trim().toUpperCase();
   if(text==="TREND")return "trend";
@@ -299,6 +302,12 @@ function installAnalysisCapture(){
   const handler=ev=>{
     const view=getAnalysisViewFromTarget(ev.target);
     if(!view)return;
+    const link=ev.target?.closest?.("a");
+    if(link){
+      link.removeAttribute("href");
+      link.setAttribute("role","button");
+      link.setAttribute("aria-label",view==="trend"?"Apri Trend":"Apri Scenari Possibili");
+    }
     ev.preventDefault();
     try{ev.stopImmediatePropagation();}catch(_){}
     try{ev.stopPropagation();}catch(_){}
