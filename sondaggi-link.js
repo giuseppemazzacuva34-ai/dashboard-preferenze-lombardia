@@ -184,20 +184,28 @@ let SG_ACTIVE_VIEW="scenari";
 function ensureAnalysisNav(){
   const root=document.getElementById("sg7");
   if(!root)return null;
-  const shell=root.querySelector(".sg7w")||root;
-  let nav=document.getElementById("sgAnalysisNav");
-  if(!nav||!shell.contains(nav)){
-    if(nav)nav.remove();
-    nav=document.createElement("div");
+  const tabs=root.querySelector(".sg7tabs");
+  if(!tabs)return null;
+  let nav=tabs.querySelector("#sgAnalysisNav");
+  if(!nav){
+    nav=document.createElement("span");
     nav.id="sgAnalysisNav";
-    nav.innerHTML="<span class='sgan-title'>ANALISI</span><button type='button' data-sgan-view='scenari' class='active'>SCENARI POSSIBILI</button><button type='button' data-sgan-view='trend'>TREND</button>";
-    const anchor=shell.querySelector(".sg7top")||shell.querySelector(".sg7tabs")||shell.firstElementChild;
-    if(anchor&&anchor.parentElement===shell)shell.insertBefore(nav,anchor.nextSibling);
-    else shell.insertBefore(nav,shell.firstChild);
-    nav.querySelectorAll("[data-sgan-view]").forEach(btn=>btn.addEventListener("click",()=>{
-      SG_ACTIVE_VIEW=btn.getAttribute("data-sgan-view")==="trend"?"trend":"scenari";
-      applyAnalysisView();
-    }));
+    nav.style.cssText="display:contents";
+    const mk=(view,label)=>{
+      const btn=document.createElement("button");
+      btn.type="button";
+      btn.className="sg7tab sg7analysisTab";
+      btn.dataset.sganView=view;
+      btn.textContent=label;
+      btn.addEventListener("click",()=>{
+        SG_ACTIVE_VIEW=view;
+        applyAnalysisView();
+      });
+      return btn;
+    };
+    tabs.appendChild(nav);
+    nav.appendChild(mk("scenari","SCENARI POSSIBILI"));
+    nav.appendChild(mk("trend","TREND"));
   }
   return nav;
 }
@@ -206,12 +214,10 @@ function ensureAnalysisNavStyle(){
   const st=document.createElement("style");
   st.id="sgAnalysisNavStyle";
   st.textContent=[
-    "#sgAnalysisNav{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:10px 0 12px;padding:5px 6px;border:1px solid rgba(255,255,255,.18);border-radius:11px;background:rgba(4,27,51,.82);box-sizing:border-box;position:relative;z-index:2147483647}",
-    "#sgAnalysisNav .sgan-title{font-size:7px;letter-spacing:.12em;color:#7595ab;font-weight:900;padding:0 6px}",
-    "#sgAnalysisNav button{border:1px solid #315f7e;background:#0b2941;color:#a9c7d9;border-radius:8px;padding:8px 13px;font-size:7px;font-weight:900;cursor:pointer}",
-    "#sgAnalysisNav button:hover{border-color:#4d8eb8;color:#fff}",
-    "#sgAnalysisNav button.active{background:#176ea5;border-color:#318bc5;color:#fff}",
-    "@media(max-width:520px){#sgAnalysisNav button{flex:1 1 calc(50% - 7px)}}"
+    "#sgAnalysisNav{display:contents!important}",
+    "#sg7 .sg7analysisTab{border-color:rgba(255,255,255,.28)!important;background:rgba(255,255,255,.10)!important;color:#fff!important}",
+    "#sg7 .sg7analysisTab.active{background:rgba(255,255,255,.28)!important;border-color:rgba(255,255,255,.48)!important}",
+    "#sg7 .sg7analysisTab:hover{background:rgba(255,255,255,.18)!important}"
   ].join("");
   document.head.appendChild(st);
 }
