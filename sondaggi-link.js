@@ -32,7 +32,7 @@ function loadMobileStyles(){
 }
 function loadEngines(){
   loadScript("sondaggi-law-20261008","sondaggi-law-20261008.js?v=20261009-legal");
-  loadScript("sondaggi-app-preview","sondaggi-app.js?v=20261012-preview");
+  loadScript("sondaggi-app-preview","sondaggi-app.js?v=20261012-preview2");
   loadScript("dashboard-runtime-integrity","dashboard-runtime-integrity.js?v=20261009-1");
 }
 
@@ -43,8 +43,14 @@ function resultsMarkup(result,item){
   const checks=(result.checks||[]).map(x=>
     "<tr><td>"+esc(x.label)+"</td><td>"+esc(typeof x.actual==="object"?(x.actual?.name||x.actual?.id||"presente"):x.actual)+"</td><td>"+esc(typeof x.expected==="object"?(x.expected?.name||x.expected?.id||"presente"):x.expected)+"</td><td>"+(x.ok?"✅":"❌")+"</td></tr>"
   ).join("");
+  const displayMemberName=k=>{
+    const s=String(k||"");
+    if(s==="FdI" || s==="Fratelli d'Italia")return "Fratelli d'Italia (FdI)";
+    const aliases={PD:"Partito Democratico",M5S:"Movimento 5 Stelle",AVS:"Alleanza Verdi Sinistra",FI:"Forza Italia",LEGA:"Lega",FN:"Futuro Nazionale",AZ:"Azione",IV:"Italia Viva",PIU:"+Europa",NM:"Noi Moderati",ALTRI:"Altri"};
+    return aliases[s]||s;
+  };
   const coal=(result.coalitions||[]).map(c=>
-    "<div class='sgsn-coal-row'><div><b>"+esc(c.name)+"</b><small>"+esc((c.members||[]).join(" · "))+"</small></div>"+
+    "<div class='sgsn-coal-row'><div><b>"+esc(c.name)+"</b><small>"+esc((c.members||[]).map(displayMemberName).join(" · "))+"</small></div>"+
     "<span>Camera "+fmt(c.cameraPct)+"% · "+fmt0(c.cameraSeats)+" seggi<br>Senato "+fmt(c.senatePct)+"% · "+fmt0(c.senateSeats)+" seggi</span></div>"
   ).join("")||"<div class='sgsn-empty'>Nessuna coalizione prevista per questo test.</div>";
   const rows=(title,data)=>
