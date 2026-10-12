@@ -1,0 +1,45 @@
+name: TREND module tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "trend.html"
+      - "trend-territoriale.js"
+      - "trend-territorial-compact-bootstrap.js"
+      - "sondaggi-trend-2018-2022.js"
+      - "trend-data-politiche.json"
+      - "trend-data-europee.json"
+      - "data/trend-regionali-generated.json"
+      - ".github/workflows/trend-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: JS syntax
+        run: |
+          node --check trend-territoriale.js
+          node --check trend-territorial-compact-bootstrap.js
+          node --check sondaggi-trend-2018-2022.js
+          echo "TREND JS syntax: OK"
+      - name: Dataset integrity
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for p in ["trend-data-politiche.json","trend-data-europee.json","data/trend-regionali-generated.json"]:
+              d=json.loads(Path(p).read_text(encoding="utf-8"))
+              print(p, d.get("version"))
+          assert json.loads(Path("trend-data-politiche.json").read_text())["version"]=="2026-10-12-politiche-v1"
+          assert json.loads(Path("trend-data-europee.json").read_text())["version"]=="2026-10-12-europee-v1"
+          r=json.loads(Path("data/trend-regionali-generated.json").read_text())
+          assert r["version"] in {"2026-10-12-regionali1","2026-10-12-regionali2"}
+          assert r.get("byRegion")
+          print("TREND datasets: OK")
+          PY
