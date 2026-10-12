@@ -401,7 +401,7 @@
   function splitCoalitionNational(unit,seatCount,values){
     if(unit.type!=="coalition")return {[unit.members[0]]:seatCount};
     const items=(unit.members||[]).map(k=>({id:k,votes:values?.[k]||0}));
-    return quotientAllocate(items,seatCount,(k)=>values?.[k]||0);
+    return quotientAllocate(items,seatCount,(k)=>values?.[k]||0).seats;
   }
 
   function nationalListTargets(unitSeats,units,values){
@@ -1579,11 +1579,6 @@
         Math.max(0,(initial.seats[winnerUnit.id]||0)-(final.seats[winnerUnit.id]||0)):0,
       trace:{
         nationalInitial:initial,
-        listDistributionDebug:{
-          nationalListTargets,
-          unitCircTotals:ordinaryCirc.nationalTotals,
-          listDistributionTotals:listDistribution.totals
-        },
         nationalFinal:final,
         ordinaryAssigned,
         prizeAssigned,
