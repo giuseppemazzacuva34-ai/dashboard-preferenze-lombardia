@@ -89,7 +89,7 @@ function mergeEuropean(bundle){
     const [p,e,r]=await Promise.all([pRes.json(),eRes.json(),rRes.json()]);
     if(p.version!=="2026-10-12-politiche-v1")throw new Error("dataset Politiche non riconosciuto");
     if(e.version!=="2026-10-12-europee-v1")throw new Error("dataset Europee non riconosciuto");
-    if(r.version!=="2026-10-12-regionali1")throw new Error("dataset Regionali non riconosciuto");
+    if(!["2026-10-12-regionali3","2026-10-12-regionali2","2026-10-12-regionali1"].includes(r.version))throw new Error("dataset Regionali non riconosciuto");
     mergePolitical(p);
     mergeEuropean(e);
     mergeRegional(r);
