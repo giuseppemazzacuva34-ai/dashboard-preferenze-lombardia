@@ -40,7 +40,7 @@ function loadMobileStyles(){
 }
 function loadEngines(){
   loadScript("sondaggi-law-20261008","sondaggi-law-20261008.js?v=20261009-legal");
-  loadScript("sondaggi-app-preview","sondaggi-app.js?v=20261012-preview4");
+  loadScript("sondaggi-app-preview","sondaggi-app.js?v=20261012-preview5");
   loadScript("dashboard-runtime-integrity","dashboard-runtime-integrity.js?v=20261009-1");
   loadScript("sondaggi-trend-2018-2022","sondaggi-trend-2018-2022.js?v=20261012-trend10");
 }
