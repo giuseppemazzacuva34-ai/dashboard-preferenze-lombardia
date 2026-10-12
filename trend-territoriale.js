@@ -168,6 +168,7 @@ function render(){
   const obsRows=["politiche2022","europee2019","europee2024"].map(k=>({label:k,share:obs(STATE.chamber,k,STATE.college,STATE.party),nat:nationalObserved(STATE.chamber,k,STATE.party)}));
   const regObs=regionalSignals(STATE.region,STATE.party);
   const sim=runSeats(), rows=allRows(STATE.chamber,STATE.region,STATE.party,sim);
+  const selectedRow=rows.find(x=>keyCollege(x.college)===keyCollege(STATE.college))||{seats:0,share:model.shares[STATE.party]||0};
   const totalSelected=rows.reduce((a,x)=>a+x.seats,0);
   host.innerHTML=`
   <section class="sta">
@@ -184,7 +185,7 @@ function render(){
       <div class="sta-kpis">
         <div><b>${pct(baseNational(STATE.chamber,STATE.party))}%</b><span>base nazionale</span></div>
         <div><b>${row.delta>=0?"+":""}${pct(row.delta)} pt</b><span>aggiustamento territoriale</span></div>
-        <div><b>${totalSelected}</b><span>seggi simulati nella regione</span></div>
+        <div><b>${selectedRow.seats}</b><span>seggi nel collegio selezionato</span><small style="display:block;margin-top:3px;color:#718da0;font-size:6px">${totalSelected} nella regione</small></div>
       </div>
     </div>
     <div class="sta-grid">
