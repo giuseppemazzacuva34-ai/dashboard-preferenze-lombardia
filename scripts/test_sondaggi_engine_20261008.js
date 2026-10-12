@@ -106,6 +106,55 @@ assert.strictEqual(Object.values(r.sen.ordinarySeatsByParty).reduce((a,v)=>a+v,0
 assert.strictEqual(r.cam.simulatedTotal,384);
 assert.strictEqual(r.sen.simulatedTotal,189);
 assert.strictEqual(r.cam.complete,true,"Camera senza premio quadrata");
+
+// Regressione scenario A: la Camera deve rispettare prima i seggi nazionali
+// delle coalizioni e poi il riparto nazionale interno alle coalizioni.
+const scenarioACam={
+  FdI:40,PD:41.5,M5S:6,AVS:3,FI:3.5,LEGA:2,FN:1,AZ:1,IV:0.5,PIU:0.5,NM:0,ALTRI:1
+};
+const scenarioASen={
+  FdI:42,PD:34,M5S:3,AVS:2,FI:3.5,LEGA:3,FN:2,AZ:2,IV:1,PIU:1,NM:1.5,ALTRI:5
+};
+const scenarioAParties=Object.fromEntries(Object.keys(scenarioACam).map(k=>[
+  k,{name:k,camera:scenarioACam[k],senate:scenarioASen[k]}
+]));
+const scenarioA=engine.simulate({
+  law,
+  parties:scenarioAParties,
+  coalitions,
+  camera:{nationalValues:scenarioACam,collegeValues:{},collegeMap:CAM},
+  senato:{nationalValues:scenarioASen,
+    regionalValuesByRegion:Object.fromEntries(
+      Object.keys(regionalValuesByRegion).map(region=>[region,{...scenarioASen}])
+    ),
+    collegeMap:SEN,premiumByRegion:law.rules.senatePremiumByRegion},
+  specialSeats:{camera:{},senato:{}}
+});
+const aUnits=engine.nationalUnits(scenarioACam,"camera",coalitions,law).units;
+const aNationalUnitSeats=engine.quotientAllocate(
+  aUnits.map(u=>({id:u.id,votes:u.votes})),384,
+  id=>aUnits.find(u=>u.id===id)?.votes||0
+).seats;
+const aExpectedLists={};
+aUnits.forEach(u=>{
+  const count=aNationalUnitSeats[u.id]||0;
+  const split=engine.quotientAllocate(
+    (u.members||[]).map(k=>({id:k,votes:scenarioACam[k]||0})),
+    count,
+    k=>scenarioACam[k]||0
+  ).seats;
+  Object.entries(split).forEach(([k,v])=>aExpectedLists[k]=(aExpectedLists[k]||0)+v);
+});
+assert.deepStrictEqual(
+  scenarioA.cam.ordinarySeatsByParty,
+  aExpectedLists,
+  "Scenario A Camera: seggi nazionali delle liste non rispettati"
+);
+assert.strictEqual(
+  Object.values(scenarioA.cam.ordinarySeatsByParty).reduce((a,v)=>a+v,0),
+  384,
+  "Scenario A Camera: totale seggi non quadrato"
+);
 assert.strictEqual(r.sen.complete,true,"Senato senza premio quadrato");
 assert.strictEqual(Object.values(r.cam.circResults.nationalTotals).reduce((a,v)=>a+v,0),384);
 
