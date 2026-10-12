@@ -579,6 +579,96 @@ function installSondaggiModule(){
     }catch(_){return false;}
   }
 
+  function evaluateTestScenario(id){
+    const preset=TEST_SCENARIOS.find(x=>x.id===id);
+    if(!preset)return {id,pass:false,error:"Scenario non trovato."};
+
+    const law=window.SONDAGGI_LAW_20261008;
+    const cam=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].camera)]));
+    const sen=Object.fromEntries(Object.keys(S.parties).map(k=>[k,num(S.parties[k].senate)]));
+    let national=null;
+    try{national=nationalResults();}catch(err){
+      return {id,pass:false,error:"Errore nel ricalcolo: "+String(err?.message||err)};
+    }
+
+    const checks=[];
+    const add=(label,actual,expected,ok)=>{
+      checks.push({label,actual,expected,ok:!!ok});
+    };
+
+    if(id==="A"){
+      add("Premio",national?.bonus||null,"nessun premio",!national?.bonus &&
+        Number(national?.cam?.premiumWinnerSeats||0)===0 &&
+        Number(national?.sen?.premiumWinnerSeats||0)===0);
+    }else if(id==="B"){
+      const w=bonusTarget();
+      add("Soggetto vincente del premio",w?.id||null,"C-CD",w?.id==="C-CD");
+      add("Cifra Camera",w?.cam||0,42,w?.cam===42);
+      add("Cifra Senato",w?.sen||0,42,w?.sen===42);
+      add("Seggi premio Camera",Number(national?.cam?.premiumWinnerSeats||0),70,Number(national?.cam?.premiumWinnerSeats||0)===70);
+      add("Seggi premio Senato",Number(national?.sen?.premiumWinnerSeats||0),35,Number(national?.sen?.premiumWinnerSeats||0)===35);
+    }else if(id==="C"){
+      add("Premio",national?.bonus||null,"nessun premio",!national?.bonus &&
+        Number(national?.cam?.premiumWinnerSeats||0)===0 &&
+        Number(national?.sen?.premiumWinnerSeats||0)===0);
+    }else if(id==="D"){
+      const co=S.coalitions.find(x=>x.id==="C-TEST10")||{members:["FdI","LEGA"]};
+      const qc=law?.coalitionScores?.(co.members,cam,"camera");
+      const qs=law?.coalitionScores?.(co.members,sen,"senato");
+      add("Coalizione qualificata Camera",!!qc?.qualifies,true,!!qc?.qualifies);
+      add("Coalizione qualificata Senato",!!qs?.qualifies,true,!!qs?.qualifies);
+      add("Cifra Camera",Number(qc?.totalAll||0),10,Math.abs(Number(qc?.totalAll||0)-10)<1e-9);
+      add("Lista al 3% (gate)",Number(cam.LEGA||0),3,Number(cam.LEGA||0)===3);
+    }else if(id==="E"){
+      const az=law?.listNationallyEligible?.(cam.AZ);
+      const iv=law?.listNationallyEligible?.(cam.IV);
+      add("Lista AZ al 3,0%",!!az,true,!!az);
+      add("Lista IV al 2,9%",!!iv,false,!iv);
+    }else if(id==="F"){
+      const nationalEligible=law?.listNationallyEligible?.(sen.FdI);
+      const regionalEligible=law?.listRegionallyEligibleForSenate?.(
+        sen.FdI,
+        Number(S.regionalSenate?.Lombardia?.FdI||0)
+      );
+      add("FdI nazionale sotto il 3%",!!nationalEligible,false,!nationalEligible);
+      add("FdI Lombardia al 20%",!!regionalEligible,true,!!regionalEligible);
+    }
+
+    return {
+      id,
+      name:preset.name,
+      pass:checks.length>0&&checks.every(x=>x.ok),
+      checks,
+      cameraPrize:Number(national?.cam?.premiumWinnerSeats||0),
+      senatePrize:Number(national?.sen?.premiumWinnerSeats||0),
+      winner:national?.bonus?.name||null,
+      timestamp:new Date().toISOString()
+    };
+  }
+
+  window.sondaggiTestAPI={
+    list:()=>TEST_SCENARIOS.map(x=>({
+      id:x.id,name:x.name,description:x.description,expected:x.expected
+    })),
+    run:(id)=>{
+      const ok=applyTestScenario(String(id||""));
+      if(!ok)return {id,pass:false,error:"Scenario non trovato."};
+      const result=evaluateTestScenario(String(id||""));
+      window.__SONDAGGI_LAST_TEST=result;
+      render();
+      return result;
+    },
+    evaluate:(id)=>evaluateTestScenario(String(id||"")),
+    restore:()=>{
+      const ok=restoreTestBackup();
+      if(ok)window.__SONDAGGI_LAST_TEST=null;
+      return ok;
+    },
+    isBackupAvailable:()=>!!localStorage.getItem(TEST_BACKUP_KEY),
+    current:()=>window.__SONDAGGI_LAST_TEST||null
+  };
+
+
 
   function esc2(v){
     try{return typeof esc==="function"?esc(String(v??"")):String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
