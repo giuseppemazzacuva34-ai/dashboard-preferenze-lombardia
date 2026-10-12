@@ -197,7 +197,9 @@ function ensureAnalysisNav(){
       btn.className="sg7analysisTab";
       btn.dataset.sganView=view;
       btn.textContent=label;
-      btn.addEventListener("click",()=>{
+      btn.addEventListener("click",e=>{
+        e.preventDefault();
+        e.stopImmediatePropagation();
         SG_ACTIVE_VIEW=view;
         applyAnalysisView();
       });
@@ -224,12 +226,17 @@ function ensureAnalysisNavStyle(){
 function applyAnalysisView(){
   const nav=ensureAnalysisNav();
   if(nav)nav.querySelectorAll("[data-sgan-view]").forEach(btn=>btn.classList.toggle("active",btn.getAttribute("data-sgan-view")===SG_ACTIVE_VIEW));
+  const content=document.getElementById("sg7content");
   const bank=document.getElementById("sgScenarioBankNative");
   const trend=document.getElementById("sg-trend-module");
-  if(bank)bank.style.display=SG_ACTIVE_VIEW==="scenari"?"":"none";
-  if(trend)trend.style.display=SG_ACTIVE_VIEW==="trend"?"":"none";
-}
-function styleAndMarkup(){
+  const showingTrend=SG_ACTIVE_VIEW==="trend";
+  if(content)content.style.display=showingTrend?"none":"";
+  if(bank)bank.style.display=showingTrend?"none":"";
+  if(trend){
+    trend.style.display=showingTrend?"":"none";
+    trend.style.width="100%";
+  }
+}function styleAndMarkup(){
   const host=document.getElementById("sg7content");
   if(!host)return false;
   let bank=document.getElementById("sgScenarioBankNative");
