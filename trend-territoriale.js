@@ -9,6 +9,7 @@ const APP_KEY="lombardia_sondaggi_v7";
 const D=window.SG_TERRITORIAL_DATA||{};
 const LAW=window.SONDAGGI_LAW_20261008;
 const ENGINE=window.SONDAGGI_ELECTION_ENGINE_20261008;
+const REGIONS=D.regions||[];
 const DEFAULTS={
  FdI:["Fratelli d'Italia",26.8],PD:["Partito Democratico",20.4],M5S:["Movimento 5 Stelle",12.8],
  FI:["Forza Italia",7.4],LEGA:["Lega",5.7],AVS:["Alleanza Verdi Sinistra",6.3],
