@@ -602,91 +602,155 @@
     parties,
     collegeValues
   }){
-    const listByCirc={};
-    const listRemainders={};
-
-    Object.entries(unitCirc.byCirc).forEach(([circId,unitMap])=>{
+    const listByCirc={},listRemainders={};
+    Object.entries(unitCirc?.byCirc||{}).forEach(([circId,unitMap])=>{
       listByCirc[circId]={};
       listRemainders[circId]={};
-      Object.entries(unitMap).forEach(([unitId,count])=>{
-        const unit=nationalUnitById(units,unitId);
-        if(!unit||!count)return;
+      Object.entries(unitMap||{}).forEach(([unitId,count])=>{
+        const unit=units.find(u=>u.id===unitId);
+        const nSeats=Math.floor(cleanPositive(count));
+        if(!unit||!nSeats)return;
+
         if(unit.type==="list"){
           const k=unit.members[0];
-          listByCirc[circId][k]=(listByCirc[circId][k]||0)+count;
+          if(Math.floor(cleanPositive(listTargets?.[k]||0))>0){
+            listByCirc[circId][k]=(listByCirc[circId][k]||0)+nSeats;
+            listRemainders[circId][k]=0;
+          }
           return;
         }
 
-        const items=(unit.members||[]).map(k=>({
-          id:k,
-          votes:calcCircListFigures(circData[circId],k)
-        })).filter(x=>x.votes>0);
-        const split=quotientAllocate(items,count,(k)=>parties?.[k]?.camera||0);
-        Object.entries(split.seats).forEach(([k,v])=>{
-          listByCirc[circId][k]=(listByCirc[circId][k]||0)+v;
+        const members=(unit.members||[])
+          .filter(k=>Math.floor(cleanPositive(listTargets?.[k]||0))>0)
+          .filter(k=>cleanPositive(circData?.[circId]?.figures?.[collegesKeyForCirc?.(circId)]?.[k]||0)>=0);
+        const eligible=(unit.members||[])
+          .filter(k=>Math.floor(cleanPositive(listTargets?.[k]||0))>0)
+          .map(k=>({
+            id:k,
+            votes:calcCircListFigures(circData[circId],k),
+            national:cleanPositive(parties?.[k]?.camera)
+          }))
+          .filter(x=>x.votes>0);
+
+        if(!eligible.length)return;
+
+        const total=eligible.reduce((a,x)=>a+x.votes,0);
+        const raw=eligible.map(x=>{
+          const exact=nSeats*x.votes/total;
+          const base=Math.floor(exact);
+          const rest=exact-base;
+          return {...x,base,rest};
         });
-        Object.entries(split.remainders).forEach(([k,v])=>{
-          listRemainders[circId][k]=v;
+        let used=raw.reduce((a,x)=>a+x.base,0);
+        raw.forEach(x=>{
+          listByCirc[circId][x.id]=(listByCirc[circId][x.id]||0)+x.base;
+          listRemainders[circId][x.id]=x.rest;
         });
+
+        raw.slice().sort((a,b)=>
+          b.rest-a.rest ||
+          b.national-a.national ||
+          String(a.id).localeCompare(String(b.id),"it")
+        ).forEach(x=>{
+          if(used>=nSeats)return;
+          listByCirc[circId][x.id]=(listByCirc[circId][x.id]||0)+1;
+          listRemainders[circId][x.id]=x.rest;
+          used++;
+        });
+
+        // In ogni caso il numero di seggi della coalizione nella circoscrizione
+        // resta esattamente nSeats.
       });
     });
 
-    /*
-     * Il riparto interno di coalizione va ricondotto ai totali nazionali
-     * spettanti alle liste. Se una lista è deficitaria, il seggio viene
-     * trasferito all'interno della stessa circoscrizione usando i resti non
-     * utilizzati; quando ciò non è possibile si passa al resto non utilizzato
-     * più alto della lista deficitaria.
-     */
     const totals={};
     Object.keys(listTargets||{}).forEach(k=>{totals[k]=0;});
     Object.values(listByCirc).forEach(m=>{
-      Object.entries(m).forEach(([k,v])=>{totals[k]=(totals[k]||0)+v;});
+      Object.entries(m).forEach(([k,v])=>{totals[k]=(totals[k]||0)+Math.floor(cleanPositive(v));});
     });
 
-    const targets={...listTargets};
-    let loops=0;
-    while(loops++<10000){
-      const over=Object.keys(targets).filter(k=>(totals[k]||0)>=(targets[k]||0)+1);
-      const under=Object.keys(targets).filter(k=>(totals[k]||0)<(targets[k]||0));
-      if(!over.length||!under.length)break;
+    /*
+     * Chiusura nazionale delle liste: la somma dei seggi di ogni lista deve
+     * coincidere con il target nazionale già determinato. Il trasferimento
+     * avviene solo all'interno della stessa coalizione e mantiene invariato
+     * il numero di seggi della circoscrizione.
+     */
+    const coalitionUnits=(units||[]).filter(u=>u.type==="coalition");
+    let guard=0;
+    while(guard++<20000){
       let moved=false;
-      for(const donor of over.sort()){
-        const cands=Object.keys(listByCirc)
-          .filter(c=>num(listByCirc[c]?.[donor])>0)
-          .sort((a,b)=>(listRemainders[a]?.[donor]??0)-(listRemainders[b]?.[donor]??0)||a.localeCompare(b,"it"));
-        for(const circId of cands){
-          const donorUnit=units.find(u=>u.members?.includes(donor));
-          const receivers=under.filter(k=>{
-            const receiverUnit=units.find(u=>u.members?.includes(k));
-            // La compensazione della ripartizione interna riguarda la sola
-            // coalizione di appartenenza; una lista singola non può cedere
-            // seggi a una coalizione diversa.
-            if(!receiverUnit)return false;
-            if(donorUnit?.type==="coalition")
-              return receiverUnit.type==="coalition" &&
-                receiverUnit.coalitionId===donorUnit.coalitionId;
-            return receiverUnit.type!=="coalition" && receiverUnit.members?.[0]===donor;
-          }).sort((a,b)=>
-            (listRemainders[circId]?.[b]??-1)-(listRemainders[circId]?.[a]??-1)||
-            String(a).localeCompare(String(b),"it")
-          );
-          if(!receivers.length)continue;
-          const receiver=receivers[0];
-          listByCirc[circId][donor]--;
-          listByCirc[circId][receiver]=(listByCirc[circId][receiver]||0)+1;
-          totals[donor]--;
-          totals[receiver]++;
-          moved=true;
-          break;
+
+      for(const unit of coalitionUnits){
+        const members=(unit.members||[]).filter(k=>
+          Object.prototype.hasOwnProperty.call(listTargets||{},k)
+        );
+        if(!members.length)continue;
+
+        const over=members.filter(k=>
+          (totals[k]||0)>Math.floor(cleanPositive(listTargets[k]||0))
+        ).sort((a,b)=>
+          ((totals[b]||0)-Math.floor(cleanPositive(listTargets[b]||0)))-
+          ((totals[a]||0)-Math.floor(cleanPositive(listTargets[a]||0))) ||
+          String(a).localeCompare(String(b),"it")
+        );
+        const under=members.filter(k=>
+          (totals[k]||0)<Math.floor(cleanPositive(listTargets[k]||0))
+        ).sort((a,b)=>
+          (Math.floor(cleanPositive(listTargets[a]||0))-(totals[a]||0))-
+          (Math.floor(cleanPositive(listTargets[b]||0))-(totals[b]||0)) ||
+          String(a).localeCompare(String(b),"it")
+        );
+
+        if(!over.length||!under.length)continue;
+
+        outer:
+        for(const donor of over){
+          for(const circId of Object.keys(listByCirc)){
+            if((listByCirc[circId]?.[donor]||0)<=0)continue;
+            const receiverCandidates=under
+              .filter(receiver=>{
+                if((listByCirc[circId]?.[receiver]||0)>=Math.floor(cleanPositive(listTargets[receiver]||0)))return false;
+                return calcCircListFigures(circData[circId],receiver)>0;
+              })
+              .map(receiver=>{
+                const seats=Math.max(1,
+                  Object.values(unitCirc.byCirc?.[circId]||{}).reduce((a,v)=>a+Math.floor(cleanPositive(v)),0)
+                );
+                const fig=calcCircListFigures(circData[circId],receiver);
+                const totalFig=members.reduce((a,k)=>a+calcCircListFigures(circData[circId],k),0);
+                const ideal=totalFig>0?seats*fig/totalFig:0;
+                return {
+                  receiver,
+                  rest:ideal-Math.floor(ideal),
+                  figure:fig
+                };
+              })
+              .sort((a,b)=>
+                b.rest-a.rest ||
+                b.figure-a.figure ||
+                String(a.receiver).localeCompare(String(b.receiver),"it")
+              );
+
+            const choice=receiverCandidates[0];
+            if(!choice)continue;
+
+            listByCirc[circId][donor]--;
+            listByCirc[circId][choice.receiver]=(listByCirc[circId][choice.receiver]||0)+1;
+            totals[donor]--;
+            totals[choice.receiver]++;
+            listRemainders[circId][choice.receiver]=choice.rest;
+            moved=true;
+            break outer;
+          }
         }
-        if(moved)break;
       }
+
       if(!moved)break;
     }
 
     return {listByCirc,listRemainders,totals};
   }
+
 
   function allocateListsToColleges(listByCirc,circData,circum,parties,bonusActive){
     const collegeByList={};
