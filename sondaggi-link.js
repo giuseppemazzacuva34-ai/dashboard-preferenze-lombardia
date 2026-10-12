@@ -1,8 +1,10 @@
 (function(){
 "use strict";
 
+if(window.__SG_ANALYSIS_LINK_V11)return;
+window.__SG_ANALYSIS_LINK_V11=true;
 window.__SG_ANALYSIS_LINK_V10=true;
-const SG_DASH_VERSION="20261012-dashboard-scenari-v10";
+const SG_DASH_VERSION="20261012-dashboard-scenari-v11";
 const TEST_ACTIVE_KEY="lombardia_sondaggi_v7_test_active";
 const SCENARIO_APPLY_DATA={
   A:{camera:{FdI:40,PD:41.5,M5S:6,AVS:3,FI:3.5,LEGA:2,FN:1,AZ:1,IV:0.5,PIU:0.5,NM:0,ALTRI:1},senate:{FdI:42,PD:34,M5S:3,AVS:2,FI:3.5,LEGA:3,FN:2,AZ:2,IV:1,PIU:1,NM:1.5,ALTRI:5},coalitions:[{id:"C-CD",name:"Centrodestra",members:["Fratelli d'Italia","Lega","Forza Italia","Noi Moderati"]},{id:"C-CS",name:"Centrosinistra",members:["Partito Democratico","Movimento 5 Stelle","Alleanza Verdi Sinistra","+Europa","Italia Viva"]}]},
@@ -261,9 +263,6 @@ function ensureAnalysisNav(){
         try{ev?.stopPropagation?.();}catch(_){}
         enforceAnalysisView(view);
       };
-      btn.onpointerdown=run;
-      btn.onmousedown=run;
-      btn.onclick=run;
       return btn;
     };
     tabs.appendChild(nav);
@@ -292,8 +291,9 @@ function ensureAnalysisNavStyle(){
 
 let sgAnalysisCaptureInstalled=false;
 function installAnalysisCapture(){
-  if(sgAnalysisCaptureInstalled||window.__SG_ANALYSIS_CAPTURE_V10)return;
+  if(sgAnalysisCaptureInstalled||window.__SG_ANALYSIS_CAPTURE_V11)return;
   sgAnalysisCaptureInstalled=true;
+  window.__SG_ANALYSIS_CAPTURE_V11=true;
   window.__SG_ANALYSIS_CAPTURE_V10=true;
   const handler=ev=>{
     const view=getAnalysisViewFromTarget(ev.target);
@@ -303,7 +303,7 @@ function installAnalysisCapture(){
     try{ev.stopPropagation();}catch(_){}
     enforceAnalysisView(view);
   };
-  ["pointerdown","mousedown","mouseup","click"].forEach(type=>document.addEventListener(type,handler,true));
+  ["pointerdown","mousedown","mouseup","click"].forEach(type=>window.addEventListener(type,handler,true));
 }
 function applyAnalysisView(){
   const nav=ensureAnalysisNav();
