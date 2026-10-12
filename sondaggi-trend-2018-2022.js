@@ -6,8 +6,6 @@
 (function(){
 "use strict";
 const TREND_KEY="lombardia_sondaggi_trend_2018_2022_v2";
-/* Trend view is controlled exclusively by sond​daggi-link.js on the legacy dashboard. */
-;
 const APP_KEY="lombardia_sondaggi_2026";
 const REGIONS=["Umbria","Marche","Lazio","Abruzzo","Molise","Campania","Puglia","Basilicata","Calabria","Sicilia","Sardegna","Piemonte","Valle d'Aosta","Lombardia","Trentino-Alto Adige/Südtirol","Veneto","Friuli-Venezia Giulia","Liguria","Emilia-Romagna","Toscana"];
 const PARTY_DEFAULTS=[["FdI","Fratelli d'Italia",26.8],["PD","Partito Democratico",20.7],["M5S","Movimento 5 Stelle",12.7],["FN","Futuro Nazionale",7.5],["FI","Forza Italia",7.1],["AVS","Alleanza Verdi Sinistra",6.7],["LEGA","Lega",5.7],["AZ","Azione",3.2],["IV","Italia Viva",2.4],["PIU","+Europa",1.3],["NM","Noi Moderati",1.1],["ALTRI","Altri",4.8]];
@@ -176,44 +174,11 @@ function applyToExisting(regions){
     window.location.reload();
   }catch(err){alert("Applicazione non riuscita: "+(err?.message||err));}
 }
-function ensureTrendHost(){
-  const root=document.getElementById("sg7");
-  const shell=root?.querySelector(".sg7w");
-  const content=document.getElementById("sg7content");
-  let current=document.getElementById("sg-trend-module");
-  if(!root||!shell||!content)return null;
-  if(!current){
-    current=document.createElement("section");
-    current.id="sg-trend-module";
-    current.setAttribute("aria-label","Trend storico 2018 2022 e scenario regionale");
-    shell.insertBefore(current,content.nextSibling);
-  }else if(current.parentElement!==shell || current.previousElementSibling!==content){
-    shell.insertBefore(current,content.nextSibling);
-  }
-  return current;
-}
+function ensureTrendHost(){const page=document.getElementById("page"),anchor=document.getElementById("tab-sondaggi"),dashboardHost=document.getElementById("sg7content");let current=document.getElementById("sg-trend-module");if(page&&anchor){if(!current){current=document.createElement("section");current.id="sg-trend-module";current.setAttribute("aria-label","Trend storico 2018 2022 e scenario regionale");page.insertBefore(current,anchor);}else if(current.parentElement!==page||current.nextElementSibling!==anchor){page.insertBefore(current,anchor);}return current;}if(dashboardHost){if(!current||!dashboardHost.contains(current)){if(current&&current.parentElement)current.remove();current=document.createElement("section");current.id="sg-trend-module";current.setAttribute("aria-label","Trend storico 2018 2022 e scenario regionale");dashboardHost.insertBefore(current,dashboardHost.firstChild);}return current;}return null;}
 let sgTrendObserverInstalled=false;
 function installTrendObserver(){if(sgTrendObserverInstalled)return;sgTrendObserverInstalled=true;const root=document.documentElement||document.body;if(!root)return;let queued=false;const ensure=()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;const host=ensureTrendHost();if(host&&!host.dataset.sgTrendStarted){host.dataset.sgTrendStarted="1";render();}});};new MutationObserver(ensure).observe(root,{subtree:true,childList:true});ensure();setTimeout(ensure,250);setTimeout(ensure,750);setTimeout(ensure,1500);}
 let sgTrendEventsInstalled=false;
-function start(){
-  injectStyle();
-  const host=ensureTrendHost();
-  if(host){
-    if(!sgTrendEventsInstalled){
-      sgTrendEventsInstalled=true;
-      const refresh=()=>{S=loadTrend();const h=ensureTrendHost();if(h)render();};
-      window.addEventListener("sondaggi-data-sync",refresh);
-      window.addEventListener("sondaggi-v7-updated",refresh);
-      window.addEventListener("storage",e=>{if(e.key===APP_KEY||e.key==="lombardia_sondaggi_v7")refresh();});
-    }
-    if(!host.dataset.sgTrendStarted){
-      host.dataset.sgTrendStarted="1";
-      render();
-    }
-  }
-  installTrendObserver();
-  scheduleTrendSimulation(300);
-}
+function start(){injectStyle();const host=ensureTrendHost();if(host){if(!sgTrendEventsInstalled){sgTrendEventsInstalled=true;const refresh=()=>{S=loadTrend();const h=ensureTrendHost();if(h)render();};window.addEventListener("sondaggi-data-sync",refresh);window.addEventListener("sondaggi-v7-updated",refresh);window.addEventListener("storage",e=>{if(e.key===APP_KEY||e.key==="lombardia_sondaggi_v7")refresh();});}host.dataset.sgTrendStarted="1";render();}installTrendObserver();scheduleTrendSimulation(300);}
 function injectStyle(){if(document.getElementById("sg-trend-style"))return;const style=document.createElement("style");style.id="sg-trend-style";style.textContent="\n#sg-trend-module{margin-top:14px}\n.tr-wrap{color:#eaf4fb;background:#071a2b;border:1px solid #21445f;border-radius:12px;padding:13px}\n.tr-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}\n.tr-kicker{font-size:8px;letter-spacing:.16em;color:#55b6ff;font-weight:900}\n.tr-head h2{margin:4px 0;font-size:20px;color:#fff}.tr-head p{margin:0;color:#9fb5c6;font-size:9px;line-height:1.45;max-width:900px}\n.tr-badges{display:flex;gap:6px;flex-wrap:wrap}.tr-badges span{background:#102b41;border:1px solid #28506b;border-radius:999px;padding:6px 8px;color:#bcd0dd;font-size:7px;font-weight:900}\n.tr-source,.tr-note,.tr-foot{margin-top:9px;padding:8px 9px;border-radius:8px;background:#0d2539;border:1px solid #23465f;color:#91aabc;font-size:7px;line-height:1.45}\n.tr-controls{display:grid;grid-template-columns:150px 1fr 1fr 1.2fr;gap:8px;margin-top:10px}\n.tr-controls label{display:block;font-size:6px;color:#7995a9;text-transform:uppercase;font-weight:900;margin-bottom:4px}\n.tr-controls select,.tr-controls input{width:100%;box-sizing:border-box;padding:8px;background:#091827;color:#fff;border:1px solid #2a4861;border-radius:7px;font-size:9px}\n.tr-controls small{display:block;color:#718da1;font-size:6px;line-height:1.35;margin-top:4px}\n.tr-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-top:10px}\n.tr-kpis div{background:#0d2940;border:1px solid #244b66;border-radius:8px;padding:9px}.tr-kpis b{display:block;color:#fff;font-size:15px}.tr-kpis span{display:block;margin-top:2px;color:#7998ad;font-size:6px;text-transform:uppercase}.tr-parliament-slot{margin-top:10px}.tr-parliament-card{border-color:#2e6685}.tr-parliament-kpis{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:7px;margin-bottom:9px}.tr-parliament-kpis>div{background:#0d2940;border:1px solid #244b66;border-radius:8px;padding:9px}.tr-parliament-kpis b{display:block;color:#fff;font-size:15px}.tr-parliament-kpis span{display:block;margin-top:2px;color:#7998ad;font-size:6px;text-transform:uppercase}.tr-parliament-kpis small{display:block;margin-top:4px;color:#83a1b4;font-size:6px;line-height:1.3}.tr-parliament-table td{font-size:8px}.tr-parliament-table td:nth-child(2),.tr-parliament-table td:nth-child(3),.tr-parliament-table td:nth-child(4){text-align:right}@media(max-width:600px){.tr-parliament-kpis{grid-template-columns:1fr 1fr}.tr-parliament-kpis>div:last-child{grid-column:1/-1}}\n.tr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}\n.tr-college-matrix-slot{margin-top:10px}.tr-college-matrix{border-color:#39789e}.tr-college-matrix-block{margin-top:10px}.tr-college-matrix-table{min-width:1250px}.tr-college-matrix-table th,.tr-college-matrix-table td{text-align:right}.tr-college-matrix-table th:first-child,.tr-college-matrix-table td:first-child{text-align:left;position:sticky;left:0;background:#0a2033;z-index:1}.tr-college-name{min-width:210px}.tr-college-name small{display:block;color:#7697aa;font-size:6px;margin-top:2px}.tr-college-total{font-weight:900}.tr-college-matrix .tr-card-head{margin-bottom:6px}\n.tr-card{background:#0a2033;border:1px solid #203f57;border-radius:10px;padding:10px;min-width:0}\n.tr-card-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}.tr-card-head b{font-size:10px;color:#fff}.tr-card-head span{font-size:7px;color:#7593a8}\n.tr-table-wrap{width:100%;overflow:auto}.tr-table{width:100%;border-collapse:collapse;font-size:8px}.tr-table th{padding:7px 6px;border-bottom:1px solid #29485f;color:#7c98ab;text-align:left;font-size:6px;text-transform:uppercase}.tr-table td{padding:6px;border-bottom:1px solid #18364c;color:#d7e9f3;vertical-align:middle}.tr-table td small{display:block;font-size:6px;color:#6f8da3;margin-top:2px}\n.tr-table input{width:78px;background:#091827;color:#fff;border:1px solid #2b4960;border-radius:6px;padding:6px 7px;box-sizing:border-box}\n.tr-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.tr-btn{border:1px solid #2a4b64;background:#0d263a;color:#eaf4fb;border-radius:8px;padding:8px 10px;font-size:7px;font-weight:900;cursor:pointer}.tr-btn.primary{background:#1b79bf;border-color:#2d95df}\n.tr-region-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:340px;overflow:auto}.st-region{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;border:1px solid #23465e;background:#0b2236;color:#dcecf6;border-radius:7px;padding:7px;cursor:pointer}.st-region.active{border-color:#268ff0;background:#123b5d}.st-region b{display:block;font-size:7px;color:#fff}.st-region small{display:block;font-size:5px;color:#718ea4;margin-top:2px}.st-region em{font-style:normal;font-size:5px;font-weight:900;color:#6e9cba;white-space:nowrap}\n.tr-college-list{display:grid;gap:6px}.tr-college{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:7px;border:1px solid #23445c;background:#0c2539;border-radius:7px}.tr-college b{font-size:8px;color:#fff}.tr-college>span{font-size:7px;color:#78a0ba}.tr-college small{grid-column:1/-1;color:#9eb7c8;font-size:7px;line-height:1.35}\n@media(max-width:900px){.tr-controls{grid-template-columns:1fr 1fr}.tr-grid{grid-template-columns:1fr}.tr-kpis{grid-template-columns:1fr 1fr 1fr}.tr-kpis div:nth-child(4),.tr-kpis div:nth-child(5){grid-column:span 1}}\n@media(max-width:600px){.tr-head{display:block}.tr-badges{margin-top:8px}.tr-controls{grid-template-columns:1fr}.tr-kpis{grid-template-columns:1fr 1fr}.tr-actions{display:grid;grid-template-columns:1fr}.tr-btn{width:100%}.tr-college-matrix-table{min-width:1250px}}\n";document.head.appendChild(style);}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
 window.SONDAGGI_TREND_2018_2022={version:"2026-10-12",getState:()=>JSON.parse(JSON.stringify(S)),getHistorical:(chamber,region,year,id)=>getHistorical(chamber,region,year,id),runSimulation,mount:start};
