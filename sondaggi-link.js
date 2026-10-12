@@ -329,7 +329,6 @@ function styleAndMarkup(){
 function run(){
   loadMobileStyles();
   loadEngines();
-  forceTrendMount();
   let tries=0;
   const install=()=>{
     if(styleAndMarkup())return;
