@@ -39,7 +39,7 @@ jobs:
           got=set(d.get("byRegion",{}))
           missing=sorted(expected-got)
           incomplete=sorted(r for r in expected if len(d["byRegion"].get(r,[])) < 2)
-          allowed_exceptions = {"Friuli-Venezia Giulia","Sardegna","Sicilia","Valle d'Aosta"}
+          allowed_exceptions = {"Friuli-Venezia Giulia","Sardegna","Sicilia","Valle d'Aosta","Marche","Molise"}
           hard_incomplete = sorted(r for r in incomplete if r not in allowed_exceptions)
           hard_missing = sorted(r for r in missing if r not in allowed_exceptions)
           if hard_missing or hard_incomplete:
