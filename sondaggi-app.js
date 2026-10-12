@@ -595,6 +595,20 @@ function installSondaggiModule(){
     const add=(label,actual,expected,ok)=>{
       checks.push({label,actual,expected,ok:!!ok});
     };
+    const expectedCoalitionsByTest={
+      A:["C-CD","C-CS"], B:["C-CD","C-CS"], C:["C-CD","C-CS"],
+      D:["C-TEST10"], E:[], F:[]
+    };
+    const expectedCoalitionIds=expectedCoalitionsByTest[id]||[];
+    const actualCoalitionIds=(S.coalitions||[]).map(x=>x.id);
+    const actualCoalitionNames=(S.coalitions||[]).map(x=>x.name||x.id).join(" · ")||"nessuna";
+    const expectedCoalitionNames=(expectedCoalitionIds||[]).map(cid=>{
+      const found=defaultCoalitions().find(x=>x.id===cid);
+      if(found)return found.name;
+      return cid==="C-TEST10"?"Coalizione Test 10%":cid;
+    }).join(" · ")||"nessuna";
+    add("Numero coalizioni",actualCoalitionIds.length,expectedCoalitionIds.length,actualCoalitionIds.length===expectedCoalitionIds.length);
+    add("Coalizioni caricate",actualCoalitionNames,expectedCoalitionNames,actualCoalitionIds.join("|")===expectedCoalitionIds.join("|"));
 
     if(id==="A"){
       add("Premio",national?.bonus||null,"nessun premio",!national?.bonus &&
@@ -648,7 +662,8 @@ function installSondaggiModule(){
 
   window.sondaggiTestAPI={
     list:()=>TEST_SCENARIOS.map(x=>({
-      id:x.id,name:x.name,description:x.description,expected:x.expected
+      id:x.id,name:x.name,description:x.description,expected:x.expected,
+      coalitions:(x.coalitions||[]).map(c=>({id:c.id,name:c.name,members:[...(c.members||[])]}))
     })),
     run:(id)=>{
       const ok=applyTestScenario(String(id||""));
