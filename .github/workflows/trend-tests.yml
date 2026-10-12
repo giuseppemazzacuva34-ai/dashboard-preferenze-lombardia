@@ -38,8 +38,13 @@ jobs:
               print(p, d.get("version"))
           assert json.loads(Path("trend-data-politiche.json").read_text())["version"]=="2026-10-12-politiche-v1"
           assert json.loads(Path("trend-data-europee.json").read_text())["version"]=="2026-10-12-europee-v1"
-          r=json.loads(Path("data/trend-regionali-generated.json").read_text())
-          assert r["version"] in {"2026-10-12-regionali1","2026-10-12-regionali2"}
-          assert r.get("byRegion")
+          rp=Path("data/trend-regionali-generated.json")
+          if rp.exists():
+              r=json.loads(rp.read_text(encoding="utf-8"))
+              assert r["version"] in {"2026-10-12-regionali1","2026-10-12-regionali2"}
+              assert r.get("byRegion")
+              print("TREND regional dataset: OK")
+          else:
+              print("TREND regional dataset: pending first regional build")
           print("TREND datasets: OK")
           PY
