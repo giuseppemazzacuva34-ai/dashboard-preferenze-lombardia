@@ -187,5 +187,5 @@ async function start(){
   render();
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
-window.SG_TERRITORIAL_MODEL={version:"2026-10-12-model6",regionalScenario:regionScenario,collegeScenario,runSimulation:runSimulation};
+window.SG_TERRITORIAL_MODEL={version:"2026-10-12-model6",regionalScenario:regionScenario,collegeScenario:modelForCollege,runSimulation:runSimulation};
 })();
