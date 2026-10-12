@@ -36,19 +36,19 @@ function norm(v){
 }
 
 const TESTS=[
-  {id:"A",name:"NESSUN PREMIO",desc:"Vincitore diverso nelle due Camere.",expected:"Premio 0 Camera · 0 Senato."},
-  {id:"B",name:"PREMIO 42/42",desc:"Stesso soggetto primo nelle due Camere e al 42,0%.",expected:"Premio 70 Camera + 35 Senato."},
-  {id:"C",name:"41,9 / 42,0",desc:"Il soggetto arriva al 42,0% solo in una Camera.",expected:"Nessun premio in entrambe le Camere."},
-  {id:"D",name:"COALIZIONE 10,0%",desc:"Coalizione esattamente al 10,0% con una lista al 3,0%.",expected:"Coalizione qualificata al limite."},
-  {id:"E",name:"LISTA 3,0%",desc:"Una lista è al 3,0% e una a 2,9%.",expected:"3,0% ammesso · 2,9% escluso."},
-  {id:"F",name:"SENATO 20% REGIONALE",desc:"Lista sotto il 3% nazionale ma al 20,0% in Lombardia.",expected:"Ammessa in Lombardia per la deroga regionale."}
+  {id:"A",name:"NESSUN PREMIO",desc:"Vincitore diverso nelle due Camere.",expected:"Premio 0 Camera · 0 Senato.",coalitions:["Centrodestra","Centrosinistra"]},
+  {id:"B",name:"PREMIO 42/42",desc:"Stesso soggetto primo nelle due Camere e al 42,0%.",expected:"Premio 70 Camera + 35 Senato.",coalitions:["Centrodestra","Centrosinistra"]},
+  {id:"C",name:"41,9 / 42,0",desc:"Il soggetto arriva al 42,0% solo in una Camera.",expected:"Nessun premio in entrambe le Camere.",coalitions:["Centrodestra","Centrosinistra"]},
+  {id:"D",name:"COALIZIONE 10,0%",desc:"Coalizione esattamente al 10,0% con una lista al 3,0%.",expected:"Coalizione qualificata al limite.",coalitions:["Coalizione Test 10%"]},
+  {id:"E",name:"LISTA 3,0%",desc:"Una lista è al 3,0% e una a 2,9%.",expected:"3,0% ammesso · 2,9% escluso.",coalitions:[]},
+  {id:"F",name:"SENATO 20% REGIONALE",desc:"Lista sotto il 3% nazionale ma al 20,0% in Lombardia.",expected:"Ammessa in Lombardia per la deroga regionale.",coalitions:[]}
 ];
 
 function scenarioMarkup(){
   return '<section id="sgScenariPossibili" class="sg-dashboard-scenarios">'+
     '<div class="sgds-head"><div><b>SCENARI POSSIBILI</b><small>Banco di prova del simulatore · casi limite già preparati</small></div><strong>6 TEST</strong></div>'+
     '<div class="sgds-grid">'+
-      TESTS.map(t=>'<button type="button" class="sgds-case" data-sg-test="'+t.id+'"><strong>TEST '+t.id+'</strong><b>'+t.name+'</b><small>'+t.desc+'</small><em>'+t.expected+'</em></button>').join("")+
+      TESTS.map(t=>'<button type="button" class="sgds-case" data-sg-test="'+t.id+'"><strong>TEST '+t.id+'</strong><b>'+t.name+'</b><small>'+t.desc+'</small><em>'+t.expected+'</em><span class="sgds-coal">Coalizioni: '+(t.coalitions.length?t.coalitions.join(" · "):"nessuna")+'</span></button>').join("")+
     '</div>'+
     '<div id="sgScenariDetail" class="sgds-detail"><b>Seleziona uno scenario</b><span>Il dettaglio apparirà qui.</span></div>'+
   '</section>';
@@ -74,6 +74,7 @@ function installStyles(){
     "#sgScenariPossibili .sgds-detail{display:none;margin-top:8px;padding:9px;border:1px solid #285c7d;border-radius:8px;background:#09263c}"+
     "#sgScenariPossibili .sgds-detail b{display:block;font-size:8px}"+
     "#sgScenariPossibili .sgds-detail span{display:block;margin-top:4px;color:#a0bacb;font-size:7px}"+
+    "#sgScenariPossibili .sgds-coal{display:block;margin-top:5px;color:#7fcfff;font-size:6.5px;font-weight:900}"+
     ".sg-scenari-link{position:relative}"+
     ".sg-scenari-link::after{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;margin-left:5px;background:#55b9ff;vertical-align:middle}"+
     "@media(max-width:820px){#sgScenariPossibili .sgds-grid{grid-template-columns:1fr 1fr}}"+
@@ -167,6 +168,7 @@ function testClick(test){
       "<b>TEST "+item.id+" · "+item.name+"</b>"+
       "<span>"+item.desc+"</span>"+
       "<span style='margin-top:5px;color:#dcecf6;font-weight:900'>Atteso: "+item.expected+"</span>"+
+      "<span style='margin-top:5px;color:#7fcfff;font-weight:900'>Coalizioni previste: "+(item.coalitions.length?item.coalitions.join(" · "):"nessuna")+"</span>"+
       "<div class='sgds-result'><span>Vincitore premio: <b>"+(result.winner||"nessuno")+"</b></span><span>Premio Camera: <b>"+result.cameraPrize+"</b> · Senato: <b>"+result.senatePrize+"</b></span></div>"+
       "<div class='sgds-table-wrap'><table><thead><tr><th>Controllo</th><th>Calcolato</th><th>Atteso</th><th>Esito</th></tr></thead><tbody>"+rows+"</tbody></table></div>";
 
