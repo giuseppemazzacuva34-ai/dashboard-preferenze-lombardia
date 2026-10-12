@@ -532,6 +532,8 @@ function installSondaggiModule(){
   function applyTestScenario(id){
     const preset=TEST_SCENARIOS.find(x=>x.id===id);
     if(!preset)return false;
+    TEST_ACTIVE_ID=String(id);
+    window.__SONDAGGI_TEST_ACTIVE=TEST_ACTIVE_ID;
     testBackup();
     const next=cloneScenarioState(S);
     next.chamber=preset.chamber;
@@ -572,6 +574,8 @@ function installSondaggiModule(){
       const restored=JSON.parse(raw);
       if(!restored||typeof restored!=="object")return false;
       S=restored;
+      TEST_ACTIVE_ID="";
+      window.__SONDAGGI_TEST_ACTIVE="";
       localStorage.removeItem(TEST_BACKUP_KEY);
       save();
       render();
@@ -697,9 +701,13 @@ function installSondaggiModule(){
     return Number.isFinite(n)?Math.min(100,Math.max(0,n)):0;
   };
 
+  let TEST_ACTIVE_ID="";
   syncFromLegacyV7();
   window.addEventListener("sondaggi-v7-updated",()=>{
     try{
+      // Durante un test A-F il vecchio modulo v7 non deve poter sovrascrivere
+      // scenario, coalizioni o percentuali appena caricate dal banco test.
+      if(TEST_ACTIVE_ID)return;
       syncFromLegacyV7();
       localStorage.setItem(KEY,JSON.stringify(S));
       render();
@@ -2097,7 +2105,7 @@ function installSondaggiModule(){
     host.innerHTML=
       '<div class="sg-wrap">'+
         '<div class="sg-head"><div><div class="sg-kicker">SONDAGGI ELETTORALI</div><h1>Simulatore nazionale e per collegio</h1><p>Inserisci le percentuali nazionali e quelle del territorio selezionato, costruisci le coalizioni e verifica l&#39;effetto sul riparto dei seggi.</p></div><div class="sg-head-actions"><button class="sg-btn" id="sgOpenTests">SCENARI POSSIBILI</button><button class="sg-btn primary" id="sondaggiRefreshYT">AGGIORNA DA YOUTREND</button></div></div>'+
-        '<div class="sg-law">LEGGE ELETTORALE · TESTO APPROVATO DEFINITIVAMENTE 8 OTTOBRE 2026 · soglia 3% per le liste · soglia 10% per le coalizioni con almeno una lista al 3% · deroga del 20% regionale al Senato · premio 70 Camera / 35 Senato se lo stesso soggetto è primo in entrambe le Camere e raggiunge il 42% in entrambe. Testo definitivamente approvato, in attesa di pubblicazione.</div><div class="sg-card sg-testbank" id="sgTests"><div class="sg-card-title"><b>BANCO TEST · SCENARI POSSIBILI</b><span>casi limite già pronti</span></div><div class="sg-note">Premi un caso per caricare automaticamente uno scenario sintetico di prova. Prima del primo test viene salvato un backup dello stato corrente, così il lavoro precedente resta ripristinabile.</div><div class="sg-test-grid">'+TEST_SCENARIOS.map(x=>'<button type="button" class="sg-test-case" data-test-scenario="'+esc2(x.id)+'"><span class="sg-test-code">TEST '+esc2(x.id)+'</span><span class="sg-test-name">'+esc2(x.name.replace(/^[A-Z] — /,""))+'</span><small>'+esc2(x.description)+'</small><em>'+esc2(x.expected)+'</em></button>').join("")+'</div><div class="sg-test-footer"><span id="sgTestActive">NESSUN TEST ATTIVO</span><button type="button" class="sg-btn" id="sgTestRestore">RIPRISTINA STATO PRE-TEST</button></div></div>'+
+        '<div class="sg-law">LEGGE ELETTORALE · TESTO APPROVATO DEFINITIVAMENTE 8 OTTOBRE 2026 · soglia 3% per le liste · soglia 10% per le coalizioni con almeno una lista al 3% · deroga del 20% regionale al Senato · premio 70 Camera / 35 Senato se lo stesso soggetto è primo in entrambe le Camere e raggiunge il 42% in entrambe. Testo definitivamente approvato, in attesa di pubblicazione.</div><div class="sg-card sg-testbank" id="sgTests"><div class="sg-card-title"><b>BANCO TEST · SCENARI POSSIBILI</b><span>casi limite già pronti</span></div><div class="sg-note">Premi un caso per caricare automaticamente uno scenario sintetico di prova. Prima del primo test viene salvato un backup dello stato corrente, così il lavoro precedente resta ripristinabile.</div><div class="sg-test-grid">'+TEST_SCENARIOS.map(x=>'<button type="button" class="sg-test-case" data-test-scenario="'+esc2(x.id)+'"><span class="sg-test-code">TEST '+esc2(x.id)+'</span><span class="sg-test-name">'+esc2(x.name.replace(/^[A-Z] — /,""))+'</span><small>'+esc2(x.description)+'</small><em>'+esc2(x.expected)+'</em><span class="sg-test-coalitions">Coalizioni: '+esc2((x.coalitions||[]).map(co=>co.name).join(" · ")||"nessuna")+'</span></button>').join("")+'</div><div class="sg-test-footer"><span id="sgTestActive">'+(TEST_ACTIVE_ID?'TEST '+esc2(TEST_ACTIVE_ID)+' ATTIVO':'NESSUN TEST ATTIVO')+'</span><button type="button" class="sg-btn" id="sgTestRestore">RIPRISTINA STATO PRE-TEST</button></div></div>'+
         '<div class="sg-layout">'+
           '<div class="sg-map-card"><div class="sg-card-title"><b>Italia</b><span>'+esc2(S.region)+'</span></div><div class="sg-map"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Italy_map_with_regions.svg" alt="Mappa d’Italia divisa in regioni"><div class="sg-map-caption">La mappa mostra la divisione regionale; usa i pulsanti per selezionare la regione e caricare i relativi collegi.</div></div><div class="sg-regions">'+REGIONS.map(x=>'<button type="button" data-region="'+esc2(x)+'" class="'+(x===S.region?"active":"")+'">'+esc2(x)+'</button>').join("")+'</div></div>'+
           '<div class="sg-main">'+
@@ -2225,7 +2233,10 @@ function installSondaggiModule(){
     }));
     document.getElementById("sgNewCoal").addEventListener("click",makeCoalition);
     document.getElementById("sgOpenTests")?.addEventListener("click",()=>document.getElementById("sgTests")?.scrollIntoView({behavior:"smooth",block:"start"}));
-    host.querySelectorAll("[data-test-scenario]").forEach(btn=>btn.addEventListener("click",()=>applyTestScenario(btn.getAttribute("data-test-scenario")||"")));
+    host.querySelectorAll("[data-test-scenario]").forEach(btn=>{
+      btn.addEventListener("click",()=>applyTestScenario(btn.getAttribute("data-test-scenario")||""));
+      if(TEST_ACTIVE_ID===btn.getAttribute("data-test-scenario"))btn.classList.add("active-test");
+    });
     document.getElementById("sgTestRestore")?.addEventListener("click",()=>{if(!restoreTestBackup())alert("Non c'è uno stato precedente da ripristinare.");});
     document.getElementById("sgScenarioSave")?.addEventListener("click",()=>{
       const name=document.getElementById("sgScenarioName")?.value||"";
@@ -2285,6 +2296,8 @@ function installSondaggiModule(){
 .sg-test-name{font-size:10px;font-weight:900}
 .sg-test-case small{font-size:7px;line-height:1.35;color:#9db4c4}
 .sg-test-case em{font-size:7px;line-height:1.35;color:#d7e8f5;font-style:normal}
+.sg-test-coalitions{font-size:7px;line-height:1.35;color:#6fc6ff;font-weight:900}
+.sg-test-case.active-test{border-color:#58bfff;background:#123d5e;box-shadow:0 0 0 1px rgba(88,191,255,.22) inset}
 .sg-test-footer{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}
 .sg-test-footer span{font-size:7px;color:#9eb7c7;font-weight:800}
 
