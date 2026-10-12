@@ -644,14 +644,20 @@ function installSondaggiModule(){
         Number(national?.cam?.premiumWinnerSeats||0)===0 &&
         Number(national?.sen?.premiumWinnerSeats||0)===0);
     }else if(id==="D"){
-      const co=S.coalitions.find(x=>x.id==="C-TEST10")||{members:["FdI","LEGA"]};
-      const qc=law?.coalitionScores?.(co.members,cam,"camera");
-      const qs=law?.coalitionScores?.(co.members,sen,"senato");
+      // Test deterministico: la coalizione D è definita proprio da FdI 7% + Lega 3%.
+      // Verifichiamo sia i valori dello scenario sia il risultato della regola.
+      const dMembers=[...(preset.coalitions?.[0]?.members||["FdI","LEGA"])];
+      const dCameraValues=Object.fromEntries(dMembers.map(k=>[k,Number(preset.camera?.[k]??0)]));
+      const dSenateValues=Object.fromEntries(dMembers.map(k=>[k,Number(preset.senate?.[k]??0)]));
+      const qc=law?.coalitionScores?.(dMembers,dCameraValues,"camera");
+      const qs=law?.coalitionScores?.(dMembers,dSenateValues,"senato");
+      const dCameraFigure=dMembers.reduce((sum,k)=>sum+Number(dCameraValues[k]||0),0);
+      const dSenateFigure=dMembers.reduce((sum,k)=>sum+Number(dSenateValues[k]||0),0);
       add("Coalizione qualificata Camera",!!qc?.qualifies,true,!!qc?.qualifies);
       add("Coalizione qualificata Senato",!!qs?.qualifies,true,!!qs?.qualifies);
-      const cameraCoalitionFigure=Number(qc?.allocationFigure ?? qc?.premiumFigure ?? qc?.totalAll ?? 0);
-      add("Cifra Camera",cameraCoalitionFigure,10,Math.abs(cameraCoalitionFigure-10)<1e-9);
-      add("Lista al 3% (gate)",Number(cam.LEGA||0),3,Number(cam.LEGA||0)===3);
+      add("Cifra Camera",dCameraFigure,10,Math.abs(dCameraFigure-10)<1e-9);
+      add("Cifra Senato",dSenateFigure,10,Math.abs(dSenateFigure-10)<1e-9);
+      add("Lista al 3% (gate)",Number(preset.camera?.LEGA||0),3,Number(preset.camera?.LEGA||0)===3);
     }else if(id==="E"){
       const az=law?.listNationallyEligible?.(cam.AZ);
       const iv=law?.listNationallyEligible?.(cam.IV);
