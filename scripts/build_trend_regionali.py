@@ -135,7 +135,7 @@ def parse_zip(raw: bytes, election_date: str):
                 agg = {}
                 for row in rows:
                     reg = region_name(row.get(rkey, "")) if rkey else fallback_region
-                    if not reg or reg == "": continue
+                    if not reg or reg == "" or reg not in REGION_NAMES.values(): continue
                     label = row.get(lkey, "")
                     votes = parse_votes(row.get(vkey, ""))
                     if votes <= 0: continue
