@@ -16,6 +16,12 @@ OUT = ROOT / "data" / "trend-regionali-generated.json"
 BASE = "https://elezionistorico.interno.gov.it/daithome/documenti/opendata/regionali/"
 
 SOURCES = [
+    ("2011-10-16", "regionali-20111016.zip"),
+    ("2013-02-24", "regionali-20130224.zip"),
+    ("2013-11-17", "regionali-20131117.zip"),
+    ("2014-05-25", "regionali-20140525.zip"),
+    ("2014-11-23", "regionali-20141123.zip"),
+    ("2015-05-31", "regionali-20150531.zip"),
     ("2018-03-04", "regionali-20180304.zip"),
     ("2019-02-10", "regionali-20190210.zip"),
     ("2019-03-24", "regionali-20190324.zip"),
@@ -113,7 +119,7 @@ def parse_zip(raw: bytes, election_date: str):
             except UnicodeDecodeError:
                 text = z.read(name).decode("latin-1", errors="replace")
             for headers, rows in sniff_dicts(text):
-                rkey = find_key(headers, "REGIONE", "DESCREGIONE", "REGIONE ")
+                rkey = find_key(headers, "REGIONE", "DESCREGIONE", "REGIONE ", "NOME REGIONE", "DESCRIZIONE REGIONE")
                 ckey = find_key(headers, "COMUNE", "DESCCOMUNE", "DES_COMUNE")
                 lkey = find_key(headers, "LISTA", "DESCLISTA", "DESCRLISTA", "DESCRIZIONE LISTA")
                 vkey = find_key(headers, "VOTI_LISTA", "VOTILISTA", "VOTI", "NUMVOTI")
