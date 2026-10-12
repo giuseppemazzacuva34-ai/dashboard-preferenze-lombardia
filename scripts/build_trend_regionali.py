@@ -185,7 +185,7 @@ def build():
         out[reg] = list(reversed(items))
 
     payload = {
-        "version": "2026-10-12-regionali1",
+        "version": "2026-10-12-regionali3",
         "methodology": (
             "Voti di lista comunali aggregati per regione dalle aperture "
             "open-data del Ministero/Eligendo. Sono conservate le due "
