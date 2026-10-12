@@ -2499,20 +2499,20 @@ function installSondaggiModule(){
 }
 
 installSondaggiModule();
+})();
 
-/* ===== CURRENT SONDAGGI LINK BOOTSTRAP v12 ===== */
+
+/* ===== SONDAGGI LINK CACHE BRIDGE v9 ===== */
 (function(){
   "use strict";
-  if(window.__SG_ANALYSIS_LINK_V12)return;
-  if(document.getElementById("sondaggi-link-v12-bootstrap"))return;
+  if(window.__SG_SCENARIO_LINK_BRIDGE_V9)return;
+  window.__SG_SCENARIO_LINK_BRIDGE_V9=true;
   try{
+    if(!document.getElementById("sg7content"))return;
     const s=document.createElement("script");
-    s.id="sondaggi-link-v12-bootstrap";
-    s.src="sondaggi-link.js?v=20261012-v13";
+    s.id="sondaggi-link-v9-bridge";
+    s.src="sondaggi-link.js?v=20261012-v9";
     s.async=false;
-    s.dataset.sgCurrentBridge="1";
     (document.head||document.documentElement).appendChild(s);
-  }catch(err){console.error("Sondaggi current link bootstrap",err);}
+  }catch(err){console.error("Sondaggi link bridge",err);}
 })();
-})();
-
