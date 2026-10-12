@@ -44,7 +44,7 @@ jobs:
           hard_missing = sorted(r for r in missing if r not in allowed_exceptions)
           if hard_missing or hard_incomplete:
             raise SystemExit(f"coverage failure; missing={hard_missing}; incomplete={hard_incomplete}")
-          assert d["version"]=="2026-10-12-regionali2" or d["version"]=="2026-10-12-regionali1"
+          assert d["version"]=="2026-10-12-regionali3"
           print("TREND regional coverage: OK", len(got), "regions; exceptions:", sorted((expected-got)|set(incomplete)))
           PY
 
