@@ -198,6 +198,7 @@ function ensureAnalysisNav(){
       btn.dataset.sganView=view;
       btn.textContent=label;
       btn.onclick=()=>{
+        window.__SG_FORCED_VIEW=view==="trend"?"trend":"";
         SG_ACTIVE_VIEW=view;
         try{
           if(view==="trend")window.SONDAGGI_TREND_2018_2022?.mount?.();
@@ -258,7 +259,9 @@ function applyAnalysisView(){
   const content=document.getElementById("sg7content");
   const bank=document.getElementById("sgScenarioBankNative");
   const trend=document.getElementById("sg-trend-module");
-  const showingTrend=SG_ACTIVE_VIEW==="trend";
+  const forcedView=window.__SG_FORCED_VIEW||"";
+  const activeView=forcedView||SG_ACTIVE_VIEW;
+  const showingTrend=activeView==="trend";
   if(content)content.style.display=showingTrend?"none":"";
   if(bank)bank.style.display=showingTrend?"none":"";
   if(trend){
