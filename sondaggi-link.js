@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-const SG_DASH_VERSION="20261011-dashboard-scenari-v2";
+const SG_DASH_VERSION="20261012-dashboard-scenari-v3";
 
 function loadScript(id,src){
   try{
@@ -122,6 +122,37 @@ function findSondaggiFallback(){
   return title.parentElement||title;
 }
 
+function updateVisibleScenarioDetail(test,result){
+  const item=TESTS.find(x=>x.id===test);
+  const detail=document.getElementById("sgScenariDetail");
+  if(!item||!detail)return false;
+  detail.style.display="block";
+  if(!result){
+    detail.innerHTML="<b>TEST "+item.id+" · "+item.name+"</b><span>Scenario caricato.</span>";
+    return true;
+  }
+  if(result.error){
+    detail.innerHTML="<div class='sgds-fail'>❌ TEST FALLITO</div><b>TEST "+item.id+" · "+item.name+"</b><span>"+String(result.error)+"</span>";
+    return true;
+  }
+  const status=result.pass?"<div class='sgds-pass'>✅ TEST SUPERATO</div>":"<div class='sgds-fail'>❌ TEST FALLITO</div>";
+  const rows=(result.checks||[]).map(x=>
+    "<tr><td>"+x.label+"</td><td>"+formatTestValue(x.actual)+"</td><td>"+formatTestValue(x.expected)+"</td><td>"+(x.ok?"✅":"❌")+"</td></tr>"
+  ).join("");
+  detail.innerHTML=
+    status+
+    "<b>TEST "+item.id+" · "+item.name+"</b>"+
+    "<span>"+item.desc+"</span>"+
+    "<span style='margin-top:5px;color:#dcecf6;font-weight:900'>Atteso: "+item.expected+"</span>"+
+    "<span style='margin-top:5px;color:#7fcfff;font-weight:900'>Coalizioni previste: "+(item.coalitions.length?item.coalitions.join(" · "):"nessuna")+"</span>"+
+    "<div class='sgds-result'><span>Vincitore premio: <b>"+(result.winner||"nessuno")+"</b></span><span>Premio Camera: <b>"+result.cameraPrize+"</b> · Senato: <b>"+result.senatePrize+"</b></span></div>"+
+    "<div class='sgds-table-wrap'><table><thead><tr><th>Controllo</th><th>Calcolato</th><th>Atteso</th><th>Esito</th></tr></thead><tbody>"+rows+"</tbody></table></div>";
+  document.querySelectorAll("#sgScenariPossibili .sgds-case").forEach(b=>b.classList.remove("active","active-pass","active-fail"));
+  const active=document.querySelector('#sgScenariPossibili [data-sg-test="'+item.id+'"]');
+  if(active)active.classList.add(result.pass?"active-pass":"active-fail");
+  return true;
+}
+
 function formatTestValue(v){
   if(v===null||v===undefined)return "—";
   if(typeof v==="object")return v.id||v.name||"presente";
@@ -131,51 +162,32 @@ function formatTestValue(v){
 }
 
 function testClick(test){
-  const detail=document.getElementById("sgScenariDetail");
   const item=TESTS.find(x=>x.id===test);
-  if(!detail||!item)return;
+  if(!item)return;
+  window.__SG_SELECTED_TEST=item.id;
+  const detail=document.getElementById("sgScenariDetail");
+  if(detail){
+    detail.style.display="block";
+    detail.innerHTML="<b>TEST "+item.id+" · "+item.name+"</b><span>Caricamento scenario e ricalcolo del Parlamento…</span>";
+  }
 
   const api=window.sondaggiTestAPI;
   if(!api||typeof api.run!=="function"){
-    detail.style.display="block";
-    detail.innerHTML="<b>TEST "+item.id+" · "+item.name+"</b><span>Il motore Sondaggi non è ancora pronto. Riprovo automaticamente…</span>";
+    if(detail)detail.innerHTML="<b>TEST "+item.id+" · "+item.name+"</b><span>Il motore Sondaggi non è ancora pronto. Riprovo automaticamente…</span>";
     setTimeout(()=>testClick(test),700);
     return;
   }
 
-  detail.style.display="block";
-  detail.innerHTML="<b>TEST "+item.id+" · "+item.name+"</b><span>Caricamento scenario e ricalcolo del Parlamento…</span>";
+  let result;
+  try{result=api.run(item.id);}catch(err){result={id:item.id,pass:false,error:String(err&&err.message||err)};}
 
-  setTimeout(()=>{
-    let result;
-    try{result=api.run(item.id);}catch(err){result={id:item.id,pass:false,error:String(err&&err.message||err)};}
-
-    if(!result||result.error){
-      detail.innerHTML="<div class='sgds-fail'>❌ TEST FALLITO</div><b>TEST "+item.id+" · "+item.name+"</b><span>"+(result&&result.error||"Errore durante il test.")+"</span>";
-      return;
-    }
-
-    const status=result.pass
-      ?"<div class='sgds-pass'>✅ TEST SUPERATO</div>"
-      :"<div class='sgds-fail'>❌ TEST FALLITO</div>";
-
-    const rows=(result.checks||[]).map(x=>
-      "<tr><td>"+x.label+"</td><td>"+formatTestValue(x.actual)+"</td><td>"+formatTestValue(x.expected)+"</td><td>"+(x.ok?"✅":"❌")+"</td></tr>"
-    ).join("");
-
-    detail.innerHTML=
-      status+
-      "<b>TEST "+item.id+" · "+item.name+"</b>"+
-      "<span>"+item.desc+"</span>"+
-      "<span style='margin-top:5px;color:#dcecf6;font-weight:900'>Atteso: "+item.expected+"</span>"+
-      "<span style='margin-top:5px;color:#7fcfff;font-weight:900'>Coalizioni previste: "+(item.coalitions.length?item.coalitions.join(" · "):"nessuna")+"</span>"+
-      "<div class='sgds-result'><span>Vincitore premio: <b>"+(result.winner||"nessuno")+"</b></span><span>Premio Camera: <b>"+result.cameraPrize+"</b> · Senato: <b>"+result.senatePrize+"</b></span></div>"+
-      "<div class='sgds-table-wrap'><table><thead><tr><th>Controllo</th><th>Calcolato</th><th>Atteso</th><th>Esito</th></tr></thead><tbody>"+rows+"</tbody></table></div>";
-
-    document.querySelectorAll("#sgScenariPossibili .sgds-case").forEach(b=>b.classList.remove("active","active-pass","active-fail"));
-    const active=document.querySelector('#sgScenariPossibili [data-sg-test="'+item.id+'"]');
-    if(active)active.classList.add(result.pass?"active-pass":"active-fail");
-  },20);
+  // api.run() ricarica il pannello Sondaggi: la sezione Scenari viene quindi
+  // ricreata dal MutationObserver. Agganciamo il risultato alla nuova istanza.
+  const paint=()=>updateVisibleScenarioDetail(item.id,result);
+  setTimeout(paint,20);
+  setTimeout(paint,120);
+  setTimeout(paint,350);
+  setTimeout(paint,800);
 }
 
 function wireScenarioBank(bank){
@@ -201,6 +213,23 @@ function wireScenarioBank(bank){
       }
     });
   }
+}
+
+function hideLegacyInPanel(){
+  try{
+    const legacy=document.getElementById("sgTests");
+    if(legacy){legacy.style.setProperty("display","none","important");}
+  }catch(_){ }
+}
+
+function restoreVisibleScenarioState(){
+  const selected=window.__SG_SELECTED_TEST;
+  if(!selected)return;
+  const item=TESTS.find(x=>x.id===selected);
+  if(!item)return;
+  document.querySelectorAll("#sgScenariPossibili .sgds-case").forEach(b=>b.classList.remove("active","active-pass","active-fail"));
+  const active=document.querySelector('#sgScenariPossibili [data-sg-test="'+item.id+'"]');
+  if(active)active.classList.add("active");
 }
 
 function installScenarioBank(){
@@ -246,7 +275,9 @@ function cleanSideSondaggi(){
 
 function ensure(){
   cleanSideSondaggi();
+  hideLegacyInPanel();
   installScenarioBank();
+  restoreVisibleScenarioState();
 }
 
 loadMobileStyles();
