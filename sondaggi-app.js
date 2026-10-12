@@ -2502,17 +2502,80 @@ installSondaggiModule();
 })();
 
 
-/* ===== SONDAGGI LINK CACHE BRIDGE v9 ===== */
+/* ===== SONDAGGI TREND VIEW GUARD v10 ===== */
 (function(){
   "use strict";
-  if(window.__SG_SCENARIO_LINK_BRIDGE_V9)return;
-  window.__SG_SCENARIO_LINK_BRIDGE_V9=true;
-  try{
-    if(!document.getElementById("sg7content"))return;
-    const s=document.createElement("script");
-    s.id="sondaggi-link-v9-bridge";
-    s.src="sondaggi-link.js?v=20261012-v9";
-    s.async=false;
-    (document.head||document.documentElement).appendChild(s);
-  }catch(err){console.error("Sondaggi link bridge",err);}
+
+  function trendMode(view){
+    const root=document.getElementById("sg7");
+    const content=document.getElementById("sg7content");
+    const bank=document.getElementById("sgScenarioBankNative");
+    let trend=document.getElementById("sg-trend-module");
+
+    window.__SG_FORCED_VIEW=view==="trend"?"trend":"";
+    if(root)root.classList.toggle("sg7TrendViewActive",view==="trend");
+
+    if(view==="trend"){
+      try{window.SONDAGGI_TREND_2018_2022?.mount?.();}catch(err){console.error("Trend guard mount",err);}
+      trend=document.getElementById("sg-trend-module");
+    }
+
+    // 'hidden' is deliberate: it wins over every inline display rule written
+    // by the native Sondaggi renderer and prevents the race that caused the
+    // native Estero panel to reappear after clicking TREND.
+    if(content)content.hidden=view==="trend";
+    if(bank)bank.hidden=view==="trend";
+    if(trend){
+      trend.hidden=false;
+      trend.style.setProperty("display",view==="trend"?"block":"none","important");
+      trend.style.setProperty("width","100%","important");
+      trend.style.setProperty("visibility",view==="trend"?"visible":"hidden","important");
+    }
+
+    return !!(trend&&view==="trend");
+  }
+
+  function getView(target){
+    const btn=target?.closest?.("button");
+    if(!btn)return "";
+    const direct=btn.getAttribute("data-sgan-view");
+    if(direct==="trend"||direct==="scenari")return direct;
+    const t=String(btn.textContent||"").trim().toUpperCase();
+    if(t==="TREND")return "trend";
+    if(t==="SCENARI POSSIBILI")return "scenari";
+    return "";
+  }
+
+  // This handler is installed by the Sondaggi app itself, before any second
+  // cached bridge can register, so a stale link script cannot take the event.
+  const guard=ev=>{
+    const view=getView(ev.target);
+    if(!view)return;
+    ev.preventDefault();
+    try{ev.stopImmediatePropagation();}catch(_){}
+    try{ev.stopPropagation();}catch(_){}
+    trendMode(view);
+    if(view==="trend"){
+      let tries=0;
+      const timer=setInterval(()=>{
+        tries++;
+        const ok=trendMode("trend");
+        if(ok||tries>40)clearInterval(timer);
+      },100);
+    }
+  };
+  ["pointerdown","mousedown","click"].forEach(type=>document.addEventListener(type,guard,true));
+
+  // Remove the old v9 cache bridge. The current link is already loaded by the
+  // dashboard; when it is not, load the current v10 bridge only once.
+  if(!window.__SG_ANALYSIS_LINK_V10){
+    window.__SG_ANALYSIS_LINK_V10=true;
+    try{
+      const s=document.createElement("script");
+      s.id="sondaggi-link-v10-bridge";
+      s.src="sondaggi-link.js?v=20261012-v10";
+      s.async=false;
+      (document.head||document.documentElement).appendChild(s);
+    }catch(err){console.error("Sondaggi link bridge v10",err);}
+  }
 })();
