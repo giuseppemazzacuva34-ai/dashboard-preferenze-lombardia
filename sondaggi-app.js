@@ -666,13 +666,25 @@ function installSondaggiModule(){
       add("FdI Lombardia al 20%",!!regionalEligible,true,!!regionalEligible);
     }
 
+    const resultCameraPrize=Number(
+      national?.cam?.premiumSeats ??
+      national?.cam?.premiumWinnerSeats ??
+      national?.cam?.prizeWinnerSeats ??
+      0
+    );
+    const resultSenatePrize=Number(
+      national?.sen?.premiumSeats ??
+      national?.sen?.premiumWinnerSeats ??
+      national?.sen?.prizeWinnerSeats ??
+      0
+    );
     return {
       id,
       name:preset.name,
       pass:checks.length>0&&checks.every(x=>x.ok),
       checks,
-      cameraPrize:Number(national?.cam?.premiumWinnerSeats||0),
-      senatePrize:Number(national?.sen?.premiumWinnerSeats||0),
+      cameraPrize:resultCameraPrize,
+      senatePrize:resultSenatePrize,
       winner:national?.bonus?.name||null,
       timestamp:new Date().toISOString()
     };
