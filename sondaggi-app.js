@@ -529,19 +529,16 @@ function installSondaggiModule(){
     }
   }
 
-  function applyTestScenario(id){
-    const preset=TEST_SCENARIOS.find(x=>x.id===id);
-    if(!preset)return false;
-    TEST_ACTIVE_ID=String(id);
-    window.__SONDAGGI_TEST_ACTIVE=TEST_ACTIVE_ID;
-    testBackup();
-    const next=cloneScenarioState(S);
+  function buildTestStateFromPreset(preset, source){
+    const next=cloneScenarioState(source||S);
     next.chamber=preset.chamber;
     next.region="Lombardia";
     next.college=collegesFor(preset.chamber,"Lombardia")[0]?.name||"";
-    next.parties=cloneScenarioState(S.parties||{});
+    next.parties=cloneScenarioState((source||S).parties||{});
     POLLS.forEach(p=>{
-      next.parties[p[0]]={...(next.parties[p[0]]||{}),name:p[1],camera:Number(preset.camera?.[p[0]]??p[2]),senate:Number(preset.senate?.[p[0]]??p[2])};
+      next.parties[p[0]]={...(next.parties[p[0]]||{}),name:p[1],
+        camera:Number(preset.camera?.[p[0]]??p[2]),
+        senate:Number(preset.senate?.[p[0]]??p[2])};
     });
     next.coalitions=cloneScenarioState(preset.coalitions||[]);
     next.coalitionPresetVersion=COALITION_PRESET_VERSION;
@@ -552,7 +549,9 @@ function installSondaggiModule(){
     next.regionalCustom={};
     next.regionalSenate={};
     [...SENATE_PROP_REGIONS,"Valle d'Aosta","Trentino-Alto Adige/Südtirol"].forEach(region=>{
-      next.regionalSenate[region]=Object.fromEntries(POLLS.map(p=>[p[0],Number(preset.senate?.[p[0]]??p[2])]));
+      next.regionalSenate[region]=Object.fromEntries(POLLS.map(p=>[
+        p[0],Number(preset.senate?.[p[0]]??p[2])
+      ]));
       next.regionalCustom[region]=false;
     });
     if(preset.lombardiaSenate){
@@ -560,7 +559,16 @@ function installSondaggiModule(){
       next.regionalCustom.Lombardia=true;
     }
     next.currentScenarioId="";
-    S=next;
+    return next;
+  }
+
+  function applyTestScenario(id){
+    const preset=TEST_SCENARIOS.find(x=>x.id===id);
+    if(!preset)return false;
+    TEST_ACTIVE_ID=String(id);
+    window.__SONDAGGI_TEST_ACTIVE=TEST_ACTIVE_ID;
+    testBackup();
+    S=buildTestStateFromPreset(preset,S);
     save();
     render();
     setTimeout(()=>document.getElementById("sgTests")?.scrollIntoView({behavior:"smooth",block:"start"}),0);
@@ -664,6 +672,52 @@ function installSondaggiModule(){
     };
   }
 
+  function previewTestScenario(id){
+    const preset=TEST_SCENARIOS.find(x=>x.id===id);
+    if(!preset)return {id,pass:false,error:"Scenario non trovato."};
+    const previous=S;
+    try{
+      S=buildTestStateFromPreset(preset,previous);
+      const national=nationalResults();
+      const evaluation=evaluateTestScenario(id);
+      const partyKeys=Object.keys(S.parties);
+      const valueMap=(ch)=>Object.fromEntries(partyKeys.map(k=>[
+        k,num(ch==="camera"?S.parties[k].camera:S.parties[k].senate)
+      ]));
+      const coalitionResults=(S.coalitions||[]).map(co=>{
+        const values=valueMap("camera");
+        const camFigure=coalitionFigure(co.members,values,"camera");
+        const senateValues=valueMap("senato");
+        const senFigure=coalitionFigure(co.members,senateValues,"senato");
+        const camSeats=(Object.entries(national?.cam?.seats||{}).filter(([k])=>(co.members||[]).includes(k)).reduce((a,[,v])=>a+Number(v||0),0));
+        const senSeats=(Object.entries(national?.sen?.seats||{}).filter(([k])=>(co.members||[]).includes(k)).reduce((a,[,v])=>a+Number(v||0),0));
+        return {
+          id:co.id,name:co.name,members:[...(co.members||[])],
+          cameraPct:Number(camFigure.total)||0,senatePct:Number(senFigure.total)||0,
+          cameraQualified:!!camFigure.qualifies,senateQualified:!!senFigure.qualifies,
+          cameraSeats:camSeats,senateSeats:senSeats
+        };
+      });
+      const mapRows=(res,ch)=>Object.entries(res?.seats||{})
+        .map(([k,v])=>({party:k,name:S.parties[k]?.name||k,seats:Number(v||0),pct:Number(ch==="camera"?S.parties[k]?.camera:S.parties[k]?.senate)||0}))
+        .filter(x=>x.seats>0)
+        .sort((a,b)=>b.seats-a.seats||b.pct-a.pct||a.name.localeCompare(b.name,"it"));
+      return {
+        ...evaluation,
+        coalitions:coalitionResults,
+        cameraRows:mapRows(national?.cam,"camera"),
+        senateRows:mapRows(national?.sen,"senato"),
+        cameraTotal:Object.values(national?.cam?.seats||{}).reduce((a,v)=>a+Number(v||0),0),
+        senateTotal:Object.values(national?.sen?.seats||{}).reduce((a,v)=>a+Number(v||0),0),
+        previewOnly:true
+      };
+    }catch(err){
+      return {id,pass:false,error:"Errore nella simulazione: "+String(err?.message||err)};
+    }finally{
+      S=previous;
+    }
+  }
+
   window.sondaggiTestAPI={
     list:()=>TEST_SCENARIOS.map(x=>({
       id:x.id,name:x.name,description:x.description,expected:x.expected,
@@ -678,6 +732,7 @@ function installSondaggiModule(){
       return result;
     },
     evaluate:(id)=>evaluateTestScenario(String(id||"")),
+    preview:(id)=>previewTestScenario(String(id||"")),
     restore:()=>{
       const ok=restoreTestBackup();
       if(ok)window.__SONDAGGI_LAST_TEST=null;
