@@ -273,8 +273,10 @@ function ensureAnalysisNavStyle(){
     "#sg7 .sg7analysisTab:hover{background:rgba(255,255,255,.18)!important}",
     "#sg7.sg7TrendViewActive #sg7content{display:none!important}",
     "#sg7.sg7TrendViewActive #sgScenarioBankNative{display:none!important}",
+    "#sg7.sg7TrendViewActive #sg7EsteroBox{display:none!important}",
     "#sg7.sg7TrendViewActive #sg-trend-module{display:block!important;width:100%!important;visibility:visible!important;position:relative!important;z-index:2147483646!important}",
-    "#sg7:not(.sg7TrendViewActive) #sg-trend-module{display:none!important}"
+    "#sg7:not(.sg7TrendViewActive) #sg-trend-module{display:none!important}",
+    "#sg7:not(.sg7TrendViewActive) #sg7EsteroBox{display:block!important}"
   ].join("");
   document.head.appendChild(st);
 }
@@ -314,6 +316,8 @@ function applyAnalysisView(){
   if(root)root.classList.toggle("sg7TrendViewActive",showingTrend);
   if(content)content.style.setProperty("display",showingTrend?"none":"block","important");
   if(bank)bank.style.setProperty("display",showingTrend?"none":"block","important");
+  const estero=document.getElementById("sg7EsteroBox");
+  if(estero)estero.style.setProperty("display",showingTrend?"none":"block","important");
   if(trend){
     trend.style.setProperty("display",showingTrend?"block":"none","important");
     trend.style.width="100%";
