@@ -46,6 +46,14 @@ body{overflow-x:hidden}
     setTimeout(goTop,80);
     setTimeout(goTop,250);
     setTimeout(goTop,700);
+    const trend=document.createElement("script");
+    trend.id="sondaggi-trend-2018-2022";
+    trend.src="sondaggi-trend-2018-2022.js?v=20261012-trend1";
+    trend.async=false;
+    trend.addEventListener("error",()=>{
+      console.error("Sondaggi: impossibile caricare il modulo Trend storico 2018-2022.");
+    },{once:true});
+    (document.head||document.documentElement).appendChild(trend);
   });
   s.addEventListener("error",()=>{
     const host=document.getElementById("tab-sondaggi");
