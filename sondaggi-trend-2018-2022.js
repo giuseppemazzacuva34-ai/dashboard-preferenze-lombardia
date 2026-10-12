@@ -6,38 +6,8 @@
 (function(){
 "use strict";
 const TREND_KEY="lombardia_sondaggi_trend_2018_2022_v2";
-(function installHardTrendButton(){
-  if(window.__SG_HARD_TREND_BUTTON)return;
-  window.__SG_HARD_TREND_BUTTON=true;
-  document.addEventListener("pointerdown",function(ev){
-    const btn=ev.target?.closest?.("#sgAnalysisNav [data-sgan-view]");
-    if(!btn)return;
-    const view=btn.getAttribute("data-sgan-view");
-    if(view!=="trend"&&view!=="scenari")return;
-    ev.preventDefault();
-    try{ev.stopImmediatePropagation();}catch(_){}
-    window.__SG_FORCED_VIEW=view==="trend"?"trend":"";
-    const activate=()=>{
-      const content=document.getElementById("sg7content");
-      const bank=document.getElementById("sgScenarioBankNative");
-      let trend=document.getElementById("sg-trend-module");
-      if(view==="trend"){
-        try{window.SONDAGGI_TREND_2018_2022?.mount?.();}catch(err){console.error("Hard Trend mount",err);}
-        trend=document.getElementById("sg-trend-module");
-      }
-      if(content)content.style.display=view==="trend"?"none":"";
-      if(bank)bank.style.display=view==="trend"?"none":"";
-      if(trend){
-        trend.style.display=view==="trend"?"":"none";
-        trend.style.width="100%";
-      }
-    };
-    activate();
-    setTimeout(activate,0);
-    setTimeout(activate,100);
-    setTimeout(activate,300);
-  },true);
-})();
+/* Trend view is controlled exclusively by sond​daggi-link.js on the legacy dashboard. */
+;
 const APP_KEY="lombardia_sondaggi_2026";
 const REGIONS=["Umbria","Marche","Lazio","Abruzzo","Molise","Campania","Puglia","Basilicata","Calabria","Sicilia","Sardegna","Piemonte","Valle d'Aosta","Lombardia","Trentino-Alto Adige/Südtirol","Veneto","Friuli-Venezia Giulia","Liguria","Emilia-Romagna","Toscana"];
 const PARTY_DEFAULTS=[["FdI","Fratelli d'Italia",26.8],["PD","Partito Democratico",20.7],["M5S","Movimento 5 Stelle",12.7],["FN","Futuro Nazionale",7.5],["FI","Forza Italia",7.1],["AVS","Alleanza Verdi Sinistra",6.7],["LEGA","Lega",5.7],["AZ","Azione",3.2],["IV","Italia Viva",2.4],["PIU","+Europa",1.3],["NM","Noi Moderati",1.1],["ALTRI","Altri",4.8]];
