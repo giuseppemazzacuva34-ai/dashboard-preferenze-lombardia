@@ -98,6 +98,7 @@ function run(camVals=Object.fromEntries(Object.entries(parties).map(([k,v])=>[k,
 }
 
 let r=run();
+console.log("DEBUG_CAMERA_V2",JSON.stringify({cam:r.cam?.ordinarySeatsByParty,total:r.cam?.simulatedTotal,trace:r.cam?.trace,bonus:r.bonus},null,2));
 assert.strictEqual(r.bonus,null,"Nessun premio nello scenario base");
 assert.strictEqual(Object.values(r.cam.ordinarySeatsByParty).reduce((a,v)=>a+v,0),384);
 const lawRip=law.coalitionScores(["A","B"],{A:7.5,B:2.5},"camera");
