@@ -41,7 +41,28 @@ function manualValue(region,id,chamber){return clamp(S.manual?.[region]?.[id]??m
 function parseColleges(map,region){return(map[region]||[]).map(raw=>{const p=String(raw).split("|");return{name:p[0],noPrize:n(p[1]),withPrize:n(p[2]??p[1]),special:String(p[3]||"").toUpperCase()==="SPECIAL"};});}
 function weightedNational(chamber){const parties=getParties(),vals=Object.fromEntries(Object.keys(parties).map(k=>[k,0])),weights=Object.fromEntries(REGIONS.map(r=>[r,n(HIST?.[chamber]?.[2022]?.[r]?.total)])),tw=Object.values(weights).reduce((a,v)=>a+v,0);REGIONS.forEach(r=>{const w=weights[r]||1;const raw=Object.fromEntries(Object.keys(parties).map(id=>[id,manualValue(r,id,chamber)]));const sum=Object.values(raw).reduce((a,v)=>a+v,0);const norm=sum>0?raw:Object.fromEntries(Object.keys(parties).map(id=>[id,1]));const normSum=Object.values(norm).reduce((a,v)=>a+v,0)||1;Object.keys(parties).forEach(id=>{vals[id]+=(norm[id]/normSum*100)*w;});});Object.keys(vals).forEach(id=>vals[id]=tw>0?vals[id]/tw:manualValue("Lombardia",id,chamber));return vals;}
 function buildInput(){const app=getApp(),parties=getParties(),law=window.SONDAGGI_LAW_20261008,engine=window.SONDAGGI_ELECTION_ENGINE_20261008;if(!law||!engine)throw new Error("Motori Sondaggi non disponibili.");const cn=weightedNational("camera"),sn=weightedNational("senato"),shape=Object.fromEntries(Object.keys(parties).map(id=>[id,{name:parties[id].name,camera:cn[id],senate:sn[id]}]));const cameraCollegeValues={};Object.entries(CAM_COLLEGI).forEach(([r,raws])=>{const vals=Object.fromEntries(Object.keys(parties).map(id=>[id,manualValue(r,id,"camera")]));parseColleges(CAM_COLLEGI,r).filter(c=>!c.special).forEach(c=>{cameraCollegeValues[c.name]={...vals};});});const regionalValuesByRegion=Object.fromEntries(REGIONS.map(r=>[r,Object.fromEntries(Object.keys(parties).map(id=>[id,manualValue(r,id,"senato")]))]));const special={camera:{estero:{},valleDAosta:{},trentinoAltoAdige:{}},senato:{estero:{},valleDAosta:{},trentinoAltoAdige:{}}};["camera","senato"].forEach(ch=>["estero","valleDAosta","trentinoAltoAdige"].forEach(cat=>{special[ch][cat]={...(app.specialSeats?.[ch]?.[cat]||{})};}));return{law,parties:shape,coalitions:Array.isArray(app.coalitions)?app.coalitions:[],specialSeats:special,camera:{nationalValues:cn,collegeValues:cameraCollegeValues,collegeWeights:{},collegeMap:CAM_COLLEGI},senato:{nationalValues:sn,regionalValuesByRegion,collegeMap:SEN_COLLEGI,premiumByRegion:SEN_PREMIO}};}
-function runSimulation(){const sim=window.SONDAGGI_ELECTION_ENGINE_20261008.simulate(buildInput());S.results=sim;writeTrend();render();}
+function runSimulation(){
+  const sim=window.SONDAGGI_ELECTION_ENGINE_20261008.simulate(buildInput());
+  S.results=sim;
+  writeTrend();
+  render();
+  return sim;
+}
+let trendAutoPending=false,trendAutoTimer=null;
+function scheduleTrendSimulation(delay=120){
+  if(trendAutoTimer)clearTimeout(trendAutoTimer);
+  trendAutoPending=true;
+  trendAutoTimer=setTimeout(()=>{
+    trendAutoTimer=null;
+    if(!trendAutoPending)return;
+    trendAutoPending=false;
+    if(window.SONDAGGI_ELECTION_ENGINE_20261008&&window.SONDAGGI_LAW_20261008){
+      try{runSimulation();}catch(err){console.error("Trend automatic simulation",err);}
+    }else{
+      scheduleTrendSimulation(250);
+    }
+  },delay);
+}
 function historicalListRows(chamber,year,region){return Object.entries(HIST?.[chamber]?.[year]?.[region]?.lists||{}).sort((a,b)=>b[1]-a[1]).slice(0,18).map(([name,p])=>"<tr><td>"+esc(name)+"</td><td>"+fmt(p)+"%</td></tr>").join("");}
 function regionStatus(){const parties=getParties();return REGIONS.map(r=>{const filled=Object.keys(parties).filter(id=>S.manual?.[r]?.[id]!=null).length,complete=filled===Object.keys(parties).length;return'<button type="button" class="st-region '+(r===S.region?"active":"")+'" data-tr-region="'+esc(r)+'"><span><b>'+esc(r)+'</b><small>'+filled+'/'+Object.keys(parties).length+' valori</small></span><em>'+(complete?"COMPLETA":"DA COMPLETARE")+"</em></button>"}).join("");}
 function cameraCollegeBreakdown(sim,region){const out=[],parties=getParties();parseColleges(CAM_COLLEGI,region).filter(c=>!c.special).forEach(c=>{const circ=c.name.replace(/\s-\sP\d+$/,""),rec=sim?.cam?.collegeResults?.ordinary?.[circ]?.[c.name],pr=sim?.cam?.collegeResults?.prize?.[circ],totals={};Object.entries(rec?.alloc||{}).forEach(([k,v])=>totals[k]=(totals[k]||0)+n(v));Object.entries(pr||{}).forEach(([k,v])=>{const x=v?.seats?.[c.name];if(x!=null)totals[k]=(totals[k]||0)+n(x);});const desc=Object.entries(totals).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>(parties[k]?.name||k)+" "+fmt0(v)).join(" · ")||"nessun seggio modellato";out.push({name:c.name,seats:c.noPrize,desc});});return out;}
