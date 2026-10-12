@@ -83,6 +83,16 @@ function readState(){
     return raw&&typeof raw==="object"?raw:{};
   }catch(_){return {};}
 }
+function loadIntegrityGuard(){
+  try{
+    if(document.getElementById("dashboard-runtime-integrity"))return;
+    const s=document.createElement("script");
+    s.id="dashboard-runtime-integrity";
+    s.src="dashboard-runtime-integrity.js?v=20261009-1";
+    s.async=false;
+    (document.head||document.documentElement).appendChild(s);
+  }catch(err){console.error("Dashboard integrity guard",err);}
+}
 function writeState(state){
   localStorage.setItem(V7_KEY,JSON.stringify(state));
   window.dispatchEvent(new CustomEvent("sondaggi-v7-updated"));
