@@ -108,7 +108,7 @@ function regionScenario(ch,region){
   const nat=currentNational(ch),shares={},diagnostic={};
   Object.keys(nat).forEach(p=>{
     const m=regionalMultiplier(ch,region,p);
-    shares[p]=nat[p]*Math.pow(m.factor,0.90);
+    shares[p]=nat[p]*Math.pow(m.factor,0.90*STATE.strength);
     diagnostic[p]={factor:m.factor,signals:m.signals};
   });
   const total=Object.values(shares).reduce((a,b)=>a+b,0)||1;
@@ -124,7 +124,7 @@ function modelForCollege(ch,region,college){
   const rs=regionScenario(ch,region),shares={},diagnostic={};
   Object.keys(rs.shares).forEach(p=>{
     const m=collegeMultiplier(ch,region,college,p);
-    shares[p]=rs.shares[p]*Math.pow(m.factor,0.80);
+    shares[p]=rs.shares[p]*Math.pow(m.factor,0.80*STATE.strength);
     diagnostic[p]={factor:(rs.diagnostic[p]?.factor||1)*(m.factor||1),region:rs.diagnostic[p],college:m.factor,signals:m.signals};
   });
   const total=Object.values(shares).reduce((a,b)=>a+b,0)||1;
