@@ -2499,5 +2499,20 @@ function installSondaggiModule(){
 }
 
 installSondaggiModule();
+
+/* ===== CURRENT SONDAGGI LINK BOOTSTRAP v12 ===== */
+(function(){
+  "use strict";
+  if(window.__SG_ANALYSIS_LINK_V12)return;
+  if(document.getElementById("sondaggi-link-v12-bootstrap"))return;
+  try{
+    const s=document.createElement("script");
+    s.id="sondaggi-link-v12-bootstrap";
+    s.src="sondaggi-link.js?v=20261012-v12";
+    s.async=false;
+    s.dataset.sgCurrentBridge="1";
+    (document.head||document.documentElement).appendChild(s);
+  }catch(err){console.error("Sondaggi current link bootstrap",err);}
+})();
 })();
 
