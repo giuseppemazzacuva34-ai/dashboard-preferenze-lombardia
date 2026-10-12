@@ -635,8 +635,10 @@ function installSondaggiModule(){
       add("Soggetto vincente del premio",w?.id||null,"C-CD",w?.id==="C-CD");
       add("Cifra Camera",w?.cam||0,42,w?.cam===42);
       add("Cifra Senato",w?.sen||0,42,w?.sen===42);
-      add("Seggi premio Camera",Number(national?.cam?.premiumWinnerSeats||0),70,Number(national?.cam?.premiumWinnerSeats||0)===70);
-      add("Seggi premio Senato",Number(national?.sen?.premiumWinnerSeats||0),35,Number(national?.sen?.premiumWinnerSeats||0)===35);
+      const camPrize=Number(national?.cam?.premiumSeats ?? national?.cam?.premiumWinnerSeats ?? national?.cam?.prizeWinnerSeats ?? 0);
+      const senPrize=Number(national?.sen?.premiumSeats ?? national?.sen?.premiumWinnerSeats ?? national?.sen?.prizeWinnerSeats ?? 0);
+      add("Seggi premio Camera",camPrize,70,camPrize===70);
+      add("Seggi premio Senato",senPrize,35,senPrize===35);
     }else if(id==="C"){
       add("Premio",national?.bonus||null,"nessun premio",!national?.bonus &&
         Number(national?.cam?.premiumWinnerSeats||0)===0 &&
@@ -696,16 +698,53 @@ function installSondaggiModule(){
         const camSeats=(Object.entries(national?.cam?.seats||{}).filter(([k])=>(co.members||[]).includes(k)).reduce((a,[,v])=>a+Number(v||0),0));
         const senSeats=(Object.entries(national?.sen?.seats||{}).filter(([k])=>(co.members||[]).includes(k)).reduce((a,[,v])=>a+Number(v||0),0));
         return {
-          id:co.id,name:co.name,members:[...(co.members||[])],
+          id:co.id,name:co.name,members:[...(co.members||[])].map(canonicalKey),
           cameraPct:Number(camFigure.total)||0,senatePct:Number(senFigure.total)||0,
           cameraQualified:!!camFigure.qualifies,senateQualified:!!senFigure.qualifies,
           cameraSeats:camSeats,senateSeats:senSeats
         };
       });
-      const mapRows=(res,ch)=>Object.entries(res?.seats||{})
-        .map(([k,v])=>({party:k,name:S.parties[k]?.name||k,seats:Number(v||0),pct:Number(ch==="camera"?S.parties[k]?.camera:S.parties[k]?.senate)||0}))
-        .filter(x=>x.seats>0)
-        .sort((a,b)=>b.seats-a.seats||b.pct-a.pct||a.name.localeCompare(b.name,"it"));
+      const canonicalKey=(key)=>{
+        const s=String(key||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase();
+        const aliases={
+          "FDI":"FdI","FRATELLI D'ITALIA":"FdI",
+          "PD":"PD","PARTITO DEMOCRATICO":"PD",
+          "M5S":"M5S","MOVIMENTO 5 STELLE":"M5S",
+          "AVS":"AVS","ALLEANZA VERDI SINISTRA":"AVS",
+          "FI":"FI","FORZA ITALIA":"FI",
+          "LEGA":"LEGA",
+          "FN":"FN","FUTURO NAZIONALE":"FN",
+          "AZ":"AZ","AZIONE":"AZ",
+          "IV":"IV","ITALIA VIVA":"IV",
+          "PIU":"PIU","+EUROPA":"PIU",
+          "NM":"NM","NOI MODERATI":"NM",
+          "ALTRI":"ALTRI"
+        };
+        return aliases[s]||String(key||"");
+      };
+      const canonicalDisplay={
+        FdI:"Fratelli d'Italia",PD:"Partito Democratico",M5S:"Movimento 5 Stelle",
+        AVS:"Alleanza Verdi Sinistra",FI:"Forza Italia",LEGA:"Lega",FN:"Futuro Nazionale",
+        AZ:"Azione",IV:"Italia Viva",PIU:"+Europa",NM:"Noi Moderati",ALTRI:"Altri"
+      };
+      const mapRows=(res,ch)=>{
+        const grouped={};
+        Object.entries(res?.seats||{}).forEach(([k,v])=>{
+          const canonical=canonicalKey(k);
+          const seats=Number(v||0);
+          if(!canonical||seats<=0)return;
+          grouped[canonical]=(grouped[canonical]||0)+seats;
+        });
+        return Object.entries(grouped)
+          .map(([k,seats])=>({
+            party:k,
+            name:canonicalDisplay[k]||S.parties[k]?.name||k,
+            seats,
+            pct:Number(ch==="camera"?S.parties[k]?.camera:S.parties[k]?.senate)||0
+          }))
+          .filter(x=>x.seats>0)
+          .sort((a,b)=>b.seats-a.seats||b.pct-a.pct||a.name.localeCompare(b.name,"it"));
+      };
       return {
         ...evaluation,
         coalitions:coalitionResults,
