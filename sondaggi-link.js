@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-const SG_DASH_VERSION="20261012-dashboard-scenari-v9";
+const SG_DASH_VERSION="20261012-dashboard-scenari-v10";
 const TEST_ACTIVE_KEY="lombardia_sondaggi_v7_test_active";
 const SCENARIO_APPLY_DATA={
   A:{camera:{FdI:40,PD:41.5,M5S:6,AVS:3,FI:3.5,LEGA:2,FN:1,AZ:1,IV:0.5,PIU:0.5,NM:0,ALTRI:1},senate:{FdI:42,PD:34,M5S:3,AVS:2,FI:3.5,LEGA:3,FN:2,AZ:2,IV:1,PIU:1,NM:1.5,ALTRI:5},coalitions:[{id:"C-CD",name:"Centrodestra",members:["Fratelli d'Italia","Lega","Forza Italia","Noi Moderati"]},{id:"C-CS",name:"Centrosinistra",members:["Partito Democratico","Movimento 5 Stelle","Alleanza Verdi Sinistra","+Europa","Italia Viva"]}]},
@@ -40,9 +40,9 @@ function loadMobileStyles(){
 }
 function loadEngines(){
   loadScript("sondaggi-law-20261008","sondaggi-law-20261008.js?v=20261009-legal");
-  loadScript("sondaggi-app-preview","sondaggi-app.js?v=20261012-preview5");
+  loadScript("sondaggi-app-preview","sondaggi-app.js?v=20261012-preview6");
   loadScript("dashboard-runtime-integrity","dashboard-runtime-integrity.js?v=20261009-1");
-  loadScript("sondaggi-trend-2018-2022","sondaggi-trend-2018-2022.js?v=20261012-trend10");
+  loadScript("sondaggi-trend-2018-2022","sondaggi-trend-2018-20261012-trend11");
 }
 
 function activeId(){try{return localStorage.getItem(TEST_ACTIVE_KEY)||"";}catch(_){return"";}}
@@ -181,6 +181,63 @@ function writeV7(v){
 }
 
 let SG_ACTIVE_VIEW="scenari";
+let sgTrendLatchTimer=null;
+
+function stopTrendLatch(){
+  if(sgTrendLatchTimer!==null){
+    clearInterval(sgTrendLatchTimer);
+    sgTrendLatchTimer=null;
+  }
+}
+
+function getAnalysisViewFromTarget(target){
+  const btn=target?.closest?.("[data-sgan-view]");
+  if(btn){
+    const v=btn.getAttribute("data-sgan-view");
+    if(v==="trend"||v==="scenari")return v;
+  }
+  const text=String(target?.textContent||"").trim().toUpperCase();
+  if(text==="TREND")return "trend";
+  if(text==="SCENARI POSSIBILI")return "scenari";
+  return "";
+}
+
+function enforceAnalysisView(view){
+  const root=document.getElementById("sg7");
+  if(view==="trend"){
+    window.__SG_FORCED_VIEW="trend";
+    SG_ACTIVE_VIEW="trend";
+    if(root)root.classList.add("sg7TrendViewActive");
+    try{window.SONDAGGI_TREND_2018_2022?.mount?.();}catch(err){console.error("Trend mount",err);}
+  }else{
+    window.__SG_FORCED_VIEW="";
+    SG_ACTIVE_VIEW="scenari";
+    if(root)root.classList.remove("sg7TrendViewActive");
+    stopTrendLatch();
+  }
+  const apply=()=>{
+    try{window.SONDAGGI_TREND_2018_2022?.mount?.();}catch(_){}
+    applyAnalysisView();
+    const content=document.getElementById("sg7content");
+    const bank=document.getElementById("sgScenarioBankNative");
+    const trend=document.getElementById("sg-trend-module");
+    const on=view==="trend";
+    if(content)content.style.setProperty("display",on?"none":"block","important");
+    if(bank)bank.style.setProperty("display",on?"none":"block","important");
+    if(trend)trend.style.setProperty("display",on?"block":"none","important");
+  };
+  apply();
+  if(view==="trend"){
+    stopTrendLatch();
+    let tries=0;
+    sgTrendLatchTimer=setInterval(()=>{
+      apply();
+      tries++;
+      if(tries>80)stopTrendLatch();
+    },120);
+  }
+}
+
 function ensureAnalysisNav(){
   const root=document.getElementById("sg7");
   if(!root)return null;
@@ -197,15 +254,15 @@ function ensureAnalysisNav(){
       btn.className="sg7analysisTab";
       btn.dataset.sganView=view;
       btn.textContent=label;
-      btn.onclick=()=>{
-        window.__SG_FORCED_VIEW=view==="trend"?"trend":"";
-        SG_ACTIVE_VIEW=view;
-        try{
-          if(view==="trend")window.SONDAGGI_TREND_2018_2022?.mount?.();
-        }catch(err){console.error("Trend mount",err);}
-        applyAnalysisView();
-        setTimeout(applyAnalysisView,0);
+      const run=ev=>{
+        ev?.preventDefault?.();
+        try{ev?.stopImmediatePropagation?.();}catch(_){}
+        try{ev?.stopPropagation?.();}catch(_){}
+        enforceAnalysisView(view);
       };
+      btn.onpointerdown=run;
+      btn.onmousedown=run;
+      btn.onclick=run;
       return btn;
     };
     tabs.appendChild(nav);
@@ -214,6 +271,7 @@ function ensureAnalysisNav(){
   }
   return nav;
 }
+
 function ensureAnalysisNavStyle(){
   if(document.getElementById("sgAnalysisNavStyle"))return;
   const st=document.createElement("style");
@@ -222,36 +280,29 @@ function ensureAnalysisNavStyle(){
     "#sgAnalysisNav{display:contents!important}",
     "#sg7 .sg7analysisTab{position:relative!important;z-index:2147483647!important;pointer-events:auto!important;touch-action:manipulation!important;border:1px solid rgba(255,255,255,.28)!important;background:rgba(255,255,255,.10)!important;color:#fff!important;border-radius:10px!important;padding:10px 13px!important;font-weight:800!important;cursor:pointer!important}",
     "#sg7 .sg7analysisTab.active{background:rgba(255,255,255,.24)!important;border-color:rgba(255,255,255,.48)!important}",
-    "#sg7 .sg7analysisTab:hover{background:rgba(255,255,255,.18)!important}"
+    "#sg7 .sg7analysisTab:hover{background:rgba(255,255,255,.18)!important}",
+    "#sg7.sg7TrendViewActive #sg7content{display:none!important}",
+    "#sg7.sg7TrendViewActive #sgScenarioBankNative{display:none!important}",
+    "#sg7.sg7TrendViewActive #sg-trend-module{display:block!important;width:100%!important;visibility:visible!important;position:relative!important;z-index:2147483646!important}",
+    "#sg7:not(.sg7TrendViewActive) #sg-trend-module{display:none!important}"
   ].join("");
   document.head.appendChild(st);
 }
+
 let sgAnalysisCaptureInstalled=false;
 function installAnalysisCapture(){
-  if(sgAnalysisCaptureInstalled)return;
+  if(sgAnalysisCaptureInstalled||window.__SG_ANALYSIS_CAPTURE_V10)return;
   sgAnalysisCaptureInstalled=true;
-  document.addEventListener("click",function(ev){
-    const btn=ev.target?.closest?.("[data-sgan-view]");
-    if(!btn)return;
-    const view=btn.getAttribute("data-sgan-view");
-    if(view!=="trend"&&view!=="scenari")return;
+  window.__SG_ANALYSIS_CAPTURE_V10=true;
+  const handler=ev=>{
+    const view=getAnalysisViewFromTarget(ev.target);
+    if(!view)return;
     ev.preventDefault();
-    ev.stopPropagation();
     try{ev.stopImmediatePropagation();}catch(_){}
-    SG_ACTIVE_VIEW=view;
-    const activate=()=>{
-      try{
-        if(view==="trend"){
-          const api=window.SONDAGGI_TREND_2018_2022;
-          if(api?.mount)api.mount();
-        }
-        applyAnalysisView();
-      }catch(err){console.error("Sondaggi analysis view",err);}
-    };
-    activate();
-    setTimeout(activate,0);
-    setTimeout(activate,120);
-  },true);
+    try{ev.stopPropagation();}catch(_){}
+    enforceAnalysisView(view);
+  };
+  ["pointerdown","mousedown","mouseup","click"].forEach(type=>document.addEventListener(type,handler,true));
 }
 function applyAnalysisView(){
   const nav=ensureAnalysisNav();
@@ -262,11 +313,14 @@ function applyAnalysisView(){
   const forcedView=window.__SG_FORCED_VIEW||"";
   const activeView=forcedView||SG_ACTIVE_VIEW;
   const showingTrend=activeView==="trend";
-  if(content)content.style.display=showingTrend?"none":"";
-  if(bank)bank.style.display=showingTrend?"none":"";
+  const root=document.getElementById("sg7");
+  if(root)root.classList.toggle("sg7TrendViewActive",showingTrend);
+  if(content)content.style.setProperty("display",showingTrend?"none":"block","important");
+  if(bank)bank.style.setProperty("display",showingTrend?"none":"block","important");
   if(trend){
-    trend.style.display=showingTrend?"":"none";
+    trend.style.setProperty("display",showingTrend?"block":"none","important");
     trend.style.width="100%";
+    trend.style.visibility=showingTrend?"visible":"";
   }
 }function styleAndMarkup(){
   const host=document.getElementById("sg7content");
