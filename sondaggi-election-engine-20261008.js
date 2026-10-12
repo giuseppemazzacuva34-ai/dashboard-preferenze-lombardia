@@ -1579,6 +1579,11 @@
         Math.max(0,(initial.seats[winnerUnit.id]||0)-(final.seats[winnerUnit.id]||0)):0,
       trace:{
         nationalInitial:initial,
+        listDistributionDebug:{
+          nationalListTargets,
+          unitCircTotals:ordinaryCirc.nationalTotals,
+          listDistributionTotals:listDistribution.totals
+        },
         nationalFinal:final,
         ordinaryAssigned,
         prizeAssigned,
