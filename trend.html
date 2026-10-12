@@ -21,13 +21,20 @@ body{overflow-x:hidden}
 <script>
 (function(){
   "use strict";
-  document.getElementById("back").addEventListener("click",function(){window.location.href="index.html?v=20261012-clean3";});
-  var s=document.createElement("script");
-  s.id="sondaggi-trend-clean";
-  s.src="sondaggi-trend-2018-2022.js?v=20261012-clean3";
-  s.async=false;
-  s.onerror=function(){document.getElementById("tab-sondaggi").innerHTML='<div style="padding:16px;border:1px solid #7a3044;border-radius:10px;background:#321522;color:#ffd7df;font:600 13px/1.4 Arial,sans-serif">Impossibile caricare il modulo Trend.</div>';};
-  (document.head||document.documentElement).appendChild(s);
+  document.getElementById("back").addEventListener("click",function(){window.location.href="index.html?v=20261012-territorial2";});
+  function add(id,src,onerror){
+    var s=document.createElement("script");
+    s.id=id;s.src=src;s.async=false;
+    if(onerror)s.onerror=onerror;
+    (document.head||document.documentElement).appendChild(s);
+    return s;
+  }
+  add("sondaggi-law","sondaggi-law-20261008.js?v=20261012");
+  add("sondaggi-engine","sondaggi-election-engine-20261008.js?v=20261012");
+  add("sondaggi-trend-clean","sondaggi-trend-2018-2022.js?v=20261012-clean3",function(){
+    document.getElementById("tab-sondaggi").innerHTML='<div style="padding:16px;border:1px solid #7a3044;border-radius:10px;background:#321522;color:#ffd7df;font:600 13px/1.4 Arial,sans-serif">Impossibile caricare il modulo Trend.</div>';
+  });
+  add("trend-territoriale","trend-territoriale.js?v=20261012-territorial1");
 })();
 </script>
 </body>
