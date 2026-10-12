@@ -1,11 +1,11 @@
 (function(){
 "use strict";
 
-if(window.__SG_ANALYSIS_LINK_V12)return;
-window.__SG_ANALYSIS_LINK_V12=true;
+if(window.__SG_ANALYSIS_LINK_V13||window.__SG_ANALYSIS_LINK_V12)return;
+window.__SG_ANALYSIS_LINK_V13=true;
 window.__SG_ANALYSIS_LINK_V11=true;
 window.__SG_ANALYSIS_LINK_V10=true;
-const SG_DASH_VERSION="20261012-dashboard-scenari-v12";
+const SG_DASH_VERSION="20261012-dashboard-scenari-v13";
 const TEST_ACTIVE_KEY="lombardia_sondaggi_v7_test_active";
 const SCENARIO_APPLY_DATA={
   A:{camera:{FdI:40,PD:41.5,M5S:6,AVS:3,FI:3.5,LEGA:2,FN:1,AZ:1,IV:0.5,PIU:0.5,NM:0,ALTRI:1},senate:{FdI:42,PD:34,M5S:3,AVS:2,FI:3.5,LEGA:3,FN:2,AZ:2,IV:1,PIU:1,NM:1.5,ALTRI:5},coalitions:[{id:"C-CD",name:"Centrodestra",members:["Fratelli d'Italia","Lega","Forza Italia","Noi Moderati"]},{id:"C-CS",name:"Centrosinistra",members:["Partito Democratico","Movimento 5 Stelle","Alleanza Verdi Sinistra","+Europa","Italia Viva"]}]},
@@ -211,11 +211,11 @@ function getAnalysisViewFromTarget(target){
 
 function enforceAnalysisView(view){
   const root=document.getElementById("sg7");
-  if(view==="trend"){
+  const isTrend=view==="trend";
+  if(isTrend){
     window.__SG_FORCED_VIEW="trend";
     SG_ACTIVE_VIEW="trend";
     if(root)root.classList.add("sg7TrendViewActive");
-    try{window.SONDAGGI_TREND_2018_2022?.mount?.();}catch(err){console.error("Trend mount",err);}
   }else{
     window.__SG_FORCED_VIEW="";
     SG_ACTIVE_VIEW="scenari";
@@ -223,28 +223,31 @@ function enforceAnalysisView(view){
     stopTrendLatch();
   }
   const apply=()=>{
-    try{window.SONDAGGI_TREND_2018_2022?.mount?.();}catch(_){}
     applyAnalysisView();
     const content=document.getElementById("sg7content");
     const bank=document.getElementById("sgScenarioBankNative");
     const trend=document.getElementById("sg-trend-module");
-    const on=view==="trend";
-    if(content)content.style.setProperty("display",on?"none":"block","important");
-    if(bank)bank.style.setProperty("display",on?"none":"block","important");
-    if(trend)trend.style.setProperty("display",on?"block":"none","important");
+    if(content)content.style.setProperty("display",isTrend?"none":"block","important");
+    if(bank)bank.style.setProperty("display",isTrend?"none":"block","important");
+    if(trend)trend.style.setProperty("display",isTrend?"block":"none","important");
   };
   apply();
-  if(view==="trend"){
+  if(isTrend){
     stopTrendLatch();
     let tries=0;
     sgTrendLatchTimer=setInterval(()=>{
+      const api=window.SONDAGGI_TREND_2018_2022;
+      let mounted=!!document.getElementById("sg-trend-module");
+      if(!mounted && api?.mount){
+        try{api.mount();}catch(err){console.error("Trend mount",err);}
+        mounted=!!document.getElementById("sg-trend-module");
+      }
       apply();
       tries++;
-      if(tries>80)stopTrendLatch();
+      if((mounted && document.getElementById("sg-trend-module")?.dataset?.sgTrendStarted) || tries>40)stopTrendLatch();
     },120);
   }
 }
-
 function ensureAnalysisNav(){
   const root=document.getElementById("sg7");
   if(!root)return null;
