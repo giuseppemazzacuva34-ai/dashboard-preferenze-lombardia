@@ -197,12 +197,14 @@ function ensureAnalysisNav(){
       btn.className="sg7analysisTab";
       btn.dataset.sganView=view;
       btn.textContent=label;
-      btn.addEventListener("click",e=>{
-        e.preventDefault();
-        e.stopImmediatePropagation();
+      btn.onclick=()=>{
         SG_ACTIVE_VIEW=view;
+        try{
+          if(view==="trend")window.SONDAGGI_TREND_2018_2022?.mount?.();
+        }catch(err){console.error("Trend mount",err);}
         applyAnalysisView();
-      });
+        setTimeout(applyAnalysisView,0);
+      };
       return btn;
     };
     tabs.appendChild(nav);
@@ -222,6 +224,33 @@ function ensureAnalysisNavStyle(){
     "#sg7 .sg7analysisTab:hover{background:rgba(255,255,255,.18)!important}"
   ].join("");
   document.head.appendChild(st);
+}
+let sgAnalysisCaptureInstalled=false;
+function installAnalysisCapture(){
+  if(sgAnalysisCaptureInstalled)return;
+  sgAnalysisCaptureInstalled=true;
+  document.addEventListener("click",function(ev){
+    const btn=ev.target?.closest?.("[data-sgan-view]");
+    if(!btn)return;
+    const view=btn.getAttribute("data-sgan-view");
+    if(view!=="trend"&&view!=="scenari")return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    try{ev.stopImmediatePropagation();}catch(_){}
+    SG_ACTIVE_VIEW=view;
+    const activate=()=>{
+      try{
+        if(view==="trend"){
+          const api=window.SONDAGGI_TREND_2018_2022;
+          if(api?.mount)api.mount();
+        }
+        applyAnalysisView();
+      }catch(err){console.error("Sondaggi analysis view",err);}
+    };
+    activate();
+    setTimeout(activate,0);
+    setTimeout(activate,120);
+  },true);
 }
 function applyAnalysisView(){
   const nav=ensureAnalysisNav();
@@ -359,6 +388,7 @@ function forceTrendMount(){
   tick();
 }
 function run(){
+  installAnalysisCapture();
   loadMobileStyles();
   loadEngines();
   forceTrendMount();
