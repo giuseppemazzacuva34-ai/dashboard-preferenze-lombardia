@@ -1,0 +1,53 @@
+name: Build TREND political data
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/build_trend_politiche.py"
+      - ".github/workflows/build-trend-politiche.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build compact data
+        run: python scripts/build_trend_politiche.py
+
+      - name: Validate output
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("trend-data-politiche.json")
+          d=json.loads(p.read_text(encoding="utf-8"))
+          assert d["version"] == "2026-10-12-politiche-v1"
+          for year in ("2018","2022"):
+              for chamber in ("camera","senato"):
+                  x=d["elections"][year][chamber]
+                  assert x["colleges"]
+                  assert x["regions"]
+                  assert all(0 <= part["share"] <= 100 for c in x["colleges"] for part in c["parties"])
+          print("TREND political data validation: OK")
+          PY
+
+      - name: Commit generated dataset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add trend-data-politiche.json
+          git diff --cached --quiet && exit 0
+          git commit -m "TREND: build compact political territorial dataset"
+          git push
