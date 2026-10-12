@@ -125,7 +125,7 @@ function modelForCollege(ch,region,college){
   Object.keys(rs.shares).forEach(p=>{
     const m=collegeMultiplier(ch,region,college,p);
     shares[p]=rs.shares[p]*Math.pow(m.factor,0.80);
-    diagnostic[p]={region:rs.diagnostic[p],college:m.factor,signals:m.signals};
+    diagnostic[p]={factor:(rs.diagnostic[p]?.factor||1)*(m.factor||1),region:rs.diagnostic[p],college:m.factor,signals:m.signals};
   });
   const total=Object.values(shares).reduce((a,b)=>a+b,0)||1;
   Object.keys(shares).forEach(p=>shares[p]=shares[p]/total*100);
