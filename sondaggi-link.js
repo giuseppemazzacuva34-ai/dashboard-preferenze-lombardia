@@ -1,10 +1,11 @@
 (function(){
 "use strict";
 
-if(window.__SG_ANALYSIS_LINK_V11)return;
+if(window.__SG_ANALYSIS_LINK_V12)return;
+window.__SG_ANALYSIS_LINK_V12=true;
 window.__SG_ANALYSIS_LINK_V11=true;
 window.__SG_ANALYSIS_LINK_V10=true;
-const SG_DASH_VERSION="20261012-dashboard-scenari-v11";
+const SG_DASH_VERSION="20261012-dashboard-scenari-v12";
 const TEST_ACTIVE_KEY="lombardia_sondaggi_v7_test_active";
 const SCENARIO_APPLY_DATA={
   A:{camera:{FdI:40,PD:41.5,M5S:6,AVS:3,FI:3.5,LEGA:2,FN:1,AZ:1,IV:0.5,PIU:0.5,NM:0,ALTRI:1},senate:{FdI:42,PD:34,M5S:3,AVS:2,FI:3.5,LEGA:3,FN:2,AZ:2,IV:1,PIU:1,NM:1.5,ALTRI:5},coalitions:[{id:"C-CD",name:"Centrodestra",members:["Fratelli d'Italia","Lega","Forza Italia","Noi Moderati"]},{id:"C-CS",name:"Centrosinistra",members:["Partito Democratico","Movimento 5 Stelle","Alleanza Verdi Sinistra","+Europa","Italia Viva"]}]},
