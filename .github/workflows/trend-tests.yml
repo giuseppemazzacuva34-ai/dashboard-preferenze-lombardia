@@ -41,7 +41,7 @@ jobs:
           rp=Path("data/trend-regionali-generated.json")
           if rp.exists():
               r=json.loads(rp.read_text(encoding="utf-8"))
-              assert r["version"] in {"2026-10-12-regionali1","2026-10-12-regionali2"}
+              assert r["version"] in {"2026-10-12-regionali3","2026-10-12-regionali2","2026-10-12-regionali1"}
               assert r.get("byRegion")
               print("TREND regional dataset: OK")
           else:
