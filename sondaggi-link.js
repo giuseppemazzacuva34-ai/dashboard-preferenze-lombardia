@@ -3,6 +3,14 @@
 
 const SG_DASH_VERSION="20261012-dashboard-scenari-v9";
 const TEST_ACTIVE_KEY="lombardia_sondaggi_v7_test_active";
+const SCENARIO_APPLY_DATA={
+  A:{camera:{FdI:40,PD:41.5,M5S:6,AVS:3,FI:3.5,LEGA:2,FN:1,AZ:1,IV:0.5,PIU:0.5,NM:0,ALTRI:1},senate:{FdI:42,PD:34,M5S:3,AVS:2,FI:3.5,LEGA:3,FN:2,AZ:2,IV:1,PIU:1,NM:1.5,ALTRI:5},coalitions:[{id:"C-CD",name:"Centrodestra",members:["Fratelli d'Italia","Lega","Forza Italia","Noi Moderati"]},{id:"C-CS",name:"Centrosinistra",members:["Partito Democratico","Movimento 5 Stelle","Alleanza Verdi Sinistra","+Europa","Italia Viva"]}]},
+  B:{camera:{FdI:27,PD:20,M5S:10,AVS:5,FI:6,LEGA:6,FN:2,AZ:2.5,IV:1.5,PIU:1.5,NM:3,ALTRI:15.5},senate:{FdI:27,PD:20,M5S:10,AVS:5,FI:6,LEGA:6,FN:2,AZ:2.5,IV:1.5,PIU:1.5,NM:3,ALTRI:15.5},coalitions:[{id:"C-CD",name:"Centrodestra",members:["Fratelli d'Italia","Lega","Forza Italia","Noi Moderati"]},{id:"C-CS",name:"Centrosinistra",members:["Partito Democratico","Movimento 5 Stelle","Alleanza Verdi Sinistra","+Europa","Italia Viva"]}]},
+  C:{camera:{FdI:26.9,PD:20,M5S:10,AVS:5,FI:6,LEGA:6,FN:2,AZ:2.5,IV:1.5,PIU:1.5,NM:3,ALTRI:15.6},senate:{FdI:27,PD:20,M5S:10,AVS:5,FI:6,LEGA:6,FN:2,AZ:2.5,IV:1.5,PIU:1.5,NM:3,ALTRI:15.5},coalitions:[{id:"C-CD",name:"Centrodestra",members:["Fratelli d'Italia","Lega","Forza Italia","Noi Moderati"]},{id:"C-CS",name:"Centrosinistra",members:["Partito Democratico","Movimento 5 Stelle","Alleanza Verdi Sinistra","+Europa","Italia Viva"]}]},
+  D:{camera:{FdI:7,PD:20,M5S:12,AVS:6,FI:10,LEGA:3,FN:7,AZ:5,IV:4,PIU:3,NM:2,ALTRI:21},senate:{FdI:7,PD:20,M5S:12,AVS:6,FI:10,LEGA:3,FN:7,AZ:5,IV:4,PIU:3,NM:2,ALTRI:21},coalitions:[{id:"C-TEST10",name:"Coalizione Test 10%",members:["Fratelli d'Italia","Lega"]}]},
+  E:{camera:{FdI:25,PD:20,M5S:15,AVS:7,FI:7,LEGA:6,FN:4,AZ:3,IV:2.9,PIU:2,NM:1,ALTRI:7.1},senate:{FdI:25,PD:20,M5S:15,AVS:7,FI:7,LEGA:6,FN:4,AZ:3,IV:2.9,PIU:2,NM:1,ALTRI:7.1},coalitions:[]},
+  F:{camera:{FdI:2.5,PD:25,M5S:15,AVS:7,FI:7,LEGA:6,FN:5,AZ:4,IV:3,PIU:2,NM:1,ALTRI:22.5},senate:{FdI:2.5,PD:25,M5S:15,AVS:7,FI:7,LEGA:6,FN:5,AZ:4,IV:3,PIU:2,NM:1,ALTRI:22.5},lombardiaSenate:{FdI:20,PD:25,M5S:15,AVS:7,FI:7,LEGA:6,FN:5,AZ:4,IV:3,PIU:2,NM:1,ALTRI:5},coalitions:[]}
+};
 const TESTS={
   A:{id:"A",name:"NESSUN PREMIO",desc:"Vincitore diverso nelle due Camere.",expected:"Premio 0 Camera · 0 Senato.",coalitions:["Centrodestra","Centrosinistra"]},
   B:{id:"B",name:"PREMIO 42/42",desc:"Stesso soggetto primo nelle due Camere e al 42,0% esatto.",expected:"Premio 70 Camera + 35 Senato.",coalitions:["Centrodestra","Centrosinistra"]},
