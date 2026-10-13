@@ -184,6 +184,23 @@ function installSondaggiModule(){
       if(!saved||typeof saved!=="object")return base;
       base={...base,...saved};
       base.parties={...freshState().parties,...(saved.parties||{})};
+      /* Migrazione anti-duplicati: il modello Sondaggi usa solo gli slug
+         canonici (FdI, PD, M5S, ...). Eventuali chiavi duplicate salvate con
+         il nome completo vengono assorbite nei valori canonici e rimosse. */
+      {
+        const merged=base.parties||{};
+        const canonical={};
+        POLLS.forEach(([slug,name,def])=>{
+          const a=merged[slug]||{};
+          const b=merged[name]||{};
+          canonical[slug]={
+            name:name,
+            camera:num(a.camera??b.camera??def),
+            senate:num(a.senate??a.senato??b.senate??b.senato??def)
+          };
+        });
+        base.parties=canonical;
+      }
       base.regionalSenate=saved.regionalSenate&&typeof saved.regionalSenate==="object"?saved.regionalSenate:{};
       if(!base.regionalSenate || typeof base.regionalSenate!=="object")base.regionalSenate={};
       base.meta=saved.meta&&typeof saved.meta==="object"?saved.meta:{legacyBridgeInitialized:false};
