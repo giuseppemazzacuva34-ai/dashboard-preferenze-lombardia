@@ -35,7 +35,9 @@ function getParties(){
     const p=a.parties?.[id]||{};
     const legacy=a.parties?.[name]||{};
     out[id]={
-      name:String(p.name||name),
+      /* Il nome visualizzato è sempre quello canonico: eventuali etichette
+         vecchie o duplicate salvate nel browser non possono creare doppioni. */
+      name,
       camera:num(p.camera??legacy.camera??def),
       senato:num(p.senato??p.senate??legacy.senato??legacy.senate??def)
     };
