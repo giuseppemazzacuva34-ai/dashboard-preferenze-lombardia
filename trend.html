@@ -126,14 +126,14 @@ body{overflow-x:hidden}
       await add("sondaggi-law","sondaggi-law-20261008.js?v=20261013-law");
       await add("sondaggi-engine","sondaggi-election-engine-20261008.js?v=20261013-engine");
       await add("trend-territorial-data","trend-territorial-data.js?v=20261013-territorial");
-      await add("sondaggi-trend-clean","sondaggi-trend-2018-2022.js?v=20261013-clean7");
+      await add("sondaggi-trend-clean","sondaggi-trend-2018-2022.js?v=20261013-clean8");
       await add("trend-territorial-compact-bootstrap","trend-territorial-compact-bootstrap.js?v=20261013-compact");
       var compact=await window.SG_TERRITORIAL_COMPACT_READY;
       var cv=window.SG_TERRITORIAL_DATA&&window.SG_TERRITORIAL_DATA.compactVersions||{};
       status(compact&&compact.ok?"Dati sincronizzati":"Fallback dataset storico",compact&&compact.ok?"ok":"warn");
       badge("Politiche 2018/2022");badge("Europee 2019/2024");badge("Regionali "+(cv.regionali||"inline/fallback"));badge("20 regioni");badge("Camera · Senato");
       var loading=document.getElementById("trend-loading");if(loading)loading.remove();
-      await add("trend-territoriale","trend-territoriale.js?v=20261013-readability3");
+      await add("trend-territoriale","trend-territoriale.js?v=20261013-calibrated4");
     }catch(err){
       console.error("Trend bootstrap",err);
       var loading=document.getElementById("trend-loading");
