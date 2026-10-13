@@ -28,13 +28,17 @@ const signed=v=>{const x=num(v);return (x>0?"+":"")+x.toFixed(1).replace(".",","
 function app(){try{const x=JSON.parse(localStorage.getItem(APP_KEY)||"null");return x&&typeof x==="object"?x:{};}catch(_){return{};}}
 function getParties(){
   const a=app(),out={};
+  /* La lista dei partiti del modello è canonica: 12 voci, una sola per slug.
+     Vecchie versioni potevano aver salvato anche il nome completo come chiave;
+     quelle chiavi non vengono mai trattate come partiti aggiuntivi. */
   DEFAULT_PARTIES.forEach(([id,name,def])=>{
     const p=a.parties?.[id]||{};
-    out[id]={name:String(p.name||name),camera:num(p.camera??def),senato:num(p.senate??def)};
-  });
-  Object.entries(a.parties||{}).forEach(([id,p])=>{
-    if(out[id])return;
-    out[id]={name:String(p?.name||id),camera:num(p?.camera),senato:num(p?.senate)};
+    const legacy=a.parties?.[name]||{};
+    out[id]={
+      name:String(p.name||name),
+      camera:num(p.camera??legacy.camera??def),
+      senato:num(p.senato??p.senate??legacy.senato??legacy.senate??def)
+    };
   });
   return out;
 }
