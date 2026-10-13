@@ -273,7 +273,40 @@ function installSondaggiModule(){
     return String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9+]/g,"");
   }
   const LEGACY_PARTY_MAP=Object.fromEntries(POLLS.map(p=>[normalizePartyName(p[1]),p[0]]));
+  POLLS.forEach(p=>{
+    LEGACY_PARTY_MAP[normalizePartyName(p[0])]=p[0];
+    LEGACY_PARTY_MAP[normalizePartyName(p[1])]=p[0];
+  });
   LEGACY_PARTY_MAP["ALLEANZAVERDISINISTRA"]="AVS";
+  LEGACY_PARTY_MAP["FRATELLIDITALIACONGIORGIAMELONI"]="FdI";
+  LEGACY_PARTY_MAP["FRATELLIDITALIACON GIORGIAMELONI".replace(/ /g,"")]="FdI";
+
+  function canonicalPartySlug(v){
+    return LEGACY_PARTY_MAP[normalizePartyName(v)]||null;
+  }
+
+  function canonicalizePartyState(){
+    const prev=S.parties&&typeof S.parties==="object"?S.parties:{};
+    const out={};
+    const toNum=(v,fallback=0)=>{
+      const n=parseFloat(String(v??"").replace(",","."));
+      return Number.isFinite(n)?Math.min(100,Math.max(0,n)):fallback;
+    };
+    POLLS.forEach(([slug,name,def])=>{
+      const matches=Object.entries(prev).filter(([k])=>canonicalPartySlug(k)===slug);
+      const exact=matches.find(([k])=>k===slug)?.[1];
+      const byName=matches.find(([k])=>normalizePartyName(k)===normalizePartyName(name))?.[1];
+      const src=exact||byName||matches[0]?.[1]||{};
+      const obj=(src&&typeof src==="object")?src:{};
+      out[slug]={
+        name,
+        camera:toNum(obj.camera??obj.cam,def),
+        senate:toNum(obj.senate??obj.senato??obj.senateVotes,def)
+      };
+    });
+    S.parties=out;
+    return S.parties;
+  }
 
   function syncFromLegacyV7(){
     try{
@@ -370,10 +403,10 @@ function installSondaggiModule(){
   function mirrorToLegacyV7(){
     try{
       const legacy=JSON.parse(localStorage.getItem("lombardia_sondaggi_v7")||"{}");
-      legacy.parties=legacy.parties&&typeof legacy.parties==="object"?legacy.parties:{};
-      legacy.nationalVotes=legacy.nationalVotes&&typeof legacy.nationalVotes==="object"?legacy.nationalVotes:{};
-      legacy.nationalVotes.camera={};
-      legacy.nationalVotes.senato={};
+      /* Riscrittura completa delle strutture legacy: nessuna chiave duplicata
+         (slug + nome completo) deve sopravvivere nel mirror v7. */
+      legacy.parties={};
+      legacy.nationalVotes={camera:{},senato:{}};
       const LEGACY_NAMES={AVS:"Alleanza Verdi Sinistra"};
       Object.entries(S.parties).forEach(([slug,p])=>{
         const name=LEGACY_NAMES[slug]||p.name||POLLS.find(x=>x[0]===slug)?.[1]||slug;
@@ -402,7 +435,11 @@ function installSondaggiModule(){
     }
   }
 
-  function save(){localStorage.setItem(KEY,JSON.stringify(S));mirrorToLegacyV7();}
+  function save(){
+    canonicalizePartyState();
+    localStorage.setItem(KEY,JSON.stringify(S));
+    mirrorToLegacyV7();
+  }
   function cloneScenarioState(source=S){
     return JSON.parse(JSON.stringify(source||{}));
   }
@@ -837,13 +874,18 @@ function installSondaggiModule(){
 
   let TEST_ACTIVE_ID="";
   syncFromLegacyV7();
+  canonicalizePartyState();
+  localStorage.setItem(KEY,JSON.stringify(S));
+  mirrorToLegacyV7();
   window.addEventListener("sondaggi-v7-updated",()=>{
     try{
       // Durante un test A-F il vecchio modulo v7 non deve poter sovrascrivere
       // scenario, coalizioni o percentuali appena caricate dal banco test.
       if(TEST_ACTIVE_ID)return;
       syncFromLegacyV7();
+      canonicalizePartyState();
       localStorage.setItem(KEY,JSON.stringify(S));
+      mirrorToLegacyV7();
       render();
     }catch(err){console.error("Sync aggiornamento Sondaggi v7",err);}
   });
@@ -2044,18 +2086,17 @@ function installSondaggiModule(){
       const parts=Array.isArray(j.partiti)?j.partiti:[];
       let matched=0;
       parts.forEach(p=>{
-        const slug=String(p.slug??"").trim().toUpperCase();
-        const name=String(p.nome??p.name??slug).trim();
+        const rawSlug=String(p.slug??"").trim();
+        const name=String(p.nome??p.name??rawSlug).trim();
+        const slug=canonicalPartySlug(rawSlug)||canonicalPartySlug(name);
         const value=num(p.valore??p.value);
-        if(!slug)return;
-        if(!S.parties[slug])S.parties[slug]={name,camera:value,senate:value};
-        else{
-          S.parties[slug].name=name||S.parties[slug].name;
-          S.parties[slug].camera=value;
-          S.parties[slug].senate=value;
-        }
+        if(!slug||!S.parties[slug])return;
+        S.parties[slug].name=POLLS.find(x=>x[0]===slug)?.[1]||S.parties[slug].name;
+        S.parties[slug].camera=value;
+        S.parties[slug].senate=value;
         matched++;
       });
+      canonicalizePartyState();
       save();render();
       alert(matched?"YouTrend aggiornato: "+matched+" liste.":"YouTrend non ha restituito partiti nel formato atteso.");
     }catch(err){
@@ -2068,6 +2109,7 @@ function installSondaggiModule(){
   }
 
   function render(){
+    canonicalizePartyState();
     const host=ensurePanel();
     if(!host)return;
     const c=selectedCollege();
