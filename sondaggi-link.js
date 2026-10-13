@@ -40,7 +40,7 @@ function loadMobileStyles(){
 }
 function loadEngines(){
   loadScript("sondaggi-law-20261008","sondaggi-law-20261008.js?v=20261009-legal");
-  loadScript("sondaggi-app-preview","sondaggi-app.js?v=20261012-preview4");
+  loadScript("sondaggi-app-preview","sondaggi-app.js?v=20261013-dedup1");
   loadScript("dashboard-runtime-integrity","dashboard-runtime-integrity.js?v=20261009-1");
 }
 
@@ -199,7 +199,7 @@ function ensureAnalysisNav(){
         ev.preventDefault();
         ev.stopImmediatePropagation();
         if(view==="trend"){
-          window.location.href="trend.html?v=20261013-readability3";
+          window.location.href="trend.html?v=20261013-readability4";
           return;
         }
         SG_ACTIVE_VIEW=view;
