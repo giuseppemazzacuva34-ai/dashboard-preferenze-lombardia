@@ -7,42 +7,58 @@
 <style>
 html,body{margin:0;padding:0;min-height:100%;background:#061323;color:#eaf4fb;font-family:Arial,sans-serif}
 body{overflow-x:hidden}
-#page{width:100%;min-height:100vh;box-sizing:border-box;padding:12px}
-#topnav{display:flex;align-items:center;margin:0 0 10px;position:sticky;top:0;z-index:50;background:#061323;padding:6px 0}
-#back{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border:1px solid #2b4c65;border-radius:8px;background:#0b2034;color:#eaf4fb;font-size:10px;font-weight:900;cursor:pointer}
+#page{width:100%;min-height:100vh;box-sizing:border-box;padding:14px}
+#topnav{display:flex;align-items:center;gap:10px;margin:0 0 10px;position:sticky;top:0;z-index:50;background:#061323;padding:6px 0}
+#back{display:inline-flex;align-items:center;justify-content:center;padding:11px 15px;border:1px solid #36576e;border-radius:9px;background:#0b2034;color:#eaf4fb;font-size:12px;font-weight:900;cursor:pointer}
+#trend-intro{background:#071a2b;border:1px solid #294b62;border-radius:14px;padding:16px 18px;margin:0 0 12px;box-sizing:border-box}
+#trend-kicker{font-size:11px;font-weight:900;letter-spacing:.14em;color:#69c8ff}
+#trend-intro h1{margin:5px 0 6px;font-size:26px;line-height:1.15;color:#fff}
+#trend-intro p{margin:0;color:#b8ccd8;font-size:12px;line-height:1.5}
+#trend-status{margin-top:10px;display:flex;flex-wrap:wrap;gap:7px}
+#trend-status span{display:inline-flex;align-items:center;padding:7px 10px;border:1px solid #35566b;border-radius:999px;background:#0d263a;color:#d7e8f1;font-size:10px;font-weight:900}
+#trend-status .ok{border-color:#2f718e;background:#103047;color:#aee3f7}
+#trend-status .warn{border-color:#8a6a31;background:#302913;color:#ffe0a0}
 #tab-sondaggi{display:block;width:100%;min-width:0}
+#trend-loading{padding:18px;border:1px solid #294b62;border-radius:12px;background:#071a2b;color:#adc4d0;font-size:13px}
+@media(max-width:700px){#page{padding:9px}#topnav{display:block}#back{width:100%;min-height:44px;font-size:12px}#trend-intro{padding:14px}#trend-intro h1{font-size:22px}}
 </style>
 </head>
 <body>
 <div id="page">
   <div id="topnav"><button id="back" type="button">← TORNA ALLA DASHBOARD</button></div>
-  <div id="tab-sondaggi"></div>
+  <section id="trend-intro" aria-label="Riepilogo del modulo Trend">
+    <div id="trend-kicker">ANALISI ELETTORALE</div>
+    <h1>TREND · STORICO, TERRITORIO E PREVISIONE</h1>
+    <p>Un'unica pagina per confronto storico 2018→2022, Europee 2019→2024, Regionali disponibili, stima per regione e collegio e collegamento con il motore dei seggi.</p>
+    <div id="trend-status"><span class="ok">Caricamento dati…</span><span>20 regioni</span><span>Camera · Senato</span></div>
+  </section>
+  <div id="tab-sondaggi"><div id="trend-loading">Caricamento del modulo Trend…</div></div>
 </div>
 <script>
 (function(){
   "use strict";
-  document.getElementById("back").addEventListener("click",function(){window.location.href="index.html?v=20261012-territorial2";});
-  function add(id,src){
-    return new Promise(function(resolve,reject){
-      if(document.getElementById(id)){resolve();return;}
-      var s=document.createElement("script");
-      s.id=id;s.src=src;s.async=false;
-      s.onload=resolve;s.onerror=function(){reject(new Error("Impossibile caricare "+src));};
-      (document.head||document.documentElement).appendChild(s);
-    });
-  }
+  document.getElementById("back").addEventListener("click",function(){window.location.href="index.html?v=20261013-trend1";});
+  function add(id,src){return new Promise(function(resolve,reject){if(document.getElementById(id)){resolve();return;}var s=document.createElement("script");s.id=id;s.src=src;s.async=false;s.onload=resolve;s.onerror=function(){reject(new Error("Impossibile caricare "+src));};(document.head||document.documentElement).appendChild(s);});}
+  function status(text,className){var box=document.getElementById("trend-status");if(!box)return;box.innerHTML="";String(text||"").split(" · ").forEach(function(p,i){var span=document.createElement("span");if(i===0&&className)span.className=className;span.textContent=p;box.appendChild(span);});}
+  function badge(text){var box=document.getElementById("trend-status");if(!box)return;var span=document.createElement("span");span.textContent=text;box.appendChild(span);}
   async function start(){
     try{
-      await add("sondaggi-law","sondaggi-law-20261008.js?v=20261012");
-      await add("sondaggi-engine","sondaggi-election-engine-20261008.js?v=20261012");
-      await add("trend-territorial-data","trend-territorial-data.js?v=20261012-territorial6");
-      await add("sondaggi-trend-clean","sondaggi-trend-2018-2022.js?v=20261012-clean6");
-      await add("trend-territorial-compact-bootstrap","trend-territorial-compact-bootstrap.js?v=20261012-v3");
-      await window.SG_TERRITORIAL_COMPACT_READY;
-      await add("trend-territoriale","trend-territoriale.js?v=20261012-territorial3");
+      await add("sondaggi-law","sondaggi-law-20261008.js?v=20261013-law");
+      await add("sondaggi-engine","sondaggi-election-engine-20261008.js?v=20261013-engine");
+      await add("trend-territorial-data","trend-territorial-data.js?v=20261013-territorial");
+      await add("sondaggi-trend-clean","sondaggi-trend-2018-2022.js?v=20261013-clean7");
+      await add("trend-territorial-compact-bootstrap","trend-territorial-compact-bootstrap.js?v=20261013-compact");
+      var compact=await window.SG_TERRITORIAL_COMPACT_READY;
+      var cv=window.SG_TERRITORIAL_DATA&&window.SG_TERRITORIAL_DATA.compactVersions||{};
+      status(compact&&compact.ok?"Dati sincronizzati":"Fallback dataset storico",compact&&compact.ok?"ok":"warn");
+      badge("Politiche 2018/2022");badge("Europee 2019/2024");badge("Regionali "+(cv.regionali||"inline/fallback"));badge("20 regioni");badge("Camera · Senato");
+      var loading=document.getElementById("trend-loading");if(loading)loading.remove();
+      await add("trend-territoriale","trend-territoriale.js?v=20261013-readability1");
     }catch(err){
       console.error("Trend bootstrap",err);
-      document.getElementById("tab-sondaggi").innerHTML='<div style="padding:16px;border:1px solid #7a3044;border-radius:10px;background:#321522;color:#ffd7df;font:600 13px/1.4 Arial,sans-serif">Impossibile caricare il modulo Trend.</div>';
+      var loading=document.getElementById("trend-loading");
+      if(loading)loading.textContent="Impossibile caricare il modulo Trend: "+String(err&&err.message||err);
+      status("Errore di caricamento","warn");
     }
   }
   start();
