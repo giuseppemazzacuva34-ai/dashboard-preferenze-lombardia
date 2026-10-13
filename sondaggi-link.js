@@ -199,7 +199,7 @@ function ensureAnalysisNav(){
         ev.preventDefault();
         ev.stopImmediatePropagation();
         if(view==="trend"){
-          window.location.href="trend.html?v=20261012-clean3";
+          window.location.href="trend.html?v=20261013-readability3";
           return;
         }
         SG_ACTIVE_VIEW=view;
