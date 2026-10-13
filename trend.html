@@ -21,6 +21,38 @@ body{overflow-x:hidden}
 #tab-sondaggi{display:block;width:100%;min-width:0}
 #trend-loading{padding:18px;border:1px solid #294b62;border-radius:12px;background:#071a2b;color:#adc4d0;font-size:13px}
 @media(max-width:700px){#page{padding:9px}#topnav{display:block}#back{width:100%;min-height:44px;font-size:12px}#trend-intro{padding:14px}#trend-intro h1{font-size:22px}}
+
+/* FINAL TREND READABILITY OVERRIDES */
+#tab-sondaggi,#sgTrendScreen{width:100%!important;max-width:none!important}
+#sgTrendScreen .sgt,#tab-sondaggi .sta{font-size:15px!important;line-height:1.5!important}
+#sgTrendScreen .sgt h2,#tab-sondaggi .sta h2{font-size:30px!important;line-height:1.18!important}
+#sgTrendScreen .sgt-head p,#tab-sondaggi .sta p{font-size:15px!important;line-height:1.6!important}
+#sgTrendScreen .sgt-kicker,#tab-sondaggi .sta>div:first-child>div:first-child{font-size:12px!important}
+#sgTrendScreen .sgt-badges span{font-size:12px!important;padding:8px 11px!important}
+#sgTrendScreen .sgt-field label,#tab-sondaggi .sta label{font-size:12px!important;line-height:1.25!important}
+#sgTrendScreen .sgt-field select,#sgTrendScreen .sgt-field input,#tab-sondaggi .sta select,#tab-sondaggi .sta input{font-size:14px!important;height:42px!important}
+#sgTrendScreen .sgt-field small,#tab-sondaggi .sta small{font-size:11px!important;line-height:1.4!important}
+#sgTrendScreen .sgt-kpi strong,#tab-sondaggi .sta-kpis b{font-size:27px!important}
+#sgTrendScreen .sgt-kpi span,#tab-sondaggi .sta-kpis span{font-size:11px!important}
+#sgTrendScreen .sgt-card h3,#tab-sondaggi .sta-card>b{font-size:16px!important}
+#sgTrendScreen .sgt-muted{font-size:11px!important}
+#sgTrendScreen .sgt-bar-label,#sgTrendScreen .sgt-bar-value{font-size:12px!important}
+#sgTrendScreen .sgt-bar-row{grid-template-columns:210px 1fr 70px!important;gap:10px!important}
+#sgTrendScreen .sgt-track{height:18px!important}
+#sgTrendScreen .sgt-table{min-width:0!important;width:100%!important}
+#sgTrendScreen .sgt-table th,#tab-sondaggi .sta th{font-size:11px!important;padding:11px 9px!important;white-space:nowrap!important}
+#sgTrendScreen .sgt-table td,#tab-sondaggi .sta td{font-size:13px!important;padding:11px 9px!important;line-height:1.35!important}
+#sgTrendScreen .sgt-table td small{font-size:10px!important}
+#sgTrendScreen .sgt-table input{font-size:13px!important;height:34px!important;width:90px!important}
+#sgTrendScreen .sgt-btn{font-size:12px!important;padding:10px 13px!important}
+#sgTrendScreen .sgt-status{font-size:12px!important}
+#sgTrendScreen .sgt-rank-row b,#sgTrendScreen .sgt-rank-row span{font-size:12px!important}
+#sgTrendScreen .sgt-note{font-size:11px!important;line-height:1.55!important}
+#tab-sondaggi .sta table{min-width:0!important}
+#tab-sondaggi .sta-foot{font-size:11px!important;line-height:1.55!important}
+#tab-sondaggi .sta .sta-controls{gap:12px!important}
+@media(max-width:900px){#sgTrendScreen .sgt-bar-row{grid-template-columns:150px 1fr 68px!important}}
+@media(max-width:650px){#sgTrendScreen .sgt,#tab-sondaggi .sta{padding:14px!important}#sgTrendScreen .sgt h2,#tab-sondaggi .sta h2{font-size:24px!important}#sgTrendScreen .sgt-head p,#tab-sondaggi .sta p{font-size:14px!important}#sgTrendScreen .sgt-table{min-width:640px!important}#tab-sondaggi .sta table{min-width:620px!important}}
 </style>
 </head>
 <body>
@@ -53,7 +85,7 @@ body{overflow-x:hidden}
       status(compact&&compact.ok?"Dati sincronizzati":"Fallback dataset storico",compact&&compact.ok?"ok":"warn");
       badge("Politiche 2018/2022");badge("Europee 2019/2024");badge("Regionali "+(cv.regionali||"inline/fallback"));badge("20 regioni");badge("Camera · Senato");
       var loading=document.getElementById("trend-loading");if(loading)loading.remove();
-      await add("trend-territoriale","trend-territoriale.js?v=20261013-readability1");
+      await add("trend-territoriale","trend-territoriale.js?v=20261013-readability2");
     }catch(err){
       console.error("Trend bootstrap",err);
       var loading=document.getElementById("trend-loading");
