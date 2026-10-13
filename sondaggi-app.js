@@ -308,6 +308,79 @@ function installSondaggiModule(){
     return S.parties;
   }
 
+  function scrubPartyAliases(){
+    const canonical=canonicalizePartyState();
+    const copyValue=(bucket,slug)=>{
+      const entries=Object.entries(bucket&&typeof bucket==="object"?bucket:{})
+        .filter(([k])=>canonicalPartySlug(k)===slug);
+      const exact=entries.find(([k])=>k===slug);
+      const named=entries.find(([k])=>{
+        const name=POLLS.find(p=>p[0]===slug)?.[1]||"";
+        return normalizePartyName(k)===normalizePartyName(name);
+      });
+      return exact?exact[1]:(named?named[1]:(entries[0]?entries[0][1]:undefined));
+    };
+    const cleanNumericMap=(bucket)=>{
+      const out={};
+      if(!bucket||typeof bucket!=="object")return out;
+      POLLS.forEach(([slug])=>{
+        const v=copyValue(bucket,slug);
+        if(v!==undefined)out[slug]=num(v);
+      });
+      return out;
+    };
+    const regionOut={};
+    Object.entries(S.regionalSenate&&typeof S.regionalSenate==="object"?S.regionalSenate:{})
+      .forEach(([region,bucket])=>{
+        regionOut[region]=cleanNumericMap(bucket);
+      });
+    S.regionalSenate=regionOut;
+
+    ["camera","senato"].forEach(ch=>{
+      const src=S.collegeValues?.[ch]&&typeof S.collegeValues[ch]==="object"?S.collegeValues[ch]:{};
+      const out={};
+      Object.entries(src).forEach(([college,bucket])=>{
+        out[college]=cleanNumericMap(bucket);
+      });
+      S.collegeValues??={};
+      S.collegeValues[ch]=out;
+    });
+
+    ["camera","senato"].forEach(ch=>{
+      const src=S.specialSeats?.[ch]&&typeof S.specialSeats[ch]==="object"?S.specialSeats[ch]:{};
+      const out={};
+      SPECIAL_CATS.forEach(cat=>{
+        out[cat]=cleanNumericMap(src[cat]);
+      });
+      S.specialSeats??={};
+      S.specialSeats[ch]=out;
+    });
+
+    ["camera","senato"].forEach(ch=>{
+      const src=S.capilista?.[ch]&&typeof S.capilista[ch]==="object"?S.capilista[ch]:{};
+      const out={};
+      Object.entries(src).forEach(([college,bucket])=>{
+        const clean={};
+        Object.entries(bucket&&typeof bucket==="object"?bucket:{})
+          .forEach(([key,value])=>{
+            const slug=canonicalPartySlug(key);
+            if(!slug)return;
+            if(clean[slug]===undefined||key===slug)clean[slug]=value;
+          });
+        out[college]=clean;
+      });
+      S.capilista??={};
+      S.capilista[ch]=out;
+    });
+
+    S.coalitions=(Array.isArray(S.coalitions)?S.coalitions:[]).map(co=>({
+      ...co,
+      members:[...new Set((co.members||[]).map(canonicalPartySlug).filter(Boolean))]
+    }));
+    if(S.capilistaSelectedParty)S.capilistaSelectedParty=canonicalPartySlug(S.capilistaSelectedParty)||"";
+    return canonical;
+  }
+
   function syncFromLegacyV7(){
     try{
       const raw=localStorage.getItem("lombardia_sondaggi_v7");
@@ -436,7 +509,7 @@ function installSondaggiModule(){
   }
 
   function save(){
-    canonicalizePartyState();
+    scrubPartyAliases();
     localStorage.setItem(KEY,JSON.stringify(S));
     mirrorToLegacyV7();
   }
@@ -874,7 +947,7 @@ function installSondaggiModule(){
 
   let TEST_ACTIVE_ID="";
   syncFromLegacyV7();
-  canonicalizePartyState();
+  scrubPartyAliases();
   localStorage.setItem(KEY,JSON.stringify(S));
   mirrorToLegacyV7();
   window.addEventListener("sondaggi-v7-updated",()=>{
@@ -883,7 +956,7 @@ function installSondaggiModule(){
       // scenario, coalizioni o percentuali appena caricate dal banco test.
       if(TEST_ACTIVE_ID)return;
       syncFromLegacyV7();
-      canonicalizePartyState();
+      scrubPartyAliases();
       localStorage.setItem(KEY,JSON.stringify(S));
       mirrorToLegacyV7();
       render();
@@ -2109,7 +2182,7 @@ function installSondaggiModule(){
   }
 
   function render(){
-    canonicalizePartyState();
+    scrubPartyAliases();
     const host=ensurePanel();
     if(!host)return;
     const c=selectedCollege();
