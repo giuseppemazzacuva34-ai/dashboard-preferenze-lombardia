@@ -53,6 +53,54 @@ body{overflow-x:hidden}
 #tab-sondaggi .sta .sta-controls{gap:12px!important}
 @media(max-width:900px){#sgTrendScreen .sgt-bar-row{grid-template-columns:150px 1fr 68px!important}}
 @media(max-width:650px){#sgTrendScreen .sgt,#tab-sondaggi .sta{padding:14px!important}#sgTrendScreen .sgt h2,#tab-sondaggi .sta h2{font-size:24px!important}#sgTrendScreen .sgt-head p,#tab-sondaggi .sta p{font-size:14px!important}#sgTrendScreen .sgt-table{min-width:640px!important}#tab-sondaggi .sta table{min-width:620px!important}}
+
+/* TREND STRUCTURAL LAYOUT — ultimo livello di leggibilità */
+#page{max-width:1540px!important;margin:0 auto!important;padding:24px!important}
+#trend-intro{padding:22px 24px!important;margin-bottom:20px!important;border-radius:18px!important}
+#trend-intro h1{font-size:30px!important}
+#trend-intro p{font-size:15px!important;line-height:1.65!important;max-width:1100px}
+#trend-status{gap:9px!important}
+#trend-status span{font-size:12px!important;padding:8px 12px!important}
+#sgTrendScreen,#tab-sondaggi{margin:0!important}
+#sgTrendScreen{position:relative;margin-bottom:24px!important}
+#sgTrendScreen::before,#tab-sondaggi::before{display:block;margin:0 0 10px;padding:8px 12px;border-left:4px solid #4db8ee;background:#0a2033;color:#bfe8fa;font-size:12px;font-weight:900;letter-spacing:.08em;border-radius:6px}
+#sgTrendScreen::before{content:"01 · STORICO 2018 → 2022 · SCENARIO ELETTORALE"}
+#tab-sondaggi::before{content:"02 · TERRITORIO · REGIONALI · COLLEGI · SEGGI"}
+#sgTrendScreen .sgt,#tab-sondaggi .sta{width:100%!important;margin:0 0 24px!important;padding:24px!important;border-radius:18px!important;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+#sgTrendScreen .sgt-head{gap:28px!important;align-items:flex-start!important}
+#sgTrendScreen .sgt-kicker{font-size:14px!important}
+#sgTrendScreen .sgt h2,#tab-sondaggi .sta h2{font-size:30px!important;margin:5px 0 10px!important}
+#sgTrendScreen .sgt-head p,#tab-sondaggi .sta p{font-size:15px!important;line-height:1.65!important}
+#sgTrendScreen .sgt-toolbar{gap:14px!important;margin-top:20px!important}
+#sgTrendScreen .sgt-field label,#tab-sondaggi .sta label{font-size:13px!important;margin-bottom:6px!important}
+#sgTrendScreen .sgt-field select,#sgTrendScreen .sgt-field input,#tab-sondaggi .sta select,#tab-sondaggi .sta input{height:46px!important;font-size:15px!important;padding:9px 11px!important;border-radius:9px!important}
+#sgTrendScreen .sgt-field small,#tab-sondaggi .sta small{font-size:12px!important}
+#sgTrendScreen .sgt-kpis,#tab-sondaggi .sta-kpis{gap:14px!important;margin-top:18px!important}
+#sgTrendScreen .sgt-kpi,#tab-sondaggi .sta-kpis div{padding:16px!important;border-radius:12px!important}
+#sgTrendScreen .sgt-kpi strong,#tab-sondaggi .sta-kpis b{font-size:30px!important}
+#sgTrendScreen .sgt-kpi span,#tab-sondaggi .sta-kpis span{font-size:12px!important}
+#sgTrendScreen .sgt-grid,#tab-sondaggi .sta-grid{gap:16px!important;margin-top:16px!important}
+#sgTrendScreen .sgt-card,#tab-sondaggi .sta-card{padding:16px!important;border-radius:12px!important}
+#sgTrendScreen .sgt-card h3,#tab-sondaggi .sta-card>b{font-size:18px!important}
+#sgTrendScreen .sgt-bars{gap:11px!important}
+#sgTrendScreen .sgt-bar-row{grid-template-columns:minmax(190px,250px) 1fr 76px!important;gap:12px!important}
+#sgTrendScreen .sgt-bar-label,#sgTrendScreen .sgt-bar-value{font-size:14px!important}
+#sgTrendScreen .sgt-track{height:20px!important}
+#sgTrendScreen .sgt-table th,#tab-sondaggi .sta th{font-size:12px!important;padding:13px 11px!important}
+#sgTrendScreen .sgt-table td,#tab-sondaggi .sta td{font-size:14px!important;padding:13px 11px!important}
+#sgTrendScreen .sgt-table input{width:100px!important;height:38px!important;font-size:14px!important}
+#sgTrendScreen .sgt-actions{gap:10px!important;margin-top:14px!important}
+#sgTrendScreen .sgt-btn{font-size:13px!important;padding:12px 15px!important;min-height:44px!important}
+#sgTrendScreen .sgt-status{font-size:13px!important;margin-top:12px!important}
+#sgTrendScreen .sgt-rank{gap:8px!important;max-height:390px!important}
+#sgTrendScreen .sgt-rank-row{padding:10px 11px!important}
+#sgTrendScreen .sgt-rank-row b,#sgTrendScreen .sgt-rank-row span{font-size:14px!important}
+#sgTrendScreen .sgt-note,#tab-sondaggi .sta-foot{font-size:12px!important;line-height:1.65!important}
+#tab-sondaggi .sta table{font-size:14px!important}
+#tab-sondaggi .sta .sta-controls{gap:14px!important;margin-top:18px!important}
+@media(max-width:1050px){#page{padding:18px!important}#sgTrendScreen .sgt-toolbar,#tab-sondaggi .sta-controls{grid-template-columns:1fr 1fr!important}#sgTrendScreen .sgt-grid,#tab-sondaggi .sta-grid{grid-template-columns:1fr!important}}
+@media(max-width:650px){#page{padding:10px!important}#trend-intro{padding:17px!important}#trend-intro h1{font-size:24px!important}#sgTrendScreen .sgt,#tab-sondaggi .sta{padding:16px!important}#sgTrendScreen .sgt h2,#tab-sondaggi .sta h2{font-size:23px!important}#sgTrendScreen .sgt-toolbar,#tab-sondaggi .sta-controls{grid-template-columns:1fr!important}#sgTrendScreen .sgt-kpis{grid-template-columns:1fr 1fr!important}#tab-sondaggi .sta-kpis{grid-template-columns:1fr!important}#sgTrendScreen .sgt-bar-row{grid-template-columns:100px 1fr 58px!important}#sgTrendScreen .sgt-table{min-width:720px!important}#tab-sondaggi .sta table{min-width:700px!important}#sgTrendScreen::before,#tab-sondaggi::before{font-size:10px!important}}
+
 </style>
 </head>
 <body>
@@ -85,7 +133,7 @@ body{overflow-x:hidden}
       status(compact&&compact.ok?"Dati sincronizzati":"Fallback dataset storico",compact&&compact.ok?"ok":"warn");
       badge("Politiche 2018/2022");badge("Europee 2019/2024");badge("Regionali "+(cv.regionali||"inline/fallback"));badge("20 regioni");badge("Camera · Senato");
       var loading=document.getElementById("trend-loading");if(loading)loading.remove();
-      await add("trend-territoriale","trend-territoriale.js?v=20261013-readability2");
+      await add("trend-territoriale","trend-territoriale.js?v=20261013-readability3");
     }catch(err){
       console.error("Trend bootstrap",err);
       var loading=document.getElementById("trend-loading");
