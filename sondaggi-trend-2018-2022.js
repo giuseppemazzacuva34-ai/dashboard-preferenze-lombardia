@@ -180,7 +180,9 @@ function render(){
       const st=document.getElementById("sgtStatus");if(st)st.innerHTML="Regione <b>"+esc(r)+"</b> scritta nei Sondaggi.";
     }catch(err){alert("Scrittura non riuscita: "+(err?.message||err));}
   };
-  renderTerritorialModel();
+  /* Il modello territoriale ufficiale è renderizzato da trend-territoriale.js.
+     Questo modulo mantiene storico 2018/2022 e storico Europee senza duplicare
+     una seconda simulazione collegio potenzialmente incoerente. */
   return true;
 }
 
